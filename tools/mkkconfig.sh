@@ -34,8 +34,9 @@
 
 # Get the input parameter list
 
-USAGE="USAGE: mkkconfig.sh [-d] [-h] [-m <menu>] [-o <kconfig-file>]"
+USAGE="USAGE: mkkconfig.sh [-d] [-h] [-i <source path>] [-m <menu>] [-o <kconfig-file>]"
 KCONFIG=Kconfig
+SRCPATH=
 unset MENU
 
 while [ ! -z "$1" ]; do
@@ -55,6 +56,10 @@ while [ ! -z "$1" ]; do
       echo $USAGE
       exit 0
       ;;
+    -i )
+      shift
+      SRCPATH=$1
+      ;;
     * )
       echo "ERROR: Unrecognized argument: $1"
       echo $USAGE
@@ -64,14 +69,25 @@ while [ ! -z "$1" ]; do
   shift
 done
 
+if [ -z $SRCPATH ]; then
+    SRCPATH=$PWD
+fi
+
+SRCPATH=`readlink -f ${SRCPATH}`
 
 if [ -f ${KCONFIG} ]; then
   rm ${KCONFIG} || { echo "ERROR: Failed to remove $PWD/${KCONFIG}"; exit 1; }
 fi
 
-echo mkkconfig in $PWD
+echo mkkconfig in $SRCPATH
 
-KCONFIG_LIST=`ls -1 $PWD/*/Kconfig`
+KCONFIG_LIST=`ls -1 $SRCPATH/*/Kconfig 2> /dev/null`
+KCONFIG_OUT=`readlink -f \`dirname ${KCONFIG}\``
+
+if [ ${KCONFIG_OUT} != ${SRCPATH} ]; then
+# Some of the Kconfig will be dynamically generated in the out directory, add them together
+KCONFIG_LIST="${KCONFIG_LIST} `ls -1 ${KCONFIG_OUT}/*/Kconfig 2> /dev/null`"
+fi
 
 echo "#" > ${KCONFIG}
 echo "# For a description of the syntax of this configuration file," >> ${KCONFIG}

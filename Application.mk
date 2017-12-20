@@ -60,13 +60,13 @@ ifeq ($(WINTOOL),y)
   BIN = "${shell cygpath -w $(APPDIR)$(DELIM)libapps$(LIBEXT)}"
   INSTALL_DIR = "${shell cygpath -w $(BIN_DIR)}"
 else
-  BIN = $(APPDIR)$(DELIM)libapps$(LIBEXT)
+  BIN = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)libapps$(LIBEXT)
   INSTALL_DIR = $(BIN_DIR)
 endif
 
 ROOTDEPPATH = --dep-path .
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: clean preconfig depend distclean
@@ -129,9 +129,9 @@ endif
 
 .depend: Makefile $(SRCS)
 ifeq ($(filter %$(CXXEXT),$(SRCS)),)
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 else
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CXX)" -- $(CXXFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CXX)" -- $(CXXFLAGS) -- $^ >Make.dep
 endif
 	$(Q) touch $@
 

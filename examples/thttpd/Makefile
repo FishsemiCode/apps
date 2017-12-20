@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := content
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
@@ -70,11 +72,11 @@ else
   INSTALL_DIR = $(BIN_DIR)
 endif
 
-CONTENT_MAKE = $(MAKE) -C content
+CONTENT_MAKE = $(MAKE) -C content -I $(SRCDIR)/content
 ifeq ($(CONFIG_THTTPD_BINFS),y)
-  CONTENT_MAKE += -f Makefile.binfs
+  CONTENT_MAKE += -f $(SRCDIR)/content/Makefile.binfs
 else
-  CONTENT_MAKE += -f Makefile.nxflat
+  CONTENT_MAKE += -f $(SRCDIR)/content/Makefile.nxflat
 endif
 
 CONFIG_XYZ_PROGNAME ?= thttpd$(EXEEXT)
@@ -84,7 +86,7 @@ ROOTDEPPATH = --dep-path .
 
 # Common build
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: headers clean depend distclean preconfig
@@ -121,7 +123,7 @@ context:
 	@$(CONTENT_MAKE) context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 .depend: Makefile $(SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := tests
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
@@ -99,7 +101,7 @@ really_build: $(OBJS)
 	@touch .built
 
 .built:
-	@$(MAKE) -C tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+	@$(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 	@$(MAKE) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" really_build
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
@@ -126,7 +128,7 @@ context:
 depend: .depend
 
 clean_tests:
-	@$(MAKE) -C tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	@$(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean \
 
 clean: clean_tests
 	$(call DELFILE, .built)

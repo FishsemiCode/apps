@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := filesystem
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
@@ -98,7 +100,7 @@ build_lib: $(OBJS)
 	$(call ARCHIVE, $(BIN), $(OBJS))
 
 build:
-	@$(MAKE) -C filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+	@$(MAKE) -C filesystem  -f $(SRCDIR)/filesystem/Makefile -I $(SRCDIR)/filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 	@$(MAKE) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" build_lib
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
@@ -125,7 +127,7 @@ context:
 depend: .depend
 
 clean_filesystem:
-	@$(MAKE) -C filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	@$(MAKE) -C filesystem  -f $(SRCDIR)/filesystem/Makefile -I $(SRCDIR)/filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 clean: clean_filesystem
 	$(call CLEAN)

@@ -36,7 +36,7 @@
 
 # Builtin Registration
 
-BUILTIN_REGISTRY = $(APPDIR)$(DELIM)builtin$(DELIM)registry
+BUILTIN_REGISTRY = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)builtin$(DELIM)registry
 
 DEPCONFIG = $(TOPDIR)$(DELIM).config
 

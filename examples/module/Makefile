@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := drivers
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 
@@ -109,7 +111,7 @@ really_build: $(OBJS)
 	@touch .built
 
 .built:
-	@$(MAKE) -C drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+	@$(MAKE) -C drivers -f $(SRCDIR)/drivers/Makefile -I $(SRCDIR)/drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 	@$(MAKE) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" really_build
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
@@ -143,7 +145,7 @@ endif
 depend: .depend
 
 clean_drivers:
-	@$(MAKE) -C drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	@$(MAKE) -C drivers -f $(SRCDIR)/drivers/Makefile -I $(SRCDIR)/drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 clean: clean_drivers
 	$(call DELFILE, .built)

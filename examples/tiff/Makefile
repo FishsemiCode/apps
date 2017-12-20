@@ -83,7 +83,7 @@ STACKSIZE = 2048
 
 # Common build
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: clean depend distclean preconfig
@@ -122,7 +122,7 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

@@ -53,7 +53,7 @@ CSRCS += mb_m.c
 endif
 
 DEPPATH = --dep-path .
-VPATH = .
+VPATH := :$(SRCDIR)
 
 include ascii/Make.defs
 include functions/Make.defs
@@ -106,7 +106,7 @@ context:
 
 .depend: Makefile $(SRCS)
 ifeq ($(CONFIG_MODBUS),y)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 endif
 

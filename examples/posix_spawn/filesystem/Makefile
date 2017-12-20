@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := hello redirect
+
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
@@ -55,12 +57,12 @@ $(ROMFS_DIR):
 # Build the hello test program
 
 hello/hello:
-	$(Q) $(MAKE) -C hello hello TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
+	$(Q) $(MAKE) -C hello -f $(SRCDIR)/hello/Makefile -I $(SRCDIR)/hello hello TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
 
 # Build the redirection test program
 
 redirect/redirect:
-	$(Q) $(MAKE) -C redirect redirect TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
+	$(Q) $(MAKE) -C redirect -f $(SRCDIR)/redirect/Makefile -I $(SRCDIR)/redirect redirect TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
 
 # Create the romfs.img file from the romfs directory
 
@@ -83,7 +85,7 @@ $(SYMTAB_SRC): $(ROMFS_DIR)/hello $(ROMFS_DIR)/redirect $(ROMFS_DIR)/testdata.tx
 # Clean each subdirectory
 
 clean:
-	$(Q) $(MAKE) -C hello clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
-	$(Q) $(MAKE) -C redirect clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
+	$(Q) $(MAKE) -C hello -f $(SRCDIR)/hello/Makefile -I $(SRCDIR)/hello clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
+	$(Q) $(MAKE) -C redirect -f $(SRCDIR)/redirect/Makefile -I $(SRCDIR)/redirect clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)"
 	$(Q) rm -f $(ROMFS_HDR) $(ROMFS_IMG) $(SYMTAB_SRC)
 	$(Q) rm -rf $(ROMFS_DIR)

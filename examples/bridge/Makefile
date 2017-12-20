@@ -93,7 +93,7 @@ ROOTDEPPATH = --dep-path .
 
 # Common build
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: clean depend distclean preconfig
@@ -150,7 +150,7 @@ context:
 endif
 
 .depend: Makefile $(TARG_SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(TARG_SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

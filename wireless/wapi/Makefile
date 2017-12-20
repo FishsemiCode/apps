@@ -53,7 +53,7 @@ ASRCS =
 CSRCS =
 MAINSRC =
 
-VPATH = .
+VPATH := :$(SRCDIR)
 DEPPATH = --dep-path .
 
 include $(APPDIR)/wireless/wapi/src/Make.defs
@@ -131,7 +131,7 @@ endif
 # Create dependencies
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

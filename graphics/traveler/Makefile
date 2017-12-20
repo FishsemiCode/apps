@@ -109,7 +109,7 @@ PROGNAME = $(CONFIG_GRAPHICS_TRAVELER_PROGNAME)
 CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(TRAVELER_INC)}
 
 DEPPATH = --dep-path . --dep-path src
-VPATH = .:src
+VPATH := :$(SRCDIR):$(SRCDIR)src
 
 # Common build
 
@@ -161,7 +161,7 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
-	@$(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	@$(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

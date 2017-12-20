@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := sotest modprint
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
@@ -54,7 +56,7 @@ SYMTAB_SRC = $(LIB_DIR)/sot_symtab.c
 
 define DIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" FSROOT_DIR="$(FSROOT_DIR)" CROSSDEV=$(CROSSDEV)
+	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile -I $(SRCDIR)/$(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" FSROOT_DIR="$(FSROOT_DIR)" CROSSDEV=$(CROSSDEV)
 endef
 
 all: $(ROMFS_HDR) $(DIRLIST_HDR) $(SYMTAB_SRC)

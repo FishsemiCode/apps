@@ -95,7 +95,7 @@ CONFIG_SYSTEM_HEX2MEM_PROGNAME ?= hex2mem$(EXEEXT)
 HEX2MEM_PROGNAME = $(CONFIG_SYSTEM_HEX2MEM_PROGNAME)
 
 ROOTDEPPATH = --dep-path .
-VPATH =
+VPATH := :$(SRCDIR)
 
 CONFIG_SYSTEM_HEX2BIN_STACKSIZE ?= 1536
 CONFIG_SYSTEM_HEX2BIN_PRIORITY ?= 100
@@ -166,7 +166,7 @@ endif
 context: rhex2bin rhex2mem
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

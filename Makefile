@@ -35,7 +35,7 @@
 #
 ############################################################################
 
-APPDIR = ${shell pwd}
+APPDIR := $(patsubst %/,%,$(dir $(firstword $(MAKEFILE_LIST))))
 TOPDIR ?= $(APPDIR)/import
 
 -include $(TOPDIR)/Make.defs
@@ -47,8 +47,11 @@ TOPDIR ?= $(APPDIR)/import
 # CLEANDIRS is the list of all top-level directories containing Makefiles.
 #   It is used only for cleaning.
 
-BUILDIRS   := $(dir $(filter-out import/Make.defs,$(wildcard */Make.defs)))
-CLEANDIRS  := $(dir $(wildcard */Makefile))
+BUILDIRS   := $(dir $(filter-out $(APPDIR)/import/Make.defs,$(wildcard $(APPDIR)/*/Make.defs)))
+CLEANDIRS  := $(dir $(wildcard $(APPDIR)/*/Makefile))
+
+BUILDIRS := $(patsubst $(APPDIR)/%/,%,$(BUILDIRS))
+CLEANDIRS := $(patsubst $(APPDIR)/%/,%,$(CLEANDIRS))
 
 # CONFIGURED_APPS is the application directories that should be built in
 #   the current configuration.
@@ -56,7 +59,7 @@ CLEANDIRS  := $(dir $(wildcard */Makefile))
 CONFIGURED_APPS =
 
 define Add_Application
-  include $(1)Make.defs
+  include $(1)/Make.defs
 endef
 
 $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
@@ -73,6 +76,8 @@ BIN_DIR = $(APPDIR)$(DELIM)bin
 
 BIN = libapps$(LIBEXT)
 
+VPATH := $(APPDIR)
+
 # Build targets
 
 all: $(BIN)
@@ -80,13 +85,15 @@ all: $(BIN)
 .PRECIOUS: libapps$(LIBEXT)
 
 define MAKE_template
-	$(Q) cd $(1) && $(MAKE) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
+	$(call MKDIR, $(1))
+	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
 
 endef
 
 define SDIR_template
 $(1)_$(2):
-	$(Q) cd $(1) && $(MAKE) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
+	$(call MKDIR, $(1))
+	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
 
 endef
 
@@ -112,19 +119,20 @@ import:
 	$(Q) $(MAKE) .import TOPDIR="$(APPDIR)$(DELIM)import"
 
 dirlinks:
-	$(Q) $(MAKE) -C platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(call MKDIR, platform)
+	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 context_rest: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 
 context_serialize:
-	$(Q) $(MAKE) -C builtin context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
-	$(Q) $(MAKE) context_rest
+	$(Q) $(MAKE) -C builtin -f $(APPDIR)/builtin/Makefile -I $(APPDIR)/builtin context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -f $(APPDIR)/Makefile -I $(APPDIR) context_rest
 
 context: context_serialize
 
 Kconfig:
 	$(foreach SDIR, $(BUILDIRS), $(call MAKE_template,$(SDIR),preconfig))
-	$(Q) $(MKKCONFIG)
+	$(Q) $(MKKCONFIG) -i $(APPDIR) -o Kconfig
 
 preconfig: Kconfig
 

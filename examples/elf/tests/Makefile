@@ -33,11 +33,13 @@
 #
 ############################################################################
 
+CREATEDIR := errno hello helloxx longjmp mutex pthread signal task struct
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-ALL_SUBDIRS = errno hello helloxx longjmp mutex pthread signal task struct
+ALL_SUBDIRS = $(CREATEDIR)
 BUILD_SUBDIRS = errno hello struct
 
 ifeq ($(CONFIG_HAVE_CXX),y)
@@ -70,7 +72,7 @@ SYMTAB_SRC = $(TESTS_DIR)/symtab.c
 
 define DIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)" CROSSDEV=$(CROSSDEV)
+	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile -I $(SRCDIR)/$(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)" CROSSDEV=$(CROSSDEV)
 endef
 
 all: $(ROMFS_HDR) $(DIRLIST_HDR) $(SYMTAB_SRC)

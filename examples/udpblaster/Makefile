@@ -95,7 +95,7 @@ STACKSIZE = $(CONFIG_EXAMPLES_UDPBLASTER_STACKSIZE)
 
 # Common build
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built $(HOST_BIN)
 .PHONY: clean depend distclean preconfig
@@ -150,7 +150,7 @@ context:
 endif
 
 .depend: Makefile config.h $(TARG_SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(TARG_SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

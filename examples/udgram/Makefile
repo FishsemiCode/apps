@@ -112,7 +112,7 @@ endif
 
 # Common build
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: clean depend distclean preconfig
@@ -164,7 +164,7 @@ context:
 endif
 
 .depend: Makefile $(SERVER_SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SERVER_SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

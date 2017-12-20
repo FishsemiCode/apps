@@ -34,11 +34,13 @@
 ############################################################################
 
 -include $(TOPDIR)/.config # Current configuration
+include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
 # Sub-directories
 
-SUBDIRS = $(dir $(wildcard */Makefile))
+SUBDIRS := $(dir $(wildcard $(SRCDIR)/*/Makefile))
+SUBDIRS := $(patsubst $(SRCDIR)/%/,%,$(SUBDIRS))
 
 all: nothing
 
@@ -46,7 +48,8 @@ all: nothing
 
 define SDIR_template
 $(1)_$(2):
-	$(Q) cd $(1) && $(MAKE) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(call MKDIR, $(1))
+	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 endef
 
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),preconfig)))
@@ -60,7 +63,7 @@ nothing:
 install:
 
 preconfig: $(foreach SDIR, $(SUBDIRS), $(SDIR)_preconfig)
-	$(Q) $(MKKCONFIG) -m $(MENUDESC)
+	$(Q) $(MKKCONFIG) -m $(MENUDESC) -i $(SRCDIR) -o Kconfig
 
 context: $(foreach SDIR, $(SUBDIRS), $(SDIR)_context)
 

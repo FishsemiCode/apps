@@ -74,7 +74,7 @@ endif
 endif
 
 ROOTDEPPATH = --dep-path .
-VPATH =
+VPATH := :$(SRCDIR)
 
 # Build targets
 
@@ -97,7 +97,7 @@ install:
 context:
 
 .depend: Makefile $(SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

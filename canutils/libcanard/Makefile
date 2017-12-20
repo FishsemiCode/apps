@@ -66,7 +66,7 @@ DEPBIN = $(APPDIR)/libapps$(LIBEXT)
 
 ROOTDEPPATH = --dep-path .
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: clean depend distclean preconfig
@@ -104,7 +104,7 @@ install:
 context: $(APPS_INCDIR)$(DELIM)canard.h $(APPS_INCDIR)$(DELIM)canard_nuttx.h
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

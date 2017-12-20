@@ -17,6 +17,6 @@ config PLATFORM_CONFIGDATA
 		FLASH, etc.
 
 source "$APPSDIR/platform/gnu/Kconfig"
-source "$APPSDIR/platform/board/Kconfig"
+source "$APPSOUTDIR/platform/board/Kconfig"
 
 endmenu # Platform-specific Support

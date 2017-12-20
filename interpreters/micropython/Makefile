@@ -123,6 +123,7 @@ else
 endif
 
 ROOTDEPPATH = --dep-path .
+VPATH := :$(SRCDIR)
 
 # Common build
 
@@ -164,7 +165,7 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	@touch $@
 
 depend: .depend

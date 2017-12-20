@@ -72,7 +72,7 @@ CONFIG_XYZ_PROGNAME ?= chat$(EXEEXT)
 PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
 ROOTDEPPATH = --dep-path .
-VPATH =
+VPATH := :$(SRCDIR)
 
 APPNAME = chat
 PRIORITY = SCHED_PRIORITY_DEFAULT
@@ -117,7 +117,7 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

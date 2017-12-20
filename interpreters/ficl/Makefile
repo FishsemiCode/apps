@@ -75,7 +75,7 @@ endif
 ROOT_DEPPATH = --dep-path .
 SRC_DEPPATH = --dep-path src
 
-VPATH = src:$(FICL_SUBDIR)
+VPATH := :$(SRCDIR)/src:$(SRCDIR)/$(FICL_SUBDIR)
 
 all: .built
 .PHONY: debug context depend clean distclean preconfig
@@ -101,7 +101,7 @@ install:
 context:
 
 .depend: debug Makefile $(SRCS)
-	$(Q) $(MKDEP) $(ROOT_DEPPATH) $(SRC_DEPPATH) $(FICL_DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOT_DEPPATH) $(SRC_DEPPATH) $(FICL_DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

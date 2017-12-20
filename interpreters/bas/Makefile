@@ -48,7 +48,7 @@ CSRCS += bas_vt100.c
 endif
 
 DEPPATH = --dep-path .
-VPATH = .
+VPATH := :$(SRCDIR)
 
 AOBJS		= $(ASRCS:.S=$(OBJEXT))
 COBJS		= $(CSRCS:.c=$(OBJEXT))
@@ -103,7 +103,7 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

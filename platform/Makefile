@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := bin
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 
@@ -71,7 +73,7 @@ else
   LINKDIR   = $(if $(wildcard $(BOARDDIR)$(DELIM)Make.defs),$(BOARDDIR),$(DUMMYDIR))
 endif
 
-VPATH       = board
+VPATH       := :board:$(SRCDIR)
 DEPPATH     = --dep-path $(PLATFORMDIR)
 
 # Binaries
@@ -145,7 +147,7 @@ context: dirlinks
 # Dependencies
 
 .depend: Makefile $(SRCS) $(PLATFORMDIR)
-	$(Q) $(MKDEP) --obj-path bin --obj-suffix  $(OBJEXT) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) --obj-path bin --obj-suffix  $(OBJEXT) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend
@@ -154,7 +156,7 @@ depend: .depend
 
 clean:
 	$(call DELFILE, .built)
-	$(Q) $(MAKE) -C bin TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" clean
+	$(Q) $(MAKE) -C bin -f $(SRCDIR)/bin/Makefile -I $(SRCDIR)/bin TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" clean
 
 distclean: clean
 	$(call DELFILE, Make.dep)

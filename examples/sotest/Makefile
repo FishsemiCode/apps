@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := lib
+
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 
@@ -109,7 +111,7 @@ really_build: $(OBJS)
 	@touch .built
 
 .built:
-	@$(MAKE) -C lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+	@$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile -I $(SRCDIR)/lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 	@$(MAKE) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" really_build
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
@@ -143,7 +145,7 @@ endif
 depend: .depend
 
 clean_lib:
-	@$(MAKE) -C lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	@$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile -I $(SRCDIR)/lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 clean: clean_lib
 	$(call DELFILE, .built)

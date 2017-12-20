@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+CREATEDIR := registry
+
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
@@ -58,7 +60,7 @@ endif
 endif
 
 ROOTDEPPATH	= --dep-path .
-VPATH		=
+VPATH		:= $(SRCDIR)
 
 # Build Targets
 
@@ -73,7 +75,7 @@ $(COBJS): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@)
 
 registry$(DELIM).updated:
-	$(Q) $(MAKE) -C registry .updated TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C registry -f $(SRCDIR)/registry/Makefile -I $(SRCDIR)/registry .updated TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 builtin_list$(OBJEXT): builtin_list.h builtin_proto.h
 
@@ -114,23 +116,23 @@ endif
 install:
 
 context:
-	$(Q) $(MAKE) -C registry context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C registry -f $(SRCDIR)/registry/Makefile -I $(SRCDIR)/registry context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 .depend: Makefile $(SRCS) builtin_list.h builtin_proto.h
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend
 
 clean:
-	$(Q) $(MAKE) -C registry clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C registry -f $(SRCDIR)/registry/Makefile -I $(SRCDIR)/registry clean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 	$(call DELFILE, .built)
 	$(call DELFILE, .xx_builtin_list.h)
 	$(call DELFILE, .xx_builtin_proto.h)
 	$(call CLEAN)
 
 distclean: clean
-	$(Q) $(MAKE) -C registry distclean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C registry -f $(SRCDIR)/registry/Makefile -I $(SRCDIR)/registry distclean TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
 	$(call DELFILE, builtin_list.h)

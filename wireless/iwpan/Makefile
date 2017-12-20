@@ -54,7 +54,7 @@ ASRCS =
 CSRCS =
 MAINSRC =
 
-VPATH = .
+VPATH := :$(SRCDIR)
 
 include $(APPDIR)/wireless/iwpan/src/Make.defs
 
@@ -133,7 +133,7 @@ endif
 # Create dependencies
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

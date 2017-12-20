@@ -76,7 +76,7 @@ DEPPATHS = --dep-path .
 CGIBINDIR = $(APPDIR)$(DELIM)netutils$(DELIM)thttpd$(DELIM)cgi-bin
 
 BINFS_CSRCS =
-VPATH = .
+VPATH := :$(SRCDIR)
 
 ifeq ($(CONFIG_THTTPD_NXFLAT),y)
   SUBDIR_BIN1 = phf
@@ -88,7 +88,7 @@ endif
 ifeq ($(CONFIG_THTTPD_BINFS),y)
   BINFS_CSRCS =  phf.c redirect.c ssi.c
   DEPPATHS += --dep-path cgi-src
-  VPATH += :cgi-src
+  VPATH += :$(SRCDIR)/cgi-src
 endif
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
@@ -177,7 +177,7 @@ context:
 endif
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATHS) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATHS) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

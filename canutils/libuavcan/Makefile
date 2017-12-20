@@ -176,7 +176,7 @@ DEPBIN = $(APPDIR)/libapps$(LIBEXT)
 
 ROOTDEPPATH = --dep-path .
 
-VPATH =
+VPATH := :$(SRCDIR)
 
 all: .built
 .PHONY: clean depend distclean preconfig
@@ -245,7 +245,7 @@ context: libuavcan
 	$(Q) $(MAKE) $(APPDIR)$(DELIM)include$(DELIM)uavcan TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 .depend: Makefile $(CXXSRCS)
-	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CXX)" -- $(CXXFLAGS) -- $(CXXSRCS) >Make.dep
+	$(Q) $(MKDEP) $(ROOTDEPPATH) "$(CXX)" -- $(CXXFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend
