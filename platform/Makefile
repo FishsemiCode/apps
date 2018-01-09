@@ -73,7 +73,7 @@ else
   LINKDIR   = $(if $(wildcard $(BOARDDIR)$(DELIM)Make.defs),$(BOARDDIR),$(DUMMYDIR))
 endif
 
-VPATH       := :board:$(SRCDIR)
+VPATH       := :.:board
 DEPPATH     = --dep-path $(PLATFORMDIR)
 
 # Binaries
@@ -83,6 +83,8 @@ CSRCS =
 
 -include $(GNUDIR)$(DELIM)Make.defs
 -include $(PLATFORMDIR)$(DELIM)Make.defs
+
+VPATH := $(patsubst :%,$(SRCDIR)$(DELIM)%,$(VPATH))
 
 # REVISIT: Backslash causes problems in $(A/COBJS) patsubst
 # AOBJS = $(patsubst %.S, bin$(DELIM)%$(OBJEXT), $(ASRCS))
