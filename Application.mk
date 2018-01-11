@@ -57,7 +57,7 @@ ifneq ($(CONFIG_BUILD_KERNEL),y)
 endif
 
 ifeq ($(WINTOOL),y)
-  BIN = "${shell cygpath -w $(APPDIR)$(DELIM)libapps$(LIBEXT)}"
+  BIN = "${shell cygpath -w $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)libapps$(LIBEXT)}"
   INSTALL_DIR = "${shell cygpath -w $(BIN_DIR)}"
 else
   BIN = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)libapps$(LIBEXT)
