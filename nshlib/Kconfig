@@ -18,6 +18,12 @@ config NSH_LIBRARY
 
 if NSH_LIBRARY
 
+config NSH_PROMPT_STRING
+	string "Prompt String"
+	default "nsh> "
+	---help---
+		Provide the shell prompt string, default is "nsh> ".
+
 menuconfig NSH_MOTD
 	bool "Message of the Day (MOTD)"
 	default n
