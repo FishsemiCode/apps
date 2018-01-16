@@ -41,7 +41,7 @@ include $(APPDIR)/Make.defs
 
 ASRCS =
 CSRCS =
-VPATH =
+VPATH = :$(SRCDIR)
 DEPPATH = --dep-path .
 
 include pdcurses/Make.defs
@@ -86,7 +86,7 @@ install:
 context:
 
 .depend: Makefile $(SRCS)
-	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
 	$(Q) touch $@
 
 depend: .depend

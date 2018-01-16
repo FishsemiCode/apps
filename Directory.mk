@@ -49,7 +49,7 @@ all: nothing
 define SDIR_template
 $(1)_$(2):
 	$(call MKDIR, $(1))
-	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile $(2) -I $(SRCDIR)/$(1) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 endef
 
 $(foreach SDIR, $(SUBDIRS), $(eval $(call SDIR_template,$(SDIR),preconfig)))
