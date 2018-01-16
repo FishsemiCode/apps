@@ -737,17 +737,6 @@ examples/lis2csh_reader
   A simple reader example for the LIS3DSH acceleration sensor as found on
   STM32F4Discovery rev. C
 
-examples/ltdc
-^^^^^^^^^^^^^
-
-  STM32 LTDC framebuffer example.  Depends on:
-
-  * CONFIG_STM32_LTDC
-
-  Enabled with:
-
-  * CONFIG_EXAMPLES_LTDC
-
 examples/media
 ^^^^^^^^^^^^^^
 
@@ -1314,6 +1303,11 @@ examples/null
   This is the do nothing application.  It is only used for bringing
   up new NuttX architectures in the most minimal of environments.
 
+examples/obd2
+^^^^^^^^^^^^^
+
+  A simple test of apps/canutils/libobd2.
+
 examples/oneshot
 ^^^^^^^^^^^^^^^^
 
@@ -1368,6 +1362,12 @@ examples/pca9635
 ^^^^^^^^^^^^^^^^
 
   A simple test of the PCA9635PW LED driver.
+
+examples/pdcurses
+^^^^^^^^^^^^^^^^^
+
+  This directory contains the demo/test programs that accompany the public
+  domain cursors package (pdcurses) that can be found at apps/graphics/pdcurs34.
 
 examples/pipe
 ^^^^^^^^^^^^^
@@ -1565,7 +1565,7 @@ examples/qencoder
   This test depends on these specific QE/NSH configurations settings (your
   specific PWM settings might require additional settings).
 
-    CONFIG_QENCODER - Enables quadrature encoder support (upper-half driver).
+    CONFIG_SENSORS_QENCODER - Enables quadrature encoder support (upper-half driver).
     CONFIG_NSH_BUILTIN_APPS - Build the QE test as an NSH built-in function.
       Default: Built as a standalone progrem.
 
@@ -1758,6 +1758,11 @@ examples/smp
 
   This is a simple test for SMP functionality.  It is basically just the
   pthread barrier test with some custom instrumentation.
+
+examples/smps
+^^^^^^^^^^^^^
+
+  This is a SMPS (Switched-mode power supply) driver example application.
 
 examples/sotest
 ^^^^^^^^^^^^^^^
@@ -2121,6 +2126,11 @@ examples/usbserial
 
     The host and target will exchange are variety of very small and very large
     serial messages.
+
+examples/userfs
+^^^^^^^^^^^^^^^
+
+  A simple test of the UserFS file system.
 
 examples/ustream
 ^^^^^^^^^^^^^^^^

@@ -4,7 +4,7 @@
 #
 
 config SYSTEM_PING
-	bool "ICMP Ping command"
+	bool "ICMP 'ping' command"
 	default n
 	depends on NET_ICMP_SOCKET
 	---help---
@@ -13,7 +13,7 @@ config SYSTEM_PING
 if SYSTEM_PING
 config SYSTEM_PING_PROGNAME
 	string "Ping program name"
-	default "nxhello"
+	default "ping"
 	depends on BUILD_KERNEL
 	---help---
 		This is the name of the program that will be use when the NSH ELF

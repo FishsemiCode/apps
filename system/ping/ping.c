@@ -139,7 +139,7 @@ static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
       nerr("ERROR: gethostbyname failed: %d\n", h_errno);
       return -ENOENT;
     }
-  else if (he->h_addrtype = AF_INET)
+  else if (he->h_addrtype == AF_INET)
     {
        memcpy(&info->dest, he->h_addr, sizeof(in_addr_t));
     }
@@ -160,9 +160,9 @@ static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
   int ret = inet_pton(AF_INET, hostname, &info->dest);
 
   /* The inet_pton() function returns 1 if the conversion succeeds. It will
-   * return 0 if the input is not a valid IPv4 dotted-decimal string or a
-   * valid IPv6 address string, or -1 with errno set to EAFNOSUPPORT if
-   * the address family argument is unsupported.
+   * return 0 if the input is not a valid IPv4 dotted-decimal string or -1
+   * with errno set to EAFNOSUPPORT if the address family argument is
+   * unsupported.
    */
 
   return (ret > 0) ? OK : ERROR;
@@ -171,10 +171,10 @@ static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
 }
 
 /****************************************************************************
- * Name: do_ping
+ * Name: icmp_ping
  ****************************************************************************/
 
-void do_ping(FAR struct ping_info_s *info)
+static void icmp_ping(FAR struct ping_info_s *info)
 {
   struct sockaddr_in destaddr;
   struct sockaddr_in fromaddr;
@@ -194,13 +194,14 @@ void do_ping(FAR struct ping_info_s *info)
   int ch;
   int i;
 
-  memset(&destaddr, 0, sizeof destaddr);
+  memset(&destaddr, 0, sizeof(struct sockaddr_in));
   destaddr.sin_family      = AF_INET;
+  destaddr.sin_port        = 0;
   destaddr.sin_addr.s_addr = info->dest.s_addr;
 
-  memset(&outhdr, 0, sizeof outhdr);
+  memset(&outhdr, 0, sizeof(struct icmp_hdr_s));
   outhdr.type              = ICMP_ECHO_REQUEST;
-  outhdr.icode             = ping_newid();
+  outhdr.id                = ping_newid();
   outhdr.seqno             = 0;
 
   printf("PING %u.%u.%u.%u %d bytes of data\n",
@@ -300,12 +301,12 @@ void do_ping(FAR struct ping_info_s *info)
 
           if (inhdr->type == ICMP_ECHO_REPLY)
             {
-              if (inhdr->icode != outhdr.icode)
+              if (inhdr->id != outhdr.id)
                 {
                   fprintf(stderr,
                           "WARNING: Ignoring ICMP reply with ID %u.  "
                           "Expected %u\n",
-                          inhdr->icode, outhdr.icode);
+                          inhdr->id, outhdr.id);
                   retry = true;
                 }
               else if (inhdr->seqno > outhdr.seqno)
@@ -416,15 +417,23 @@ void do_ping(FAR struct ping_info_s *info)
 static void show_usage(FAR const char *progname, int exitcode) noreturn_function;
 static void show_usage(FAR const char *progname, int exitcode)
 {
+#if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
+  printf("\nUsage: %s [-c <count>] [-i <interval>] <hostname>\n", progname);
+  printf("       %s -h\n", progname);
+  printf("\nWhere:\n");
+  printf("  <hostname> is either an IPv6 address or the name of the remote host\n");
+  printf("   that is requested the ICMPv6 ECHO reply.\n");
+#else
   printf("\nUsage: %s [-c <count>] [-i <interval>] <ip-address>\n", progname);
   printf("       %s -h\n", progname);
   printf("\nWhere:\n");
-  printf("  <ip-address> is the IP address request the ICMP ECHO replay.\n");
+  printf("  <ip-address> is the IPv4 address request the ICMP ECHO reply.\n");
+#endif
   printf("  -c <count> determines the number of pings.  Default %u.\n",
          ICMP_NPINGS);
   printf("  -i <interval> is the default delay between pings (milliseconds).\n");
   printf("    Default %d.\n", ICMP_POLL_DELAY);
-  printf("  -h shows this text an exits.\n");
+  printf("  -h shows this text and exits.\n");
   exit(exitcode);
 }
 
@@ -515,13 +524,13 @@ int ping_main(int argc, char **argv)
       show_usage(argv[0], EXIT_FAILURE);
     }
 
-  if (ping_gethostip(argv[optind], info) == 0)
+  if (ping_gethostip(argv[optind], info) < 0)
     {
       fprintf(stderr, "ERROR: ping_gethostip(%s) failed\n", argv[optind]);
       goto errout_with_info;
     }
 
-  info->sockfd = socket(AF_INET,SOCK_DGRAM,IPPROTO_ICMP);
+  info->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
   if (info->sockfd < 0)
     {
       fprintf(stderr, "ERROR: socket() failed: %d\n", errno);
@@ -529,7 +538,7 @@ int ping_main(int argc, char **argv)
     }
 
   start = clock_systimer();
-  do_ping(info);
+  icmp_ping(info);
 
   /* Get the total elapsed time */
 
