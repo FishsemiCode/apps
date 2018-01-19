@@ -66,7 +66,8 @@ endif
 
 ROOTDEPPATH = --dep-path .
 
-VPATH := :$(SRCDIR)
+VPATH := $(patsubst :%,:$(SRCDIR)$(DELIM)%,$(VPATH))
+VPATH += :$(SRCDIR)
 
 all: .built
 .PHONY: clean preconfig depend distclean
