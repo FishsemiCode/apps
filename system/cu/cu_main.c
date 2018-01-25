@@ -61,9 +61,17 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#ifndef SIGINT
 #define SIGINT  2
+#endif
+
+#ifndef SIGKILL
 #define SIGKILL 9
+#endif
+
+#ifndef SIGTERM
 #define SIGTERM 15
+#endif
 
 enum parity_mode
 {
