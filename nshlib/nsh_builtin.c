@@ -46,6 +46,8 @@
 
 #include <nuttx/config.h>
 
+#include <sys/ioctl.h>
+
 #ifdef CONFIG_SCHED_WAITPID
 #  include <sys/wait.h>
 #endif
@@ -134,6 +136,8 @@ int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
         {
           int rc = 0;
 
+          ioctl(stdout->fs_fd, TIOCSCTTY, ret);
+
           /* Wait for the application to exit.  We did lock the scheduler
            * above, but that does not guarantee that the application did not
            * already run to completion in the case where I/O was redirected.
@@ -187,6 +191,8 @@ int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
               * the most recently executed task.
               */
             }
+
+            ioctl(stdout->fs_fd, TIOCSCTTY, -1);
         }
 #  ifndef CONFIG_NSH_DISABLEBG
       else
