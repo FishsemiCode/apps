@@ -36,6 +36,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include $(APPDIR)/external/Config.mk
 
 CXXEXT ?= .cxx
 
