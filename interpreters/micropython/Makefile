@@ -34,155 +34,18 @@
 #
 ###########################################################################
 
-# Standard includes
+
+MICROPY_PORT_DIR = micropython/ports/nuttx
+
+CREATEDIR = $(MICROPY_PORT_DIR)
 
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-# Set up build configuration and environment
+.PHONY = $(MAKECMDGOALS) sub-make
 
-WD := ${shell pwd | sed -e 's/ /\\ /g'}
+$(MAKECMDGOALS): sub-make
 
-CONFIG_INTERPRETERS_MICROPYTHON_URL ?= "https://github.com/micropython/micropython/archive"
-CONFIG_INTERPRETERS_MICROPYTHON_VERSION ?= "1.3.8"
-MICROPYTHON_VERSION = $(patsubst "%",%,$(strip $(CONFIG_INTERPRETERS_MICROPYTHON_VERSION)))
-
-MICROPYTHON_TARBALL = v$(MICROPYTHON_VERSION).tar.gz
-WGET ?= wget
-
-MICROPYTHON_UNPACKNAME = micropython-$(MICROPYTHON_VERSION)
-UNPACK ?= tar -zxf
-
-MICROPYTHON_UNPACKDIR =  $(WD)/$(MICROPYTHON_UNPACKNAME)
-MICROPYTHON_SRCDIR = $(MICROPYTHON_UNPACKDIR)/py
-
-# Get the Micro Python build environment.  mkenv.mk has these dependencies
-#
-#  V             - Enable verbose output (same meaning as in NuttX)
-#  CROSS_COMPILE - Tool prefix (same as CROSSDEV in NuttX)
-
-CROSS_COMPILE ?= $(CROSSDEV)
--include $(MICROPYTHON_SRCDIR)/mkenv.mk
-
-# qstr definitions (must come before including py.mk)
-
-QSTR_DEFS = qstrdefsport.h
-
-# Include py core make definitions
-
--include $(MICROPYTHON_SRCDIR)/py.mk
-
-# c99 is needed for Micro Python
-
-CFLAGS += -std=c99 -Wno-shadow -Wno-strict-prototypes
-
-INC =  -I. -I$(WD) -I$(MICROPYTHON_UNPACKDIR) -I$(PY_SRC) -I$(BUILD)
-
-CFLAGS +=$(INC)
-
-# Built-in application info
-
-CONFIG_INTERPRETERS_MICROPYTHON_APPNAME ?= micropython
-CONFIG_INTERPRETERS_MICROPYTHON_STACKSIZE ?= 2048
-CONFIG_INTERPRETERS_MICROPYTHON_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-
-APPNAME = $(CONFIG_INTERPRETERS_MICROPYTHON_APPNAME)
-STACKSIZE = $(CONFIG_INTERPRETERS_MICROPYTHON_STACKSIZE)
-PRIORITY = $(CONFIG_INTERPRETERS_MICROPYTHON_PRIORITY)
-
-CONFIG_INTERPRETERS_MICROPYTHON_PROGNAME ?= micropython$(EXEEXT)
-PROGNAME = $(CONFIG_INTERPRETERS_MICROPYTHON_PROGNAME)
-
-# Files
-
-ASRCS =
-CSRCS = pyexec.c py_readline.c
-MAINSRC = micropython_main.c
-
-OBJ = $(PY_O) $(addprefix $(BUILD)/, $(ASRC:.S=$(OBJEXT)) $(CSRCS:.c=$(OBJEXT)))
-
-ifneq ($(CONFIG_BUILD_KERNEL),y)
-  OBJ += $(addprefix $(BUILD)/, $(MAINSRC:.c=$(OBJEXT)))
-endif
-
-ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-  BIN = ..\..\libapps$(LIBEXT)
-else
-ifeq ($(WINTOOL),y)
-  BIN = ..\\..\\libapps$(LIBEXT)
-else
-  BIN = ../../libapps$(LIBEXT)
-endif
-endif
-
-ifeq ($(WINTOOL),y)
-  INSTALL_DIR = "${shell cygpath -w $(BIN_DIR)}"
-else
-  INSTALL_DIR = $(BIN_DIR)
-endif
-
-ROOTDEPPATH = --dep-path .
-VPATH := :$(SRCDIR)
-
-# Common build
-
-all: .built
-.PHONY: install context clean distclean preconfig
-.PRECIOUS: ../../libapps$(LIBEXT)
-
-$(MICROPYTHON_TARBALL):
-	@echo "Downloading: $(MICROPYTHON_TARBALL)"
-	$(Q) $(WGET) $(CONFIG_INTERPRETERS_MICROPYTHON_URL)/$(MICROPYTHON_TARBALL)
-
-$(MICROPYTHON_UNPACKNAME): $(MICROPYTHON_TARBALL)
-	@echo "Unpacking: $(MICROPYTHON_TARBALL) -> $(MICROPYTHON_UNPACKNAME)"
-	$(Q) $(UNPACK) $(MICROPYTHON_TARBALL)
-	@touch $(MICROPYTHON_UNPACKNAME)
-
-.built: $(MICROPYTHON_UNPACKNAME) $(OBJ)
-	$(call ARCHIVE, $(BIN), $(OBJ))
-	@touch $@
-
-ifeq ($(CONFIG_BUILD_KERNEL),y)
-$(BIN_DIR)$(DELIM)$(PROGNAME): $(MICROPYTHON_UNPACKNAME) $(OBJ) $(MAINOBJ)
-	@echo "LD: $(PROGNAME)"
-	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) -o $(INSTALL_DIR)$(DELIM)$(PROGNAME) $(ARCHCRT0OBJ) $(MAINOBJ) $(LDLIBS)
-	$(Q) $(NM) -u $(INSTALL_DIR)$(DELIM)$(PROGNAME)
-
-install: $(BIN_DIR)$(DELIM)$(PROGNAME)
-else
-install:
-endif
-
-ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
-$(BUILTIN_REGISTRY)$(DELIM)$(APPNAME)_main.bdat: $(DEPCONFIG) Makefile
-	$(call REGISTER,$(APPNAME),$(PRIORITY),$(STACKSIZE),micropython_main)
-
-context: $(MICROPYTHON_UNPACKNAME) $(BUILTIN_REGISTRY)$(DELIM)$(APPNAME)_main.bdat
-else
-context:
-endif
-
-.depend: Makefile $(SRCS)
-	@$(MKDEP) $(ROOTDEPPATH) "$(CC)" -- $(CFLAGS) -- $^ >Make.dep
-	@touch $@
-
-depend: .depend
-
-clean:
-	$(call DELDIR, build)
-	$(call DELFILE, .built)
-	$(call CLEAN)
-
-distclean: clean
-	$(call DELFILE, Make.dep)
-	$(call DELFILE, .depend)
-	$(call DELDIR, $(MICROPYTHON_UNPACKNAME))
-	$(call DELFILE, .downloaded)
-	$(call DELFILE, $(MICROPYTHON_TARBALL))
-
-preconfig:
-
--include $(MICROPYTHON_SRCDIR)/mkrules.mk
--include Make.dep
+sub-make:
+	$(Q)$(MAKE) -C $(MICROPY_PORT_DIR) -f $(SRCDIR)/$(MICROPY_PORT_DIR)/Makefile -I $(SRCDIR)/$(MICROPY_PORT_DIR) TOPDIR=$(TOPDIR) APPDIR=$(APPDIR) OUTDIR=$(OUTDIR) $(MAKECMDGOALS)
