@@ -70,9 +70,9 @@
  *
  ****************************************************************************/
 
-int system(FAR char *cmd)
+int system(FAR const char *cmd)
 {
-  FAR char *nshargv[2];
+  FAR const char *nshargv[2];
   int pid;
   int rc;
   int ret;
