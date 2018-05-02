@@ -1,7 +1,7 @@
 /****************************************************************************
  * apps/nshlib/nsh_command.c
  *
- *   Copyright (C) 2007-2017 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -186,17 +186,9 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_NSH_DISABLE_ECHO
 # ifndef CONFIG_DISABLE_ENVIRON
-  { "echo",     cmd_echo,     1, CONFIG_NSH_MAXARGUMENTS, "[<string|$name> [<string|$name>...]]" },
+  { "echo",     cmd_echo,     1, CONFIG_NSH_MAXARGUMENTS, "[-n] [<string|$name> [<string|$name>...]]" },
 # else
-  { "echo",     cmd_echo,     1, CONFIG_NSH_MAXARGUMENTS, "[<string> [<string>...]]" },
-# endif
-#endif
-
-#ifndef CONFIG_NSH_DISABLE_PRINTF
-# ifndef CONFIG_DISABLE_ENVIRON
-  { "printf",   cmd_printf,   1, CONFIG_NSH_MAXARGUMENTS, "[\\xNN] [\\n\\r\\t] [<string|$name> [<string|$name>...]]" },
-# else
-  { "printf",   cmd_printf,   1, CONFIG_NSH_MAXARGUMENTS, "[\\xNN] [\\n\\r\\t] [<string> [<string>...]]" },
+  { "echo",     cmd_echo,     1, CONFIG_NSH_MAXARGUMENTS, "[-n] [<string> [<string>...]]" },
 # endif
 #endif
 
@@ -245,13 +237,17 @@ static const struct cmdmap_s g_cmdmap[] =
   { "ifconfig", cmd_ifconfig, 1, 11, "[interface [<ip-address>|dhcp]] [dr|gw|gateway <dr-address>] [netmask <net-mask>] [dns <dns-address>] [hw <hw-mac>]" },
 # endif
 # ifndef CONFIG_NSH_DISABLE_IFUPDOWN
-  { "ifdown",   cmd_ifdown,   2, 2,  "<interface>" },
-  { "ifup",     cmd_ifup,     2, 2,  "<interface>" },
+  { "ifdown",   cmd_ifdown,   2, 2, "<interface>" },
+  { "ifup",     cmd_ifup,     2, 2, "<interface>" },
 # endif
 #endif
 
 #if defined(CONFIG_MODULE) && !defined(CONFIG_NSH_DISABLE_MODCMDS)
-  { "insmod",   cmd_insmod,   3, 3,  "<file-path> <module-name>" },
+  { "insmod",   cmd_insmod,   3, 3, "<file-path> <module-name>" },
+#endif
+
+#ifdef HAVE_IRQINFO
+  { "irqinfo",  cmd_irqinfo,  1, 1, NULL },
 #endif
 
 #ifndef CONFIG_DISABLE_SIGNALS
@@ -385,6 +381,14 @@ static const struct cmdmap_s g_cmdmap[] =
   { "poweroff", cmd_poweroff,  1, 2, NULL },
 #endif
 
+#ifndef CONFIG_NSH_DISABLE_PRINTF
+# ifndef CONFIG_DISABLE_ENVIRON
+  { "printf",   cmd_printf,   1, CONFIG_NSH_MAXARGUMENTS, "[\\xNN] [\\n\\r\\t] [<string|$name> [<string|$name>...]]" },
+# else
+  { "printf",   cmd_printf,   1, CONFIG_NSH_MAXARGUMENTS, "[\\xNN] [\\n\\r\\t] [<string> [<string>...]]" },
+# endif
+#endif
+
 #ifndef CONFIG_NSH_DISABLE_PS
   { "ps",       cmd_ps,       1, 1, NULL },
 #endif
@@ -487,6 +491,12 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_NSH_DISABLESCRIPT
   { "true",     cmd_true,     1, 1, NULL },
+#endif
+
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && CONFIG_NFILE_DESCRIPTORS > 0
+# ifndef CONFIG_NSH_DISABLE_TRUNCATE
+  { "truncate", cmd_truncate, 4, 4, "-s <length> <file-path>" },
+# endif
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_UNAME

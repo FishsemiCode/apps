@@ -153,7 +153,7 @@ static inline void cgi_semtake(void)
        * awakened by a signal.
        */
 
-      DEBUGASSERT(errno == EINTR);
+      DEBUGASSERT(errno == EINTR || errno == ECANCELED);
     }
 }
 

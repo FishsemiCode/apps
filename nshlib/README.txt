@@ -466,10 +466,12 @@ o dirname <path>
   Extract the path string leading up to the full <path> by removing
   the final directory or file name.
 
-o echo [<string|$name> [<string|$name>...]]
+o echo [-n] [<string|$name> [<string|$name>...]]
 
   Copy the sequence of strings and expanded environment variables to
   console out (or to a file if the output is re-directed).
+
+  The -n option will suppress the trailing newline character.
 
 o exec <hex-address>
 
@@ -587,6 +589,18 @@ o insmod <file-path> <module-name>
     nsh> lsmod
     NAME                 INIT   UNINIT      ARG     TEXT     SIZE     DATA     SIZE
     mydriver         20404659 20404625        0 20404580      552 204047a8        0
+
+o irqinfo
+
+  Show the current count of interrupts taken on all attached interrupts.
+
+  Example:
+
+    nsh> irqinfo
+    IRQ HANDLER  ARGUMENT    COUNT    RATE
+      3 00001b3d 00000000        156   19.122
+     15 0000800d 00000000        817  100.000
+     30 00000fd5 20000018         20    2.490
 
 o kill -<signal> <pid>
 
@@ -1145,6 +1159,34 @@ o time "<command>"
     nsh>
     2.0100 sec
 
+o truncate -s <length> <file-path>
+
+  Shrink or extend the size of the regular file at <file-path> to the
+  specified <length>.
+
+  A <file-path> argument that does not exist is created.  The <length>
+  option is NOT optional.
+
+  If a <file-path> is larger than the specified size, the extra data is
+  lost.  If a <file-path> is shorter, it is extended and the extended part
+  reads as zero bytes.
+
+o umount <dir-path>
+
+  Un-mount the file system at mount point <dir-path>. The umount command
+  can only be used to un-mount volumes previously mounted using mount
+  command.
+
+  Example:
+    nsh> ls /mnt/fs
+    /mnt/fs:
+     TESTDIR/
+    nsh> umount /mnt/fs
+    nsh> ls /mnt/fs
+    /mnt/fs:
+    nsh: ls: no such directory: /mnt/fs
+    nsh>
+
 o unset <name>
 
   Remove the value associated with the environment variable
@@ -1295,6 +1337,7 @@ Command Dependencies on Configuration Settings
   ifdown     CONFIG_NET && CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_NET
   ifup       CONFIG_NET && CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_NET
   insmod     CONFIG_MODULE
+  irqinfo    CONFIG_FS_PROCFS && CONFIG_SCHED_IRQMONITOR
   kill       !CONFIG_DISABLE_SIGNALS
   losetup    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_DEV_LOOP
   ln         CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_PSEUDOFS_SOFTLINK
@@ -1330,6 +1373,7 @@ Command Dependencies on Configuration Settings
   test       !CONFIG_NSH_DISABLESCRIPT
   telnetd    CONFIG_NSH_TELNET && !CONFIG_NSH_DISABLE_TELNETD
   time       ---
+  truncate   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0
   umount     !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_FS_READABLE
   uname      !CONFIG_NSH_DISABLE_UNAME
   unset      !CONFIG_DISABLE_ENVIRON
@@ -1374,9 +1418,10 @@ also allow it to squeeze into very small memory footprints.
   CONFIG_NSH_DISABLE_RM,        CONFIG_NSH_DISABLE_RMDIR,     CONFIG_NSH_DISABLE_ROUTE,
   CONFIG_NSH_DISABLE_SET,       CONFIG_NSH_DISABLE_SH,        CONFIG_NSH_DISABLE_SHUTDOWN,
   CONFIG_NSH_DISABLE_SLEEP,     CONFIG_NSH_DISABLE_TEST,      CONFIG_NSH_DIABLE_TIME,
-  CONFIG_NSH_DISABLE_UMOUNT,    CONFIG_NSH_DISABLE_UNSET,     CONFIG_NSH_DISABLE_URLDECODE,
-  CONFIG_NSH_DISABLE_URLENCODE, CONFIG_NSH_DISABLE_USERADD,   CONFIG_NSH_DISABLE_USERDEL,
-  CONFIG_NSH_DISABLE_USLEEP,    CONFIG_NSH_DISABLE_WGET,      CONFIG_NSH_DISABLE_XD
+  CONFIG_NSH_DISABLE_TRUNCATE,  CONFIG_NSH_DISABLE_UMOUNT,    CONFIG_NSH_DISABLE_UNSET,
+  CONFIG_NSH_DISABLE_URLDECODE, CONFIG_NSH_DISABLE_URLENCODE, CONFIG_NSH_DISABLE_USERADD,
+  CONFIG_NSH_DISABLE_USERDEL,   CONFIG_NSH_DISABLE_USLEEP,    CONFIG_NSH_DISABLE_WGET,
+  CONFIG_NSH_DISABLE_XD
 
 Verbose help output can be suppressed by defining CONFIG_NSH_HELP_TERSE.  In that
 case, the help command is still available but will be slightly smaller.
