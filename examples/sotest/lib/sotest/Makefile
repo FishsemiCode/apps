@@ -45,7 +45,7 @@ else
 NUTTXLIB = "$(TOPDIR)$(DELIM)lib"
 endif
 
-KDEFINE = ${shell $(TOPDIR)/tools/define.sh "$(CC)" __KERNEL__}
+KDEFINE = ${shell $(DEFINE) "$(CC)" __KERNEL__}
 CMODULEFLAGS += $(KDEFINE)
 
 ifeq ($(CONFIG_EXAMPLES_SOTEST_LIBGCC),y)
