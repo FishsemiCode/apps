@@ -127,6 +127,7 @@ static FAR void *cu_listener(FAR void *parameter)
 static void sigint(int sig)
 {
   pthread_cancel(g_cu.listener);
+  tcflush(g_cu.outfd, TCIOFLUSH);
   close(g_cu.outfd);
   close(g_cu.infd);
   exit(0);
