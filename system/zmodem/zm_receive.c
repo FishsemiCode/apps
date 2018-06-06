@@ -381,7 +381,7 @@ static int zmr_startto(FAR struct zm_state_s *pzm)
   zmdbg("ZMR_STATE %d: %d timeouts waiting for ZSINIT or ZFILE\n",
         pzm->state, pzmr->ntimeouts);
 
-  if (pzmr->ntimeouts > 4)
+  if (pzmr->ntimeouts < 4)
     {
       /* Send ZRINIT again */
 
@@ -1616,6 +1616,7 @@ ZMRHANDLE zmr_initialize(int remfd)
       pzm->pstate    = PSTATE_IDLE;
       pzm->psubstate = PIDLE_ZPAD;
       pzm->remfd     = remfd;
+      pzmr->rcaps    = CANFC32 | CANFDX;
       pzmr->outfd    = -1;
 
       /* Create a timer to handle timeout events */
