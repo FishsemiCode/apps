@@ -81,7 +81,7 @@
  */
 
 #ifndef CONFIG_SYSTEM_ZMODEM_PKTBUFSIZE
-#  define CONFIG_SYSTEM_ZMODEM_PKTBUFSIZE 1024
+#  define CONFIG_SYSTEM_ZMODEM_PKTBUFSIZE 512
 #endif
 
 /* The size of one transmit buffer used for composing messages sent to the

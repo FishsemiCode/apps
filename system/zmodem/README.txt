@@ -107,7 +107,7 @@ Using NuttX Zmodem with a Linux Host
 
     Then on the target (using /dev/ttyS1 as an example).
 
-      > sz -w 1024 -d /dev/ttyS1 <filename>
+      > sz -w 512 -d /dev/ttyS1 <filename>
 
     Where filename is the full path to the file to send (i.e., it begins
     with the '/' character).  /dev/ttyS1 or whatever device you select
@@ -142,7 +142,7 @@ Using NuttX Zmodem with a Linux Host
 
     Then use the sz command on Linux to send the file to the target:
 
-      $ sudo sz -w 1024 <filename> t </dev/ttyS0 >/dev/ttyS0
+      $ sudo sz -w 512 <filename> t </dev/ttyS0 >/dev/ttyS0
 
     Where <filename> is the file that you want to send.
 

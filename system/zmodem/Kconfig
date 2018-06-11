@@ -41,7 +41,7 @@ config SYSTEM_ZMODEM_RCVBUFSIZE
 
 config SYSTEM_ZMODEM_PKTBUFSIZE
 	int "Maximum packet size"
-	default 1024
+	default 512
 	---help---
 		Data may be received in gulps of varying size and alignment.
 		Received packets data is properly unescaped, aligned and packed
