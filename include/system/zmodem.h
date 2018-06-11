@@ -72,7 +72,7 @@
  */
 
 #ifndef CONFIG_SYSTEM_ZMODEM_RCVBUFSIZE
-#  define CONFIG_SYSTEM_ZMODEM_RCVBUFSIZE 1024
+#  define CONFIG_SYSTEM_ZMODEM_RCVBUFSIZE 512
 #endif
 
 /* Data may be received in gulps of varying size and alignment.  Received
@@ -89,7 +89,7 @@
  */
 
 #ifndef CONFIG_SYSTEM_ZMODEM_SNDBUFSIZE
-#  define CONFIG_SYSTEM_ZMODEM_SNDBUFSIZE 1024
+#  define CONFIG_SYSTEM_ZMODEM_SNDBUFSIZE 512
 #endif
 
 /* Absolute pathes are not accepted.  This configuration value must be

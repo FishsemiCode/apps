@@ -28,7 +28,7 @@ config SYSTEM_ZMODEM_DEVNAME
 
 config SYSTEM_ZMODEM_RCVBUFSIZE
 	int "Receive buffer size"
-	default 1024
+	default 512
 	---help---
 		The size of one buffer used to read data from the remote peer.  The
 		total buffering capability is SYSTEM_ZMODEM_RCVBUFSIZE plus the size
@@ -49,7 +49,7 @@ config SYSTEM_ZMODEM_PKTBUFSIZE
 
 config SYSTEM_ZMODEM_SNDBUFSIZE
 	int "Send buffer size"
-	default 1024
+	default 512
 	---help---
 		The size of one transmit buffer used for composing messages sent to
 		the remote peer.
