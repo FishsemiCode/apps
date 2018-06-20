@@ -422,7 +422,6 @@ static int zms_zrinit(FAR struct zm_state_s *pzm)
 
   /* Set flags associated with the capabilities */
 
-  rcaps &= ~(ZM_FLAG_CRC32 | ZM_FLAG_ESCCTRL);
   if ((rcaps & CANFC32) != 0)
     {
       pzm->flags |= ZM_FLAG_CRC32;
