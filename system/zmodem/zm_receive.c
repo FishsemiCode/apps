@@ -1144,8 +1144,7 @@ static int zmr_parsefilename(FAR struct zmr_state_s *pzmr,
 
   /* Extend the relative path to the file storage directory */
 
-  asprintf(&pzmr->filename, "%s/%s", CONFIG_SYSTEM_ZMODEM_MOUNTPOINT,
-           namptr);
+  asprintf(&pzmr->filename, "%s/%s", pzmr->pathname, namptr);
   if (!pzmr->filename)
     {
       zmdbg("ERROR: Failed to allocate full path %s/%s\n",
@@ -1646,16 +1645,19 @@ ZMRHANDLE zmr_initialize(int remfd)
  *   Receive file(s) sent from the remote peer.
  *
  * Input Parameters:
- *   handle - The handler created by zmr_initialize().
+ *   handle    - The handler created by zmr_initialize().
+ *   pathname  - The name of the local path to hold the file
  *
  * Returned Value:
  *   Zero on success; a negated errno value on failure.
  *
  ****************************************************************************/
 
-int zmr_receive(ZMRHANDLE handle)
+int zmr_receive(ZMRHANDLE handle, FAR const char *pathname)
 {
   FAR struct zmr_state_s *pzmr = (FAR struct zmr_state_s*)handle;
+
+  pzmr->pathname = pathname;
 
   /* The first thing that should happen is to receive ZRQINIT from the
    * remote sender.  This could take while so use a long timeout.

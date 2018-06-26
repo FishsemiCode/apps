@@ -379,6 +379,7 @@ struct zmr_state_s
 #endif
   uint8_t ntimeouts;         /* Number of timeouts */
   uint32_t crc;              /* Remove file CRC */
+  FAR const char *pathname;  /* Local pathname */
   FAR char *filename;        /* Local filename */
   FAR char *attn;            /* Attention string received from remote peer */
   off_t offset;              /* Current file offset */
