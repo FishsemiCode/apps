@@ -651,7 +651,12 @@ static int zm_data(FAR struct zm_state_s *pzm, uint8_t ch)
             isprint(ch) ? ch : '.', ch, pzm->pktlen, pzm->pkttype, pzm->ncrc);
       zmdbg("        rcvlen=%d rcvndx=%d\n",
             pzm->rcvlen, pzm->rcvndx);
-      return -ENOSPC;
+
+      /* Drop the last byte to make the room for the new one,
+       * and the whole packet will drop later due to CRC error.
+       */
+
+      pzm->pktlen--;
     }
 
   /* Handle the escaped character in an escape sequence */
