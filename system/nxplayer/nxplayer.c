@@ -651,7 +651,7 @@ static int nxplayer_readbuffer(FAR struct nxplayer_s *pPlayer,
 
   /* Read data into the buffer. */
 
-  apb->nbytes  = read(pPlayer->fd, &apb->samp, apb->nmaxbytes);
+  apb->nbytes  = read(pPlayer->fd, apb->samp, apb->nmaxbytes);
   apb->curbyte = 0;
   apb->flags   = 0;
 
@@ -1141,20 +1141,6 @@ static void *nxplayer_playthread(pthread_addr_t pvarg)
 err_out:
   audinfo("Clean-up and exit\n");
 
-  /* Unregister the message queue and release the session */
-
-  ioctl(pPlayer->devFd, AUDIOIOC_UNREGISTERMQ, (unsigned long) pPlayer->mq);
-#ifdef CONFIG_AUDIO_MULTI_SESSION
-  ioctl(pPlayer->devFd, AUDIOIOC_RELEASE, (unsigned long) pPlayer->session);
-#else
-  ioctl(pPlayer->devFd, AUDIOIOC_RELEASE, 0);
-#endif
-
-  /* Cleanup */
-
-  while (sem_wait(&pPlayer->sem) < 0)
-    ;
-
 #ifdef CONFIG_AUDIO_DRIVER_SPECIFIC_BUFFERS
   if (pBuffers != NULL)
     {
@@ -1165,6 +1151,9 @@ err_out:
 
           if (pBuffers[x] != NULL)
             {
+#ifdef CONFIG_AUDIO_MULTI_SESSION
+              buf_desc.session = pPlayer->session;
+#endif
               buf_desc.u.pBuffer = pBuffers[x];
               ioctl(pPlayer->devFd, AUDIOIOC_FREEBUFFER, (unsigned long) &buf_desc);
             }
@@ -1182,11 +1171,29 @@ err_out:
 
         if (pBuffers[x] != NULL)
           {
+#ifdef CONFIG_AUDIO_MULTI_SESSION
+            buf_desc.session = pPlayer->session;
+#endif
             buf_desc.u.pBuffer = pBuffers[x];
             ioctl(pPlayer->devFd, AUDIOIOC_FREEBUFFER, (unsigned long) &buf_desc);
           }
       }
 #endif
+
+  /* Unregister the message queue and release the session */
+
+  ioctl(pPlayer->devFd, AUDIOIOC_UNREGISTERMQ, (unsigned long) pPlayer->mq);
+
+#ifdef CONFIG_AUDIO_MULTI_SESSION
+  ioctl(pPlayer->devFd, AUDIOIOC_RELEASE, (unsigned long) pPlayer->session);
+#else
+  ioctl(pPlayer->devFd, AUDIOIOC_RELEASE, 0);
+#endif
+
+  /* Cleanup */
+
+  while (sem_wait(&pPlayer->sem) < 0)
+    ;
 
   /* Close the files */
 
@@ -1262,6 +1269,7 @@ int nxplayer_setvolume(FAR struct nxplayer_s *pPlayer, uint16_t volume)
           DEBUGASSERT(errcode > 0);
 
           auderr("ERROR: AUDIOIOC_CONFIGURE ioctl failed: %d\n", errcode);
+          sem_post(&pPlayer->sem);
           return -errcode;
         }
     }
@@ -1777,18 +1785,21 @@ int nxplayer_stop(FAR struct nxplayer_s *pPlayer)
 #endif  /* CONFIG_AUDIO_EXCLUDE_STOP */
 
 /****************************************************************************
- * Name: nxplayer_playfile
+ * Name: nxplayer_playinternal
  *
- *   nxplayer_playfile() tries to play the specified file using the Audio
- *   system.  If a preferred device is specified, it will try to use that
- *   device otherwise it will perform a search of the Audio device files
- *   to find a suitable device.
+ *   nxplayer_playinternal() tries to play the specified file/raw data
+ *   using the Audio system.  If a preferred device is specified, it will
+ *   try to use that device otherwise it will perform a search of the Audio
+ *   device files to find a suitable device.
  *
  * Input:
  *   pPlayer    Pointer to the initialized MPlayer context
  *   pFilename  Pointer to the filename to play
  *   filefmt    Format of the file or AUD_FMT_UNDEF if unknown / to be
  *              determined by nxplayer_playfile()
+ *   nchannels  channels num (raw data playback needed)
+ *   bpsamp     bits pre sample (raw data playback needed)
+ *   samplrate  samplre rate (raw data playback needed)
  *
  * Returns:
  *   OK         File is being played
@@ -1797,15 +1808,18 @@ int nxplayer_stop(FAR struct nxplayer_s *pPlayer)
  *   -ENODEV    No audio device suitable to play the media type
  *   -ENOENT    The media file was not found
  *
+ *
  ****************************************************************************/
 
-int nxplayer_playfile(FAR struct nxplayer_s *pPlayer,
-                      FAR const char *pFilename, int filefmt, int subfmt)
+static int nxplayer_playinternal(FAR struct nxplayer_s *pPlayer,
+                                 FAR const char *pFilename, int filefmt, int subfmt,
+                                 uint8_t nchannels, uint8_t bpsamp, uint32_t samprate)
 {
   struct mq_attr      attr;
   struct sched_param  sparam;
   pthread_attr_t      tattr;
-  void               *value;
+  void                *value;
+  struct audio_caps_desc_s cap_desc;
 #ifdef CONFIG_NXPLAYER_INCLUDE_MEDIADIR
   char                path[128];
 #endif
@@ -1924,6 +1938,20 @@ int nxplayer_playfile(FAR struct nxplayer_s *pPlayer,
       goto err_out;
     }
 
+  if (nchannels && samprate && bpsamp)
+    {
+#ifdef CONFIG_AUDIO_MULTI_SESSION
+      cap_desc.session = pPlayer->session;
+#endif
+      cap_desc.caps.ac_len = sizeof(struct audio_caps_s);
+      cap_desc.caps.ac_type = AUDIO_TYPE_OUTPUT;
+      cap_desc.caps.ac_channels = nchannels;
+      cap_desc.caps.ac_controls.hw[0] = samprate;
+      cap_desc.caps.ac_controls.b[3] = samprate >> 16;
+      cap_desc.caps.ac_controls.b[2]  = bpsamp;
+      ioctl(pPlayer->devFd, AUDIOIOC_CONFIGURE,
+            (unsigned long)&cap_desc);
+    }
   /* Create a message queue for the playthread */
 
   attr.mq_maxmsg  = 16;
@@ -1997,6 +2025,74 @@ err_out_nodev:
     }
 
   return ret;
+}
+
+/****************************************************************************
+ * Name: nxplayer_playfile
+ *
+ *   nxplayer_playfile() tries to play the specified file using the Audio
+ *   system.  If a preferred device is specified, it will try to use that
+ *   device otherwise it will perform a search of the Audio device files
+ *   to find a suitable device.
+ *
+ * Input:
+ *   pPlayer    Pointer to the initialized MPlayer context
+ *   pFilename  Pointer to the filename to play
+ *   filefmt    Format of the file or AUD_FMT_UNDEF if unknown / to be
+ *              determined by nxplayer_playfile()
+ *
+ * Returns:
+ *   OK         File is being played
+ *   -EBUSY     The media device is busy
+ *   -ENOSYS    The media file is an unsupported type
+ *   -ENODEV    No audio device suitable to play the media type
+ *   -ENOENT    The media file was not found
+ *
+ ****************************************************************************/
+
+int nxplayer_playfile(FAR struct nxplayer_s *pPlayer,
+                      FAR const char *pFilename, int filefmt, int subfmt)
+{
+  return nxplayer_playinternal(pPlayer, pFilename, filefmt, subfmt, 0, 0, 0);;
+}
+
+/****************************************************************************
+ * Name: nxplayer_playraw
+ *
+ *   nxplayer_playraw() tries to play the raw data file using the Audio
+ *   system.  If a preferred device is specified, it will try to use that
+ *   device otherwise it will perform a search of the Audio device files
+ *   to find a suitable device.
+ *
+ * Input:
+ *   pPlayer    Pointer to the initialized MPlayer context
+ *   pFilename  Pointer to the filename to play
+ *   nchannels  channel num
+ *   bpsampe    bit width
+ *   samprate   sample rate
+ *
+ * Returns:
+ *   OK         File is being played
+ *   -EBUSY     The media device is busy
+ *   -ENOSYS    The media file is an unsupported type
+ *   -ENODEV    No audio device suitable to play the media type
+ *   -ENOENT    The media file was not found
+ *
+ ****************************************************************************/
+
+int nxplayer_playraw(FAR struct nxplayer_s *pPlayer,
+                     FAR const char *pFilename, uint8_t nchannels,
+                     uint8_t bpsamp, uint32_t samprate)
+{
+  if (!nchannels)
+    nchannels = 2;
+  if (!bpsamp)
+    bpsamp = 16;
+  if (!samprate)
+    samprate = 48000;
+
+  return nxplayer_playinternal(pPlayer, pFilename, AUDIO_FMT_PCM, 0,
+                               nchannels, bpsamp, samprate);
 }
 
 /****************************************************************************
