@@ -40,9 +40,9 @@ OBJEXT ?= .o
 DELIM ?= /
 
 ifeq ($(WINTOOL),y)
-NUTTXLIB = "${shell cygpath -w $(TOPDIR)$(DELIM)lib}"
+NUTTXLIB = "${shell cygpath -w $(TOPDIR)$(DELIM)staging}"
 else
-NUTTXLIB = "$(TOPDIR)$(DELIM)lib"
+NUTTXLIB = "$(TOPDIR)$(DELIM)staging"
 endif
 
 KDEFINE = ${shell $(DEFINE) "$(CC)" __KERNEL__}
