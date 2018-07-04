@@ -58,7 +58,6 @@ endif
 
 # Tools
 
-ifeq ($(DIRLINK),)
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
   MKKCONFIG = $(APPDIR)\tools\mkkconfig.bat
   DIRLINK   = $(TOPDIR)\tools\link.bat
@@ -74,7 +73,6 @@ ifeq ($(WINTOOL),y)
   DIRLINK = $(TOPDIR)/tools/copydir.sh
 else
   DIRLINK   = $(TOPDIR)/tools/link.sh
-endif
 endif
 endif
 
