@@ -472,10 +472,6 @@
  * commands that require more commands than NSH is aware of.
  */
 
-#ifndef CONFIG_NSH_MAXARGUMENTS
-#  define CONFIG_NSH_MAXARGUMENTS 7
-#endif
-
 #if CONFIG_NSH_MAXARGUMENTS < 11
 #  if defined(CONFIG_NET) && !defined(CONFIG_NSH_DISABLE_IFCONFIG)
 #    undef CONFIG_NSH_MAXARGUMENTS
