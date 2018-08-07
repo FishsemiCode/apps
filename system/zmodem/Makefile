@@ -56,7 +56,7 @@ STACKSIZE = $(CONFIG_SYSTEM_ZMODEM_STACKSIZE)
 ASRCS  =
 
 CSRCS  = zm_send.c zm_receive.c zm_state.c zm_proto.c zm_watchdog.c
-CSRCS += zm_utils.c zm_dumpbuffer.c
+CSRCS += zm_utils.c
 SZ_MAINSRC = sz_main.c
 RZ_MAINSRC = rz_main.c
 
