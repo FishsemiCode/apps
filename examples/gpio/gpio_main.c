@@ -251,10 +251,14 @@ int gpio_main(int argc, char *argv[])
             {
               struct timespec ts;
               sigset_t set;
+              struct sigevent notify;
+
+              notify.sigev_notify = SIGEV_SIGNAL;
+              notify.sigev_signo = signo;
 
               /* Set up to receive signal */
 
-              ret = ioctl(fd, GPIOC_REGISTER, (unsigned long)signo);
+              ret = ioctl(fd, GPIOC_REGISTER, (unsigned long)&notify);
               if (ret < 0)
                 {
                   int errcode = errno;
