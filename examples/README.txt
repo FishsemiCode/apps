@@ -338,6 +338,22 @@ examples/djoystick
     CONFIG_EXAMPLES_DJOYSTICK_SIGNO - Signal used to signal the test
       application.  Default 13.
 
+
+examples/dsptest
+^^^^^^^^^^^^^^^^^^
+
+  This is a Unit Test for the Nuttx DSP library. It use Unity testing framwork.
+
+  Dependencies:
+
+    CONFIG_LIBDSP=y
+    CONFIG_LIBDSP_DEBUG=y
+    CONFIG_TESTING_UNITY=y
+
+  Optional configuration:
+
+    CONFIG_TESTING_UNITY_OUTPUT_COLOR - enable colored output
+
 examples/elf
 ^^^^^^^^^^^^
 
@@ -1449,14 +1465,16 @@ examples/posix_spawn
 
   Requires:
 
-    CONFIG_BINFMT_DISABLE=n           - Don't disable the binary loader
-    CONFIG_ELF=y                      - Enable ELF binary loader
-    CONFIG_LIBC_EXECFUNCS=y           - Enable support for posix_spawn
-    CONFIG_EXECFUNCS_SYMTAB="exports" - The name of the symbol table
-                                        created by the test.
-    CONFIG_EXECFUNCS_NSYMBOLS=10      - Value does not matter, it will be
-                                        corrected at runtime.
-    CONFIG_POSIX_SPAWN_STACKSIZE=768  - This default setting.
+    CONFIG_BINFMT_DISABLE=n                   - Don't disable the binary loader
+    CONFIG_ELF=y                              - Enable ELF binary loader
+    CONFIG_LIBC_EXECFUNCS=y                   - Enable support for posix_spawn
+    CONFIG_EXECFUNCS_SYMTAB_ARRAY="g_spawn_exports"
+                                              - The name of the symbol table
+                                                created by the test.
+    CONFIG_EXECFUNCS_NSYMBOLS_VAR="g_spawn_nexports"
+                                              - Name of variable holding the
+                                                number of symbols
+    CONFIG_POSIX_SPAWN_STACKSIZE=768          - This default setting.
 
   Test-specific configuration options:
 
@@ -1522,7 +1540,7 @@ examples/powerled
     1. Demo mode
 
     2. Continuous mode
-    
+
     3. Flash mode
 
 examples/pty_test
@@ -1840,6 +1858,13 @@ examples/system
   system command:
 
     ret = system("ls -Rl /");
+
+examples/tcpblaster
+^^^^^^^^^^^^^^^^^^
+
+  The tcpblaster example derives from the nettest example and basically duplicatesi
+  that example when the nettest PERFORMANCE option is selected.  tcpblaster has a
+  little better reporting of performance stats, however.
 
 examples/tcpecho
 ^^^^^^^^^^^^^^^^

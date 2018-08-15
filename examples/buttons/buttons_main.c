@@ -180,11 +180,13 @@ static int button_daemon(int argc, char *argv[])
 
 #ifdef CONFIG_EXAMPLES_BUTTONS_NAMES
   btn_buttonset_t oldsample = 0;
-  int i;
 #endif
 
   int ret;
   int fd;
+  int i;
+
+  UNUSED(i);
 
   /* Indicate that we are running */
 
@@ -315,12 +317,12 @@ static int button_daemon(int argc, char *argv[])
                   if (nbytes == 0 || errno == EAGAIN)
                     {
                       if ((fds[i].revents & POLLIN) != 0)
-                        { 
+                        {
                           printf("button_daemon: ERROR no read data[%d]\n", i);
                         }
                     }
                   else if (errno != EINTR)
-                    { 
+                    {
                       printf("button_daemon: read[%d] failed: %d\n", i, errno);
                     }
 

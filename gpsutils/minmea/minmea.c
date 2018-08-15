@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <wchar.h>
 #include <stdarg.h>
 
 #include "gpsutils/minmea.h"
@@ -164,7 +165,7 @@ bool minmea_check(FAR const char *sentence, bool strict)
           return false;
         }
     }
-  else if (strict) 
+  else if (strict)
     {
       /* Discard non-checksummed frames in strict mode. */
 
@@ -315,7 +316,7 @@ bool minmea_scan(FAR const char *sentence, FAR const char *format, ...)
 
                                   break;
                                 }
-                              else 
+                              else
                                 {
                                   /* integer overflow. bail out. */
 

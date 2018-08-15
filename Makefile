@@ -78,10 +78,15 @@ BIN = libapps$(LIBEXT)
 
 VPATH := $(APPDIR)
 
+# Symbol table for loadable apps.
+
+SYMTABSRC = $(APPDIR)$(DELIM)symtab_apps.c
+SYMTABOBJ = $(APPDIR)$(DELIM)symtab_apps.o
+
 # Build targets
 
 all: $(BIN)
-.PHONY: import install dirlinks context context_serialize clean_context context_rest .depdirs preconfig depend clean distclean
+.PHONY: import symtab install dirlinks context context_serialize clean_context context_rest .depdirs preconfig depend clean distclean
 .PRECIOUS: libapps$(LIBEXT)
 
 define MAKE_template
@@ -104,7 +109,15 @@ $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),depend))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
-$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+make_symbols:
+ifeq ($(CONFIG_EXAMPLES_NSH_SYMTAB),y)
+	mkdir -p $(BIN_DIR)
+	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BIN_DIR) $(SYMTABSRC)
+	$(call COMPILE, $(SYMTABSRC), $(SYMTABOBJ))
+	$(call ARCHIVE, $(APPDIR)$(DELIM)$(BIN), $(SYMTABOBJ))
+endif
+
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all) make_symbols
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
@@ -114,6 +127,10 @@ $(BIN_DIR):
 install: $(BIN_DIR) .install
 
 .import: $(BIN) install
+
+symtab: $(BIN_DIR)
+	$(Q) tools/mksymtab.sh $(BIN_DIR) $(APPDIR)$(DELIM)import/symtab.c
+	$(call MAKE_template,import,symtab)
 
 import:
 	$(Q) $(MAKE) .import TOPDIR="$(APPDIR)$(DELIM)import"
@@ -147,6 +164,7 @@ clean_context:
 	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
+	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(BIN_DIR))
@@ -168,6 +186,7 @@ else
 	)
 endif
 	$(call DELFILE, .depend)
+	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(BIN_DIR))

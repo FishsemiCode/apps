@@ -1,7 +1,7 @@
 ############################################################################
 # apps/examples/module/drivers/Makefile
 #
-#   Copyright (C) 2015, 2017 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2015, 2017-2018 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,22 +39,33 @@ CREATEDIR := chardev
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-ALL_SUBDIRS = chardev 
-BUILD_SUBDIRS = chardev 
+ALL_SUBDIRS = chardev
+BUILD_SUBDIRS = chardev
+FSIMG_SUBDIR = fsroot
 
 MODULE_DIR = $(APPDIR)/examples/module
 DRIVER_DIR = $(MODULE_DIR)/drivers
 FSROOT_DIR = $(DRIVER_DIR)/fsroot
-ROMFS_IMG = $(DRIVER_DIR)/romfs.img
-ROMFS_HDR = $(DRIVER_DIR)/romfs.h
 SYMTAB_SRC = $(DRIVER_DIR)/mod_symtab.c
+PASS1_SYMTAB = $(TOPDIR)/pass1/mod_symtab.c
+
+ifeq ($(CONFIG_EXAMPLES_MODULE_ROMFS),y)
+  ROMFS_IMG = $(DRIVER_DIR)/romfs.img
+  FSIMG_HDR = $(DRIVER_DIR)/romfs.h
+else ifeq ($(CONFIG_EXAMPLES_MODULE_CROMFS),y)
+  NXTOOLDIR = $(TOPDIR)/tools
+  GENCROMFSSRC = gencromfs.c
+  GENCROMFSEXE = gencromfs$(EXEEXT)
+
+  FSIMG_HDR = $(DRIVER_DIR)/cromfs.h
+endif
 
 define DIR_template
 $(1)_$(2):
 	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile -I $(SRCDIR)/$(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" FSROOT_DIR="$(FSROOT_DIR)" CROSSDEV=$(CROSSDEV)
 endef
 
-all: $(ROMFS_HDR) $(DIRLIST_HDR) $(SYMTAB_SRC)
+all: $(FSIMG_HDR) $(DIRLIST_HDR) $(SYMTAB_SRC) $(PASS1_SYMTAB)
 .PHONY: all build clean install populate
 .PRECIOUS: ../../../libapps$(LIBEXT)
 
@@ -69,6 +80,11 @@ build: $(foreach DIR, $(BUILD_SUBDIRS), $(DIR)_build)
 # Install each program in the fsroot directory
 
 install: $(foreach DIR, $(BUILD_SUBDIRS), $(DIR)_install)
+ifneq ($(STRIP),)
+ifneq ($(CONFIG_EXAMPLES_MODULE_NOSTRIP),y)
+	$(Q) $(STRIP) $(wildcard $(FSIMG_SUBDIR)$(DELIM)*)
+endif
+endif
 
 # Create the fsroot directory
 
@@ -79,6 +95,8 @@ $(FSROOT_DIR):
 
 populate:  $(FSROOT_DIR) build install
 
+ifeq ($(CONFIG_EXAMPLES_MODULE_BUILTINFS),y)
+ifeq ($(CONFIG_EXAMPLES_MODULE_ROMFS),y)
 # Create the romfs.img file from the populated fsroot directory
 
 $(ROMFS_IMG): populate
@@ -88,9 +106,22 @@ endif
 
 # Create the romfs.h header file from the romfs.img file
 
-$(ROMFS_HDR) : $(ROMFS_IMG)
+$(FSIMG_HDR) : $(ROMFS_IMG)
 ifeq ($(CONFIG_EXAMPLES_MODULE_BUILTINFS),y)
 	$(Q) (cd $(DRIVER_DIR); xxd -i romfs.img | sed -e "s/^unsigned/static const unsigned/g" >$@)
+endif
+
+else ifeq ($(CONFIG_EXAMPLES_MODULE_CROMFS),y)
+# Make sure that the NuttX gencromfs tool has been built
+
+$(NXTOOLDIR)/$(GENCROMFSEXE): $(NXTOOLDIR)/$(GENCROMFSSRC)
+       $(Q) $(MAKE) -C $(NXTOOLDIR) -f Makefile.host $(GENCROMFSEXE)
+
+# Create the cromfs.h header file from the populated cromfs directory
+
+$(FSIMG_HDR) : populate $(NXTOOLDIR)/$(GENCROMFSEXE)
+       $(Q) $(NXTOOLDIR)/$(GENCROMFSEXE) $(FSIMG_DIR) $(FSIMG_HDR)
+
 endif
 
 # Create the exported symbol table
@@ -98,8 +129,24 @@ endif
 $(SYMTAB_SRC): build
 	$(Q) $(DRIVER_DIR)/mksymtab.sh $(FSROOT_DIR) >$@
 
+else
+
+# Create the exported symbol table
+
+$(SYMTAB_SRC): build populate
+	$(Q) $(DRIVER_DIR)/mksymtab.sh $(FSROOT_DIR) >$@
+
+endif
+
+# Copy the symbol table into the kernel pass1/ build directory
+
+$(PASS1_SYMTAB): $(SYMTAB_SRC)
+ifneq ($(CONFIG_BUILD_FLAT),y)
+	$(Q) install -m 0644 $(SYMTAB_SRC) $(PASS1_SYMTAB)
+endif
+
 # Clean each subdirectory
 
 clean: $(foreach DIR, $(ALL_SUBDIRS), $(DIR)_clean)
-	$(Q) rm -f $(ROMFS_HDR) $(DIRLIST_HDR) $(ROMFS_IMG) $(SYMTAB_SRC)
+	$(Q) rm -f $(FSIMG_HDR) $(DIRLIST_HDR) $(ROMFS_IMG) $(SYMTAB_SRC)
 	$(Q) rm -rf $(FSROOT_DIR)
