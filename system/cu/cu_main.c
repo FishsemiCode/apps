@@ -381,13 +381,9 @@ int cu_main(int argc, FAR char *argv[])
     {
       int ch = getc(stdin);
 
-      if (ch < 0)
+      if (ch <= 0)
         {
           break;
-        }
-      else if (ch == 0)
-        {
-          continue;
         }
 
       if (start_of_line == 1 && ch == '~')
