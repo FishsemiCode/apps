@@ -1,5 +1,6 @@
 /****************************************************************************
  * apps/system/nxrecorder/nxrecorder.c
+ *
  *   Copyright (C) 2017 Pinecone Inc. All rights reserved.
  *   Author: Zhong An <zhongan@pinecone.net>
  *
@@ -84,9 +85,6 @@
  ****************************************************************************/
 
 /****************************************************************************
- ****************************************************************************/
-
-/****************************************************************************
  * Name: nxrecorder_opendevice
  *
  *   nxrecorder_opendevice() either searches the Audio system for a device
@@ -165,7 +163,9 @@ static int nxrecorder_writebuffer(FAR struct nxrecorder_s *pRecorder,
 
   ret = write(pRecorder->fd, apb->samp, apb->nbytes);
   if (ret < 0)
-    return ret;
+    {
+      return ret;
+    }
 
   apb->curbyte = 0;
   apb->flags   = 0;
@@ -186,7 +186,7 @@ static int nxrecorder_writebuffer(FAR struct nxrecorder_s *pRecorder,
  *   called with a buffer of data to be enqueued in the audio stream.
  *
  *   Be we may also receive an empty length buffer (with only the
- *   AUDIO_APB_FINAL set) in the event of certin write error occurs or in the
+ *   AUDIO_APB_FINAL set) in the event of certain write error occurs or in the
  *   event that the file was an exact multiple of the nmaxbytes size of the
  *   audio buffer.  In that latter case, we have an end of file with no bytes
  *   written.
@@ -344,39 +344,39 @@ static void *nxrecorder_recordthread(pthread_addr_t pvarg)
     {
       /* Write the next buffer of data */
 
-        ret = nxrecorder_enqueuebuffer(pRecorder, pBuffers[x]);
-        if (ret != OK)
-          {
-            /* Failed to enqueue the buffer.  The driver is not happy with
-             * the buffer.  Perhaps a encoder has detected something that it
-             * does not like in the stream and has stopped streaming.  This
-             * would happen normally if we send a file in the incorrect format
-             * to an audio encoder.
-             *
-             * We must stop streaming as gracefully as possible.  Close the
-             * file so that no further data is written.
-             */
+      ret = nxrecorder_enqueuebuffer(pRecorder, pBuffers[x]);
+      if (ret != OK)
+        {
+          /* Failed to enqueue the buffer.  The driver is not happy with
+           * the buffer.  Perhaps a encoder has detected something that it
+           * does not like in the stream and has stopped streaming.  This
+           * would happen normally if we send a file in the incorrect format
+           * to an audio encoder.
+           *
+           * We must stop streaming as gracefully as possible.  Close the
+           * file so that no further data is written.
+           */
 
-            close(pRecorder->fd);
-            pRecorder->fd = -1;
+          close(pRecorder->fd);
+          pRecorder->fd = -1;
 
-            /* We are no longer streaming data to the file.  Be we will
-             * need to wait for any outstanding buffers to be recovered.  We
-             * also still expect the audio driver to send a AUDIO_MSG_COMPLETE
-             * message after all queued buffers have been returned.
-             */
+          /* We are no longer streaming data to the file.  Be we will
+           * need to wait for any outstanding buffers to be recovered.  We
+           * also still expect the audio driver to send a AUDIO_MSG_COMPLETE
+           * message after all queued buffers have been returned.
+           */
 
-             streaming = false;
-             failed = true;
-             break;
-          }
+           streaming = false;
+           failed = true;
+           break;
+        }
 #ifdef CONFIG_DEBUG_FEATURES
-          else
-            {
-              /* The audio driver has one more buffer */
+      else
+        {
+          /* The audio driver has one more buffer */
 
-              outstanding++;
-            }
+          outstanding++;
+        }
 #endif
     }
 
@@ -612,8 +612,9 @@ err_out:
 
   /* Cleanup */
 
-  while(sem_wait(&pRecorder->sem) < 0)
-    ;
+  while (sem_wait(&pRecorder->sem) < 0)
+    {
+    }
 
   /* Close the files */
 
@@ -631,7 +632,7 @@ err_out:
 
   sem_post(&pRecorder->sem);                /* Release the semaphore */
 
-  /* The recordthread is done with the context.  Release it, which may
+  /* The record thread is done with the context.  Release it, which may
    * actually cause the context to be freed if the creator has already
    * abandoned (released) the context too.
    */
@@ -715,7 +716,8 @@ int nxrecorder_resume(FAR struct nxrecorder_s *pRecorder)
  *
  ****************************************************************************/
 
-int nxrecorder_setdevice(FAR struct nxrecorder_s *pRecorder, FAR const char *pDevice)
+int nxrecorder_setdevice(FAR struct nxrecorder_s *pRecorder,
+                         FAR const char *pDevice)
 {
   int tempFd;
 
@@ -927,7 +929,8 @@ int nxrecorder_recordraw(FAR struct nxrecorder_s *pRecorder,
   pthread_attr_init(&tattr);
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO) - 9;
   (void)pthread_attr_setschedparam(&tattr, &sparam);
-  (void)pthread_attr_setstacksize(&tattr, CONFIG_NXRECORDER_RECORDTHREAD_STACKSIZE);
+  (void)pthread_attr_setstacksize(&tattr,
+                                  CONFIG_NXRECORDER_RECORDTHREAD_STACKSIZE);
 
   /* Add a reference count to the recorder for the thread and start the
    * thread.  We increment for the thread to avoid thread start-up

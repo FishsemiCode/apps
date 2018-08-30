@@ -1467,6 +1467,7 @@ int cmd_mksmartfs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           case 'f':
             force = 1;
             break;
+
           case 's':
             sectorsize = atoi(optarg);
             if (sectorsize < 256 || sectorsize > 16384)

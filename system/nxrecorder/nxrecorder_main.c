@@ -1,4 +1,5 @@
 /****************************************************************************
+ *
  * apps/system/nxrecorder/nxrecorder_main.c
  *   Copyright (C) 2017 Pinecone Inc. All rights reserved.
  *   Author: Zhong An <zhongan@pinecone.net>
@@ -31,7 +32,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-
 
 /****************************************************************************
  * Included Files
@@ -67,7 +67,8 @@
  * Private Type Declarations
  ****************************************************************************/
 
-struct mp_cmd_s {
+struct mp_cmd_s
+{
   const char      *cmd;       /* The command text */
   const char      *arghelp;   /* Text describing the args */
   nxrecorder_func pFunc;      /* Pointer to command handler */
@@ -336,7 +337,9 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
     {
       len = strlen(g_nxrecorder_cmds[x].cmd) + strlen(g_nxrecorder_cmds[x].arghelp);
       if (len > maxlen)
-        maxlen = len;
+        {
+          maxlen = len;
+        }
     }
 
   printf("NxRecorder commands\n================\n");
@@ -350,7 +353,9 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
 
       len = maxlen - (strlen(g_nxrecorder_cmds[x].cmd) + strlen(g_nxrecorder_cmds[x].arghelp));
       for (c = 0; c < len; c++)
-        printf(" ");
+        {
+          printf(" ");
+        }
 
       printf("  : %s\n", g_nxrecorder_cmds[x].help);
     }
@@ -369,8 +374,8 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
  *   nxrecorder() reads in commands from the console using the readline
  *   system add-in and implemets a command-line based pcm raw data recorder
  *   that uses the NuttX audio system to record pcm raw data files read in
-     from the audio device.  Commands are provided for setting volume, base and
- *   other audio features, as well as for pausing and stoping the
+ *   from the audio device.  Commands are provided for setting volume, base and
+ *   other audio features, as well as for pausing and stopping the
  *   record.
  *
  * Input Parameters:
@@ -386,7 +391,7 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
  *
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
+#ifdef CONFIG_BUILD_LOADABLE
 int main(int argc, FAR char *argv[])
 #else
 int nxrecorder_main(int argc, char *argv[])
@@ -427,42 +432,55 @@ int nxrecorder_main(int argc, char *argv[])
       if (len > 0)
         {
           if (buffer[len-1] == '\n')
-            buffer[len-1] = '\0';
+            {
+              buffer[len-1] = '\0';
+            }
 
           /* Parse the command from the argument */
 
           cmd = strtok_r(buffer, " \n", &arg);
           if (cmd == NULL)
-            continue;
+            {
+              continue;
+            }
 
           /* Remove leading spaces from arg */
 
           while (*arg == ' ')
-            arg++;
+            {
+              arg++;
+            }
 
           /* Find the command in our cmd array */
 
           for (x = 0; x < g_nxrecorder_cmd_count; x++)
             {
               if (strcmp(cmd, g_nxrecorder_cmds[x].cmd) == 0)
-              {
-                /* Command found.  Call it's handler if not NULL */
+                {
+                  /* Command found.  Call it's handler if not NULL */
 
-                if (g_nxrecorder_cmds[x].pFunc != NULL)
-                  g_nxrecorder_cmds[x].pFunc(pRecorder, arg);
+                  if (g_nxrecorder_cmds[x].pFunc != NULL)
+                    {
+                      g_nxrecorder_cmds[x].pFunc(pRecorder, arg);
+                    }
 
-                /* Test if it is a quit command */
+                  /* Test if it is a quit command */
 
-                if (g_nxrecorder_cmds[x].pFunc == nxrecorder_cmd_quit)
-                  running = FALSE;
-                break;
-              }
+                  if (g_nxrecorder_cmds[x].pFunc == nxrecorder_cmd_quit)
+                    {
+                     running = FALSE;
+                    }
+
+                  break;
+                }
             }
 
           /* Test for Unknown command */
 
           if (x == g_nxrecorder_cmd_count)
-            printf("%s:  unknown nxrecorder command\n", buffer);
+            {
+              printf("%s:  unknown nxrecorder command\n", buffer);
+            }
         }
     }
 

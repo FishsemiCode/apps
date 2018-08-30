@@ -1802,13 +1802,14 @@ int nxplayer_stop(FAR struct nxplayer_s *pPlayer)
  ****************************************************************************/
 
 static int nxplayer_playinternal(FAR struct nxplayer_s *pPlayer,
-                                 FAR const char *pFilename, int filefmt, int subfmt,
-                                 uint8_t nchannels, uint8_t bpsamp, uint32_t samprate)
+                                 FAR const char *pFilename, int filefmt,
+                                 int subfmt, uint8_t nchannels,
+                                 uint8_t bpsamp, uint32_t samprate)
 {
   struct mq_attr      attr;
   struct sched_param  sparam;
   pthread_attr_t      tattr;
-  void                *value;
+  FAR void           *value;
   struct audio_caps_desc_s cap_desc;
 #ifdef CONFIG_NXPLAYER_INCLUDE_MEDIADIR
   char                path[128];
@@ -1933,15 +1934,16 @@ static int nxplayer_playinternal(FAR struct nxplayer_s *pPlayer,
 #ifdef CONFIG_AUDIO_MULTI_SESSION
       cap_desc.session = pPlayer->session;
 #endif
-      cap_desc.caps.ac_len = sizeof(struct audio_caps_s);
-      cap_desc.caps.ac_type = AUDIO_TYPE_OUTPUT;
-      cap_desc.caps.ac_channels = nchannels;
+      cap_desc.caps.ac_len            = sizeof(struct audio_caps_s);
+      cap_desc.caps.ac_type           = AUDIO_TYPE_OUTPUT;
+      cap_desc.caps.ac_channels       = nchannels;
       cap_desc.caps.ac_controls.hw[0] = samprate;
-      cap_desc.caps.ac_controls.b[3] = samprate >> 16;
+      cap_desc.caps.ac_controls.b[3]  = samprate >> 16;
       cap_desc.caps.ac_controls.b[2]  = bpsamp;
-      ioctl(pPlayer->devFd, AUDIOIOC_CONFIGURE,
-            (unsigned long)&cap_desc);
+
+      ioctl(pPlayer->devFd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
     }
+
   /* Create a message queue for the playthread */
 
   attr.mq_maxmsg  = 16;
@@ -2043,7 +2045,7 @@ err_out_nodev:
 int nxplayer_playfile(FAR struct nxplayer_s *pPlayer,
                       FAR const char *pFilename, int filefmt, int subfmt)
 {
-  return nxplayer_playinternal(pPlayer, pFilename, filefmt, subfmt, 0, 0, 0);;
+  return nxplayer_playinternal(pPlayer, pFilename, filefmt, subfmt, 0, 0, 0);
 }
 
 /****************************************************************************
@@ -2074,12 +2076,20 @@ int nxplayer_playraw(FAR struct nxplayer_s *pPlayer,
                      FAR const char *pFilename, uint8_t nchannels,
                      uint8_t bpsamp, uint32_t samprate)
 {
-  if (!nchannels)
-    nchannels = 2;
-  if (!bpsamp)
-    bpsamp = 16;
-  if (!samprate)
-    samprate = 48000;
+  if (nchannels == 0)
+    {
+      nchannels = 2;
+    }
+
+  if (bpsamp == 0)
+    {
+      bpsamp = 16;
+    }
+
+  if (samprate == 0)
+    {
+      samprate = 48000;
+    }
 
   return nxplayer_playinternal(pPlayer, pFilename, AUDIO_FMT_PCM, 0,
                                nchannels, bpsamp, samprate);

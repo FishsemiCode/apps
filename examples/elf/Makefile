@@ -52,7 +52,7 @@ MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS) $(MAINSRC)
 OBJS = $(AOBJS) $(COBJS)
 
-ifneq ($(CONFIG_BUILD_KERNEL),y)
+ifneq ($(CONFIG_BUILD_LOADABLE),y)
   OBJS += $(MAINOBJ)
 endif
 
@@ -104,7 +104,7 @@ really_build: $(OBJS)
 	@$(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 	@$(MAKE) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" really_build
 
-ifeq ($(CONFIG_BUILD_KERNEL),y)
+ifeq ($(CONFIG_BUILD_LOADABLE),y)
 $(BIN_DIR)$(DELIM)$(PROGNAME): $(OBJS) $(MAINOBJ)
 	@echo "LD: $(PROGNAME)"
 	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) -o $(INSTALL_DIR)$(DELIM)$(PROGNAME) $(ARCHCRT0OBJ) $(MAINOBJ) $(LDLIBS)

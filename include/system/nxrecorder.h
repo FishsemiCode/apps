@@ -1,5 +1,6 @@
 /****************************************************************************
  * apps/include/system/nxrecorder.h
+ *
  *   Copyright (C) 2017 Pinecone Inc. All rights reserved.
  *   Author: Zhong An <zhongan@pinecone.net>
  *
@@ -48,6 +49,7 @@
 /****************************************************************************
  * Public Type Declarations
  ****************************************************************************/
+
 /* This structure describes the internal state of the NxRecorder */
 
 struct nxrecorder_s
@@ -95,9 +97,9 @@ extern "C"
  *   and it will self free.  This is because the nxrecorder_recordfile
  *   will also create a reference to the context, so the client calling
  *   nxrecorder_destroy() won't actually de-allocate anything.  The freeing
- *   will occur after the recordthread has completed.
+ *   will occur after the record thread has completed.
  *
- *   Alternately, the caller can create the objec and hold on to it, then
+ *   Alternately, the caller can create the object and hold on to it, then
  *   the context will persist until the original creator destroys it.
  *
  * Input Parameters:    None
