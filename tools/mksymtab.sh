@@ -69,12 +69,14 @@ rm -f $outfile
 # list of sorted, unique undefined variable names.
 
 execlist=`find ${dir} -type f`
-for exec in ${execlist}; do
-  nm $exec | fgrep ' U ' | sed -e "s/^[ ]*//g" | cut -d' ' -f2  >>_tmplist
-done
+if [ ! -z "${execlist}" ]; then
+  for exec in ${execlist}; do
+    nm $exec | fgrep ' U ' | sed -e "s/^[ ]*//g" | cut -d' ' -f2  >>_tmplist
+  done
 
-varlist=`cat _tmplist | sort - | uniq -`
-rm -f _tmplist
+  varlist=`cat _tmplist | sort - | uniq -`
+  rm -f _tmplist
+fi
 
 # Now output the symbol table as a structure in a C source file.  All
 # undefined symbols are declared as void* types.  If the toolchain does
@@ -94,6 +96,8 @@ echo "#if defined(CONFIG_EXECFUNCS_HAVE_SYMTAB)" >>$outfile
 echo "const struct symtab_s CONFIG_EXECFUNCS_SYMTAB_ARRAY[] = " >>$outfile
 echo "#elif defined(CONFIG_SYSTEM_NSH_SYMTAB)" >>$outfile
 echo "const struct symtab_s CONFIG_SYSTEM_NSH_SYMTAB_ARRAYNAME[] = " >>$outfile
+echo "#else" >>$outfile
+echo "const struct symtab_s dummy_symtab[] = " >>$outfile
 echo "#endif" >>$outfile
 echo "{" >>$outfile
 
@@ -107,4 +111,6 @@ echo "#if defined(CONFIG_EXECFUNCS_HAVE_SYMTAB)" >>$outfile
 echo "const int CONFIG_EXECFUNCS_NSYMBOLS_VAR = sizeof(CONFIG_EXECFUNCS_SYMTAB_ARRAY) / sizeof(struct symtab_s);" >>$outfile
 echo "#elif defined(CONFIG_SYSTEM_NSH_SYMTAB)" >>$outfile
 echo "const int CONFIG_SYSTEM_NSH_SYMTAB_COUNTNAME = sizeof(CONFIG_SYSTEM_NSH_SYMTAB_COUNTNAME) / sizeof(struct symtab_s);" >>$outfile
+echo "#else" >>$outfile
+echo "const int dummy_nsymtabs = sizeof(dummy_symtab) / sizeof(struct symtab_s);" >>$outfile
 echo "#endif" >>$outfile

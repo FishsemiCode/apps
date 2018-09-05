@@ -70,7 +70,7 @@ LIBPATH ?= $(TOPDIR)$(DELIM)staging
 
 # The install path
 
-EXE_DIR = $(APPDIR)$(DELIM)exe
+EXE_DIR = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)exe
 BIN_DIR = $(EXE_DIR)$(DELIM)system$(DELIM)bin
 
 # The final build target
@@ -110,19 +110,53 @@ $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),depend))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),clean)))
 $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
-ifeq ($(CONFIG_BUILD_LOADABLE),)
-$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+# In the KERNEL build, we must build and install all of the modules.  No
+# symbol table is needed
+
+ifeq ($(CONFIG_BUILD_KERNEL),y)
+
+.install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
+
+install: $(BIN_DIR) .install
+
+$(BIN_DIR):
+	$(Q) mkdir -p $(BIN_DIR)
+
+.import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+
+import: $(BIN_DIR)
+	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+
 else
+
+# In FLAT and protected modes, the modules have already been created.  A
+# symbol table is required.
+
+ifeq ($(CONFIG_BUILD_LOADABLE),)
+
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+
+else
+
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) $(MAKE) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(EXE_DIR)$(DELIM)system $(SYMTABSRC)
 
 $(SYMTABOBJ): %$(OBJEXT): %.c
+ifeq ($(WINTOOL),y)
+	$(call COMPILE, -fno-lto "${shell cygpath -w $<}", "${shell cygpath -w $@}")
+else
 	$(call COMPILE, -fno-lto $<, $@)
+endif
 
 $(BIN): $(SYMTABOBJ)
+ifeq ($(WINTOOL),y)
+	$(call ARCHIVE, $(BIN), "${shell cygpath -w $^}")
+else
 	$(call ARCHIVE, $(BIN), $^)
 endif
+endif # !CONFIG_BUILD_KERNEL && CONFIG_BUILD_LOADABLE
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
@@ -134,11 +168,13 @@ install: $(BIN_DIR) .install
 .import: $(BIN) install
 
 import:
-	$(Q) $(MAKE) .import TOPDIR="$(APPDIR)$(DELIM)import"
+	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+
+endif # CONFIG_BUILD_KERNEL
 
 dirlinks:
 	$(call MKDIR, platform)
-	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
 
 context_rest: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 
@@ -162,13 +198,15 @@ preconfig: Kconfig
 depend: .depend
 
 clean_context:
-	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
 
 clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 	$(call DELFILE, $(SYMTABSRC))
+	$(call DELFILE, $(SYMTABOBJ))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(BIN_DIR))
+	$(call DELDIR, $(EXE_DIR))
 	$(call CLEAN)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
@@ -188,7 +226,9 @@ else
 endif
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
+	$(call DELFILE, $(SYMTABOBJ))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(BIN_DIR))
+	$(call DELDIR, $(EXE_DIR))
 	$(call CLEAN)

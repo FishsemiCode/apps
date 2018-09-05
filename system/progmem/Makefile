@@ -1,9 +1,10 @@
 ############################################################################
-# apps/system/install/Make.defs
-# Adds selected applications to apps/ build
+# apps/system/progmem/Makefile
 #
-#   Copyright (C) 2015 Gregory Nutt. All rights reserved.
-#   Author: Gregory Nutt <gnutt@nuttx.org>
+#   Copyright (C) 2011 Uros Platise. All rights reserved.
+#   Copyright (C) 2012, 2016, 2018 Gregory Nutt. All rights reserved.
+#   Author: Uros Platise <uros.platise@isotel.eu>
+#           Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -34,7 +35,22 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_SYSTEM_INSTALL),y)
-CONFIGURED_APPS += system/install
-endif
+# TODO, this makefile should run make under the app dirs, instead of
+# sourcing the Make.defs!
 
+-include $(TOPDIR)/Make.defs
+
+# Install PROGMEM Application
+
+APPNAME = progmem
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 1024
+
+MAINSRC = progmem.c
+
+CONFIG_XYZ_PROGNAME ?= progmem$(EXEEXT)
+PROGNAME = $(CONFIG_XYZ_PROGNAME)
+
+MODULE = CONFIG_SYSTEM_INSTALL
+
+include $(APPDIR)/Application.mk
