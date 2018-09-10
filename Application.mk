@@ -126,16 +126,19 @@ else
 
 define ELFASSEMBLE
 	@echo "AS: $1"
+	$(call MKDIR, $(dir $2))
 	$(Q) $(CC) -c $(AELFFLAGS) $1 -o $2
 endef
 
 define ELFCOMPILE
 	@echo "CC: $1"
+	$(call MKDIR, $(dir $2))
 	$(Q) $(CC) -c $(CELFFLAGS) $1 -o $2
 endef
 
 define ELFCOMPILEXX
 	@echo "CXX: $1"
+	$(call MKDIR, $(dir $2))
 	$(Q) $(CXX) -c $(CXXELFFLAGS) $1 -o $2
 endef
 
