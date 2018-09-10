@@ -142,32 +142,32 @@ endef
 $(AOBJS): %$(OBJEXT): %.S
 	$(if $(AELFFLAGS), \
 			$(call ELFASSEMBLE, $<, $@), \
-			$(call ASSEMBLE, $<, $@), \
+			$(call ASSEMBLE, $<, $@) \
 	)
 
 $(COBJS): %$(OBJEXT): %.c
 	$(if $(CELFFLAGS), \
 			$(call ELFCOMPILE, $<, $@), \
-			$(call COMPILE, $<, $@), \
+			$(call COMPILE, $<, $@) \
 	)
 
 $(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
 	$(if $(CXXELFFLAGS), \
 			$(call ELFCOMPILEXX, $<, $@), \
-			$(call COMPILEXX, $<, $@), \
+			$(call COMPILEXX, $<, $@) \
 	)
 
 ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
 $(MAINOBJ): %$(OBJEXT): %$(CXXEXT)
 	$(if $(CXXELFFLAGS), \
 			$(call ELFCOMPILEXX, $<, $@), \
-			$(call COMPILEXX, $<, $@), \
+			$(call COMPILEXX, $<, $@) \
 	)
 else
 $(MAINOBJ): %$(OBJEXT): %.c
 	$(if $(CELFFLAGS), \
 			$(call ELFCOMPILE, $<, $@), \
-			$(call COMPILE, $<, $@), \
+			$(call COMPILE, $<, $@) \
 	)
 endif
 
@@ -209,6 +209,7 @@ endif # BUILD_MODULE
 preconfig::
 
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
+ifneq ($(BUILD_MODULE),y)
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(APPNAME)_main.bdat)
 APPLIST := $(APPNAME)
 
@@ -233,6 +234,7 @@ context::
 endif
 else
 context::
+endif
 endif
 
 .depend: Makefile $(SRCS)
