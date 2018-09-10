@@ -191,7 +191,7 @@ endif
 PROGLIST := $(addprefix $(PROGPRFX),$(PROGNAME))
 PROGOBJ := $(MAINOBJ)
 
-.proglist: $(MAINOBJ) $(OBJS)
+$(PROGLIST): $(MAINOBJ) $(OBJS)
 ifneq ($(PROGOBJ),)
 	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $(firstword $(PROGOBJ)) $(LDLIBS) -o $(strip $(firstword $(PROGLIST)))_
 	$(Q) $(NM) -u $(strip $(firstword $(PROGLIST)))_
@@ -202,7 +202,7 @@ ifneq ($(PROGOBJ),)
 	$(eval PROGOBJ=$(filter-out $(firstword $(PROGOBJ)),$(PROGOBJ)))
 endif
 
-install:: .proglist
+install:: $(PROGLIST)
 
 else
 install::
