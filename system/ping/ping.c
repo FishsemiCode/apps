@@ -75,16 +75,11 @@
 
 struct ping_info_s
 {
-  int sockfd;               /* Open IPPROTO_ICMP socket */
-  FAR struct in_addr dest;  /* Target address to ping */
+  FAR const char *hostname; /* Host name to ping */
   uint16_t count;           /* Number of pings requested */
   uint16_t nrequests;       /* Number of ICMP ECHO requests sent */
   uint16_t nreplies;        /* Number of matching ICMP ECHO replies received */
   int16_t delay;            /* Deciseconds to delay between pings */
-
-  /* I/O buffer for data transfers */
-
-  uint8_t iobuffer[ICMP_IOBUFFER_SIZE];
 };
 
 /****************************************************************************
@@ -127,7 +122,7 @@ static inline uint16_t ping_newid(void)
  *
  ****************************************************************************/
 
-static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
+static int ping_gethostip(FAR const char *hostname, FAR struct in_addr *dest)
 {
 #if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
   /* Netdb DNS client support is enabled */
@@ -142,7 +137,7 @@ static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
     }
   else if (he->h_addrtype == AF_INET)
     {
-       memcpy(&info->dest, he->h_addr, sizeof(in_addr_t));
+       memcpy(dest, he->h_addr, sizeof(in_addr_t));
     }
   else
     {
@@ -158,7 +153,7 @@ static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
   /* No host name support */
   /* Convert strings to numeric IPv6 address */
 
-  int ret = inet_pton(AF_INET, hostname, &info->dest);
+  int ret = inet_pton(AF_INET, hostname, dest);
 
   /* The inet_pton() function returns 1 if the conversion succeeds. It will
    * return 0 if the input is not a valid IPv4 dotted-decimal string or -1
@@ -177,28 +172,57 @@ static int ping_gethostip(FAR char *hostname, FAR struct ping_info_s *info)
 
 static void icmp_ping(FAR struct ping_info_s *info)
 {
+  struct in_addr dest;
   struct sockaddr_in destaddr;
   struct sockaddr_in fromaddr;
   struct icmp_hdr_s outhdr;
   FAR struct icmp_hdr_s *inhdr;
   struct pollfd recvfd;
+  FAR uint8_t *iobuffer;
   FAR uint8_t *ptr;
   int32_t elapsed;
+  clock_t kickoff;
   clock_t start;
   socklen_t addrlen;
   ssize_t nsent;
   ssize_t nrecvd;
   size_t outsize;
   bool retry;
+  int sockfd;
   int delay;
   int ret;
   int ch;
   int i;
 
+  if (ping_gethostip(info->hostname, &dest) < 0)
+    {
+      fprintf(stderr, "ERROR: ping_gethostip(%s) failed\n", info->hostname);
+      return;
+    }
+
+  /* Allocate memory to hold ping buffer */
+
+  iobuffer = (FAR uint8_t *)malloc(ICMP_IOBUFFER_SIZE);
+  if (iobuffer == NULL)
+    {
+      fprintf(stderr, "ERROR: Failed to allocate memory\n");
+      return;
+    }
+
+  sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
+  if (sockfd < 0)
+    {
+      fprintf(stderr, "ERROR: socket() failed: %d\n", errno);
+      free(iobuffer);
+      return;
+    }
+
+  kickoff = clock();
+
   memset(&destaddr, 0, sizeof(struct sockaddr_in));
   destaddr.sin_family      = AF_INET;
   destaddr.sin_port        = 0;
-  destaddr.sin_addr.s_addr = info->dest.s_addr;
+  destaddr.sin_addr.s_addr = dest.s_addr;
 
   memset(&outhdr, 0, sizeof(struct icmp_hdr_s));
   outhdr.type              = ICMP_ECHO_REQUEST;
@@ -206,21 +230,21 @@ static void icmp_ping(FAR struct ping_info_s *info)
   outhdr.seqno             = 0;
 
   printf("PING %u.%u.%u.%u %d bytes of data\n",
-         (info->dest.s_addr      ) & 0xff,
-         (info->dest.s_addr >> 8 ) & 0xff,
-         (info->dest.s_addr >> 16) & 0xff,
-         (info->dest.s_addr >> 24) & 0xff,
+         (dest.s_addr      ) & 0xff,
+         (dest.s_addr >> 8 ) & 0xff,
+         (dest.s_addr >> 16) & 0xff,
+         (dest.s_addr >> 24) & 0xff,
          ICMP_PING_DATALEN);
 
   while (info->nrequests < info->count)
     {
       /* Copy the ICMP header into the I/O buffer */
 
-      memcpy(info->iobuffer, &outhdr, sizeof(struct icmp_hdr_s));
+      memcpy(iobuffer, &outhdr, sizeof(struct icmp_hdr_s));
 
      /* Add some easily verifiable payload data */
 
-      ptr = &info->iobuffer[sizeof(struct icmp_hdr_s)];
+      ptr = &iobuffer[sizeof(struct icmp_hdr_s)];
       ch  = 0x20;
 
       for (i = 0; i < ICMP_PING_DATALEN; i++)
@@ -234,20 +258,20 @@ static void icmp_ping(FAR struct ping_info_s *info)
 
       start   = clock();
       outsize = sizeof(struct icmp_hdr_s) + ICMP_PING_DATALEN;
-      nsent   = sendto(info->sockfd, info->iobuffer, outsize, 0,
+      nsent   = sendto(sockfd, iobuffer, outsize, 0,
                        (FAR struct sockaddr*)&destaddr,
                        sizeof(struct sockaddr_in));
       if (nsent < 0)
         {
           fprintf(stderr, "ERROR: sendto failed at seqno %u: %d\n",
                   ntohs(outhdr.seqno), errno);
-          return;
+          goto done;
         }
       else if (nsent != outsize)
         {
           fprintf(stderr, "ERROR: sendto returned %ld, expected %lu\n",
                   (long)nsent, (unsigned long)outsize);
-          return;
+          goto done;
         }
 
       info->nrequests++;
@@ -259,7 +283,7 @@ static void icmp_ping(FAR struct ping_info_s *info)
 
           retry           = false;
 
-          recvfd.fd       = info->sockfd;
+          recvfd.fd       = sockfd;
           recvfd.events   = POLLIN;
           recvfd.revents  = 0;
 
@@ -267,15 +291,15 @@ static void icmp_ping(FAR struct ping_info_s *info)
           if (ret < 0)
             {
               fprintf(stderr, "ERROR: poll failed: %d\n", errno);
-              return;
+              goto done;
             }
           else if (ret == 0)
             {
               printf("No response from %u.%u.%u.%u: icmp_seq=%u time=%u ms\n",
-                     (info->dest.s_addr      ) & 0xff,
-                     (info->dest.s_addr >> 8 ) & 0xff,
-                     (info->dest.s_addr >> 16) & 0xff,
-                     (info->dest.s_addr >> 24) & 0xff,
+                     (dest.s_addr      ) & 0xff,
+                     (dest.s_addr >> 8 ) & 0xff,
+                     (dest.s_addr >> 16) & 0xff,
+                     (dest.s_addr >> 24) & 0xff,
                       ntohs(outhdr.seqno), info->delay);
               continue;
             }
@@ -283,22 +307,22 @@ static void icmp_ping(FAR struct ping_info_s *info)
           /* Get the ICMP response (ignoring the sender) */
 
           addrlen = sizeof(struct sockaddr_in);
-          nrecvd  = recvfrom(info->sockfd, info->iobuffer,
+          nrecvd  = recvfrom(sockfd, iobuffer,
                              ICMP_IOBUFFER_SIZE, 0,
                              (FAR struct sockaddr *)&fromaddr, &addrlen);
           if (nrecvd < 0)
             {
               fprintf(stderr, "ERROR: recvfrom failed: %d\n", errno);
-              return;
+              goto done;
             }
           else if (nrecvd < sizeof(struct icmp_hdr_s))
             {
               fprintf(stderr, "ERROR: short ICMP packet: %ld\n", (long)nrecvd);
-              return;
+              goto done;
             }
 
           elapsed = (unsigned int)TICK2MSEC(clock() - start);
-          inhdr   = (FAR struct icmp_hdr_s *)info->iobuffer;
+          inhdr   = (FAR struct icmp_hdr_s *)iobuffer;
 
           if (inhdr->type == ICMP_ECHO_REPLY)
             {
@@ -332,10 +356,10 @@ static void icmp_ping(FAR struct ping_info_s *info)
 
                   printf("%ld bytes from %u.%u.%u.%u: icmp_seq=%u time=%u ms\n",
                          nrecvd - sizeof(struct icmp_hdr_s),
-                         (info->dest.s_addr      ) & 0xff,
-                         (info->dest.s_addr >> 8 ) & 0xff,
-                         (info->dest.s_addr >> 16) & 0xff,
-                         (info->dest.s_addr >> 24) & 0xff,
+                         (dest.s_addr      ) & 0xff,
+                         (dest.s_addr >> 8 ) & 0xff,
+                         (dest.s_addr >> 16) & 0xff,
+                         (dest.s_addr >> 24) & 0xff,
                          ntohs(inhdr->seqno), pktdelay);
 
                   /* Verify the payload data */
@@ -350,7 +374,7 @@ static void icmp_ping(FAR struct ping_info_s *info)
                     }
                   else
                     {
-                      ptr = &info->iobuffer[sizeof(struct icmp_hdr_s)];
+                      ptr = &iobuffer[sizeof(struct icmp_hdr_s)];
                       ch  = 0x20;
 
                       for (i = 0; i < ICMP_PING_DATALEN; i++, ptr++)
@@ -409,6 +433,27 @@ static void icmp_ping(FAR struct ping_info_s *info)
 
       outhdr.seqno = htons(ntohs(outhdr.seqno) + 1);
     }
+
+done:
+  /* Get the total elapsed time */
+
+  elapsed = (int32_t)TICK2MSEC(clock() - kickoff);
+
+  if (info->nrequests > 0)
+    {
+      unsigned int tmp;
+
+      /* Calculate the percentage of lost packets */
+
+      tmp = (100 * (info->nrequests - info->nreplies) + (info->nrequests >> 1)) /
+             info->nrequests;
+
+      printf("%u packets transmitted, %u received, %u%% packet loss, time %ld ms\n",
+             info->nrequests, info->nreplies, tmp, (long)elapsed);
+    }
+
+  close(sockfd);
+  free(iobuffer);
 }
 
 /****************************************************************************
@@ -448,24 +493,15 @@ int main(int argc, FAR char *argv[])
 int ping_main(int argc, char **argv)
 #endif
 {
-  FAR struct ping_info_s *info;
+  struct ping_info_s info;
   FAR char *endptr;
-  clock_t start;
-  int32_t elapsed;
   int exitcode;
   int option;
 
-  /* Allocate memory to hold ping information */
-
-  info = (FAR struct ping_info_s *)zalloc(sizeof(struct ping_info_s));
-  if (info == NULL)
-    {
-      fprintf(stderr, "ERROR: Failed to allocate memory\n", argv[1]);
-      return EXIT_FAILURE;
-    }
-
-  info->count = ICMP_NPINGS;
-  info->delay = ICMP_POLL_DELAY;
+  info.count = ICMP_NPINGS;
+  info.delay = ICMP_POLL_DELAY;
+  info.nrequests = 0;
+  info.nreplies = 0;
 
   /* Parse command line options */
 
@@ -484,7 +520,7 @@ int ping_main(int argc, char **argv)
                   goto errout_with_usage;
                 }
 
-              info->count = (uint16_t)count;
+              info.count = (uint16_t)count;
             }
             break;
 
@@ -497,7 +533,7 @@ int ping_main(int argc, char **argv)
                   goto errout_with_usage;
                 }
 
-              info->delay = (int16_t)delay;
+              info.delay = (int16_t)delay;
             }
             break;
 
@@ -524,50 +560,12 @@ int ping_main(int argc, char **argv)
       goto errout_with_usage;
     }
 
-  if (ping_gethostip(argv[optind], info) < 0)
-    {
-      fprintf(stderr, "ERROR: ping_gethostip(%s) failed\n", argv[optind]);
-      goto errout_with_info;
-    }
-
-  info->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
-  if (info->sockfd < 0)
-    {
-      fprintf(stderr, "ERROR: socket() failed: %d\n", errno);
-      goto errout_with_info;
-    }
-
-  start = clock();
-  icmp_ping(info);
-
-  /* Get the total elapsed time */
-
-  elapsed = (int32_t)TICK2MSEC(clock() - start);
-
-  if (info->nrequests > 0)
-    {
-      unsigned int tmp;
-
-      /* Calculate the percentage of lost packets */
-
-      tmp = (100 * (info->nrequests - info->nreplies) + (info->nrequests >> 1)) /
-             info->nrequests;
-
-      printf("%u packets transmitted, %u received, %u%% packet loss, time %ld ms\n",
-             info->nrequests, info->nreplies, tmp, (long)elapsed);
-    }
-
-  close(info->sockfd);
-  free(info);
+  info.hostname = argv[optind];
+  icmp_ping(&info);
   return EXIT_SUCCESS;
 
 errout_with_usage:
   optind = 0;
-  free(info);
   show_usage(argv[0], exitcode);
   return exitcode;  /* Not reachable */
-
-errout_with_info:
-  free(info);
-  return EXIT_FAILURE;
 }
