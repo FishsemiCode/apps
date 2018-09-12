@@ -521,8 +521,7 @@ int ping_main(int argc, char **argv)
   if (optind >= argc)
     {
       printf("ERROR: Missing required <ip-address> argument\n");
-      free(info);
-      show_usage(argv[0], EXIT_FAILURE);
+      goto errout_with_usage;
     }
 
   if (ping_gethostip(argv[optind], info) < 0)
@@ -563,6 +562,7 @@ int ping_main(int argc, char **argv)
   return EXIT_SUCCESS;
 
 errout_with_usage:
+  optind = 0;
   free(info);
   show_usage(argv[0], exitcode);
   return exitcode;  /* Not reachable */
