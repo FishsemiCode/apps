@@ -64,8 +64,7 @@
  ****************************************************************************/
 
 #define ICMPv6_PING6_DATALEN 56
-#define ICMPv6_IOBUFFER_SIZE \
-  SIZEOF_ICMPV6_ECHO_REQUEST_S(0) + ICMPv6_PING6_DATALEN
+#define ICMPv6_IOBUFFER_SIZE(x) (SIZEOF_ICMPV6_ECHO_REQUEST_S(0) + (x))
 
 #define ICMPv6_NPINGS        10    /* Default number of pings */
 #define ICMPv6_POLL_DELAY    1000  /* 1 second in milliseconds */
@@ -78,9 +77,11 @@ struct ping6_info_s
 {
   FAR const char *hostname; /* Host name to ping */
   uint16_t count;           /* Number of pings requested */
+  uint16_t datalen;         /* Number of bytes to be sent */
   uint16_t nrequests;       /* Number of ICMP ECHO requests sent */
   uint16_t nreplies;        /* Number of matching ICMP ECHO replies received */
   int16_t delay;            /* Deciseconds to delay between pings */
+  int16_t timeout;          /* Deciseconds to wait response before timeout */
 };
 
 /****************************************************************************
@@ -190,7 +191,6 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
   size_t outsize;
   bool retry;
   int sockfd;
-  int delay;
   int ret;
   int ch;
   int i;
@@ -203,7 +203,7 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
 
   /* Allocate memory to hold ping buffer */
 
-  iobuffer = (FAR uint8_t *)malloc(ICMPv6_IOBUFFER_SIZE);
+  iobuffer = (FAR uint8_t *)malloc(ICMPv6_IOBUFFER_SIZE(info->datalen));
   if (iobuffer == NULL)
     {
       fprintf(stderr, "ERROR: Failed to allocate memory\n");
@@ -233,7 +233,7 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
   (void)inet_ntop(AF_INET6, dest.s6_addr16, strbuffer,
                   INET6_ADDRSTRLEN);
   printf("PING6 %s: %d bytes of data\n",
-         strbuffer, ICMPv6_PING6_DATALEN);
+         strbuffer, info->datalen);
 
   while (info->nrequests < info->count)
     {
@@ -246,7 +246,7 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
       ptr = &iobuffer[SIZEOF_ICMPV6_ECHO_REQUEST_S(0)];
       ch  = 0x20;
 
-      for (i = 0; i < ICMPv6_PING6_DATALEN; i++)
+      for (i = 0; i < info->datalen; i++)
         {
           *ptr++ = ch;
           if (++ch > 0x7e)
@@ -256,7 +256,7 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
         }
 
       start   = clock();
-      outsize = SIZEOF_ICMPV6_ECHO_REPLY_S(0) + ICMPv6_PING6_DATALEN;
+      outsize = ICMPv6_IOBUFFER_SIZE(info->datalen);
       nsent   = sendto(sockfd, iobuffer, outsize, 0,
                        (FAR struct sockaddr*)&destaddr,
                        sizeof(struct sockaddr_in6));
@@ -275,18 +275,16 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
 
       info->nrequests++;
 
-      delay = info->delay;
+      elapsed = 0;
       do
         {
-          /* Wait for a reply with a timeout */
-
           retry           = false;
 
           recvfd.fd       = sockfd;
           recvfd.events   = POLLIN;
           recvfd.revents  = 0;
 
-          ret = poll(&recvfd, 1, delay);
+          ret = poll(&recvfd, 1, info->timeout - elapsed);
           if (ret < 0)
             {
               fprintf(stderr, "ERROR: poll failed: %d\n", errno);
@@ -296,8 +294,8 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
             {
               (void)inet_ntop(AF_INET6, dest.s6_addr16,
                               strbuffer, INET6_ADDRSTRLEN);
-              printf("No response from %s: icmp_seq=%u time=%u ms\n",
-                     strbuffer, ntohs(outhdr.seqno), info->delay);
+              printf("No response from %s: icmp_seq=%u time=%d ms\n",
+                     strbuffer, ntohs(outhdr.seqno), info->timeout);
               continue;
             }
 
@@ -305,7 +303,7 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
 
           addrlen = sizeof(struct sockaddr_in6);
           nrecvd  = recvfrom(sockfd, iobuffer,
-                             ICMPv6_IOBUFFER_SIZE, 0,
+                             ICMPv6_IOBUFFER_SIZE(info->datalen), 0,
                              (FAR struct sockaddr *)&fromaddr, &addrlen);
           if (nrecvd < 0)
             {
@@ -372,7 +370,7 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
                       ptr = &iobuffer[SIZEOF_ICMPV6_ECHO_REPLY_S(0)];
                       ch  = 0x20;
 
-                      for (i = 0; i < ICMPv6_PING6_DATALEN; i++, ptr++)
+                      for (i = 0; i < info->datalen; i++, ptr++)
                         {
                           if (*ptr != ch)
                             {
@@ -401,10 +399,8 @@ static void icmpv6_ping(FAR struct ping6_info_s *info)
               fprintf(stderr, "WARNING: ICMP packet with unknown type: %u\n",
                       inhdr->type);
             }
-
-          delay -= elapsed;
         }
-      while (retry && delay > 0);
+      while (retry && info->delay > elapsed && info->timeout > elapsed);
 
       /* Wait if necessary to preserved the requested ping rate */
 
@@ -459,13 +455,13 @@ static void show_usage(FAR const char *progname, int exitcode) noreturn_function
 static void show_usage(FAR const char *progname, int exitcode)
 {
 #if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
-  printf("\nUsage: %s [-c <count>] [-i <interval>] <hostname>\n", progname);
+  printf("\nUsage: %s [-c <count>] [-i <interval>] [-W <timeout>] [-s <size>] <hostname>\n", progname);
   printf("       %s -h\n", progname);
   printf("\nWhere:\n");
   printf("  <hostname> is either an IPv6 address or the name of the remote host\n");
   printf("   that is requested the ICMPv6 ECHO reply.\n");
 #else
-  printf("\nUsage: %s [-c <count>] [-i <interval>] <ip-address>\n", progname);
+  printf("\nUsage: %s [-c <count>] [-i <interval>] [-W <timeout>] [-s <size>] <ip-address>\n", progname);
   printf("       %s -h\n", progname);
   printf("\nWhere:\n");
   printf("  <ip-address> is the IPv6 address request the ICMPv6 ECHO reply.\n");
@@ -474,6 +470,10 @@ static void show_usage(FAR const char *progname, int exitcode)
          ICMPv6_NPINGS);
   printf("  -i <interval> is the default delay between pings (milliseconds).\n");
   printf("    Default %d.\n", ICMPv6_POLL_DELAY);
+  printf("  -W <timeout> is the timeout for wait response (milliseconds).\n");
+  printf("    Default %d.\n", ICMPv6_POLL_DELAY);
+  printf("  -s <size> specifies the number of data bytes to be sent.  Default %u.\n",
+         ICMPv6_PING6_DATALEN);
   printf("  -h shows this text and exits.\n");
   exit(exitcode);
 }
@@ -494,7 +494,9 @@ int ping6_main(int argc, char **argv)
   int option;
 
   info.count = ICMPv6_NPINGS;
+  info.datalen = ICMPv6_PING6_DATALEN;
   info.delay = ICMPv6_POLL_DELAY;
+  info.timeout = ICMPv6_POLL_DELAY;
   info.nrequests = 0;
   info.nreplies = 0;
 
@@ -502,7 +504,7 @@ int ping6_main(int argc, char **argv)
 
   exitcode = EXIT_FAILURE;
 
-  while ((option = getopt(argc, argv, ":c:i:h")) != ERROR)
+  while ((option = getopt(argc, argv, ":c:i:W:s:h")) != ERROR)
     {
       switch (option)
         {
@@ -529,6 +531,32 @@ int ping6_main(int argc, char **argv)
                 }
 
               info.delay = (int16_t)delay;
+            }
+            break;
+
+          case 'W':
+            {
+              long timeout = strtol(optarg, &endptr, 10);
+              if (timeout < 1 || timeout > INT16_MAX)
+                {
+                  fprintf(stderr, "ERROR: <timeout> out of range: %ld\n", timeout);
+                  goto errout_with_usage;
+                }
+
+              info.timeout = (int16_t)timeout;
+            }
+            break;
+
+          case 's':
+            {
+              long datalen = strtol(optarg, &endptr, 10);
+              if (datalen < 1 || datalen > UINT16_MAX)
+                {
+                  fprintf(stderr, "ERROR: <size> out of range: %ld\n", datalen);
+                  goto errout_with_usage;
+                }
+
+              info.datalen = (uint16_t)datalen;
             }
             break;
 
