@@ -68,11 +68,6 @@ $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
 
 LIBPATH ?= $(TOPDIR)$(DELIM)staging
 
-# The install path
-
-EXE_DIR = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)exe
-BIN_DIR = $(EXE_DIR)$(DELIM)system$(DELIM)bin
-
 # The final build target
 
 BIN = libapps$(LIBEXT)
@@ -81,7 +76,9 @@ VPATH := $(APPDIR)
 
 # Symbol table for loadable apps.
 
-SYMTABSRC = $(EXE_DIR)$(DELIM)symtab_apps.c
+EXETABSRC = $(SYM_DIR)$(DELIM)symtab_apps.c
+MODTABSRC = $(SYM_DIR)$(DELIM)modtab_apps.c
+SYMTABSRC = $(EXETABSRC) $(MODTABSRC)
 SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 
 # Build targets
@@ -92,14 +89,14 @@ all: $(BIN)
 
 define MAKE_template
 	$(call MKDIR, $(1))
-	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
+	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 endef
 
 define SDIR_template
 $(1)_$(2):
 	$(call MKDIR, $(1))
-	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
+	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 endef
 
@@ -113,19 +110,21 @@ $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 # In the KERNEL build, we must build and install all of the modules.  No
 # symbol table is needed
 
+MKDIR_LIST = $(BINSYM_DIR) $(LIBSYM_DIR) $(BINIST_DIR) $(LIBIST_DIR)
+
 ifeq ($(CONFIG_BUILD_KERNEL),y)
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
-install: $(BIN_DIR) .install
+install: $(MKDIR_LIST) .install
 
-$(BIN_DIR):
-	$(Q) mkdir -p $(BIN_DIR)
+$(MKDIR_LIST):
+	$(Q) mkdir -p $@
 
 .import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 
-import: $(BIN_DIR)
+import: $(MKDIR_LIST)
 	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 
 else
@@ -139,9 +138,11 @@ $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 
 else
 
-$(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
-	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(EXE_DIR)$(DELIM)system $(SYMTABSRC)
+$(EXETABSRC): install
+	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINIST_DIR) $@
+
+$(MODTABSRC): install
+	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mkmodsymtab.sh $(LIBIST_DIR) $@
 
 $(SYMTABOBJ): %$(OBJEXT): %.c
 ifeq ($(WINTOOL),y)
@@ -160,10 +161,10 @@ endif # !CONFIG_BUILD_KERNEL && CONFIG_BUILD_LOADABLE
 
 .install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
-$(BIN_DIR):
-	$(Q) mkdir -p $(BIN_DIR)
+$(MKDIR_LIST):
+	$(Q) mkdir -p $@
 
-install: $(BIN_DIR) .install
+install: $(MKDIR_LIST) .install
 
 .import: $(BIN) install
 
@@ -174,7 +175,7 @@ endif # CONFIG_BUILD_KERNEL
 
 dirlinks:
 	$(call MKDIR, platform)
-	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
+	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform dirlinks TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 context_rest: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_context)
 
@@ -198,15 +199,15 @@ preconfig: Kconfig
 depend: .depend
 
 clean_context:
-	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" BIN_DIR="$(BIN_DIR)"
+	$(Q) $(MAKE) -C platform -f $(APPDIR)/platform/Makefile -I $(APPDIR)/platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
-	$(call DELDIR, $(BIN_DIR))
-	$(call DELDIR, $(EXE_DIR))
+	$(call DELDIR, $(SYM_DIR))
+	$(call DELDIR, $(IST_DIR))
 	$(call CLEAN)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
@@ -229,6 +230,6 @@ endif
 	$(call DELFILE, $(SYMTABOBJ))
 	$(call DELFILE, $(BIN))
 	$(call DELFILE, Kconfig)
-	$(call DELDIR, $(BIN_DIR))
-	$(call DELDIR, $(EXE_DIR))
+	$(call DELDIR, $(SYM_DIR))
+	$(call DELDIR, $(IST_DIR))
 	$(call CLEAN)

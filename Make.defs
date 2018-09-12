@@ -126,3 +126,13 @@ CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(APPDIR)$(DELIM)include"}
 ifneq ($(CONFIG_BUILD_KERNEL),y)
   LDLIBS = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)libapps$(LIBEXT)
 endif
+
+# The install path
+
+SYM_DIR = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)symbols
+BINSYM_DIR = $(SYM_DIR)$(DELIM)system$(DELIM)bin
+LIBSYM_DIR = $(SYM_DIR)$(DELIM)system$(DELIM)lib
+
+IST_DIR = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)exe
+BINIST_DIR = $(IST_DIR)$(DELIM)system$(DELIM)bin
+LIBIST_DIR = $(IST_DIR)$(DELIM)system$(DELIM)lib

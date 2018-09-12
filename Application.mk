@@ -86,10 +86,10 @@ endif
 
 ifeq ($(WINTOOL),y)
   BIN = "${shell cygpath -w $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)libapps$(LIBEXT)}"
-  INSTALL_DIR = "${shell cygpath -w $(BIN_DIR)}"
+  BINSYM_DIR := "${shell cygpath -w $(BINSYM_DIR)}"
+  BINIST_DIR := "${shell cygpath -w $(BINIST_DIR)}"
 else
   BIN = $(OUTDIR)$(DELIM)$(CONFIG_APPS_DIR)$(DELIM)libapps$(LIBEXT)
-  INSTALL_DIR = $(BIN_DIR)
 endif
 
 ROOTDEPPATH += --dep-path .
@@ -183,22 +183,25 @@ endif
 ifeq ($(BUILD_MODULE), y)
 
 ifeq ($(WINTOOL), y)
-  PROGPRFX = ${cygpath -u $(INSTALL_DIR)$(DELIM)}
+  PROGPRFX = ${cygpath -u $(BINSYM_DIR)$(DELIM)}
+  STRIPPRFX = ${cygpath -u $(BINIST_DIR)$(DELIM)}
 else
-  PROGPRFX = $(INSTALL_DIR)$(DELIM)
+  PROGPRFX = $(BINSYM_DIR)$(DELIM)
+  STRIPPRFX = $(BINIST_DIR)$(DELIM)
 endif
 
 PROGLIST := $(addprefix $(PROGPRFX),$(PROGNAME))
+STRIPLIST := $(addprefix $(STRIPPRFX),$(PROGNAME))
 PROGOBJ := $(MAINOBJ)
 
 $(PROGLIST): $(MAINOBJ) $(OBJS)
 ifneq ($(PROGOBJ),)
-	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $(firstword $(PROGOBJ)) $(LDLIBS) -o $(strip $(firstword $(PROGLIST)))_
-	$(Q) $(NM) -u $(strip $(firstword $(PROGLIST)))_
-	$(Q) install -m 0755 -D $(strip $(firstword $(PROGLIST)))_ $(firstword $(PROGLIST))
-	$(call DELFILE, $(strip $(firstword $(PROGLIST)))_)
-#	$(Q) $(STRIP) $(BIN_DIR)/$(firstword $(PROGLIST)
+	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $(firstword $(PROGOBJ)) $(LDLIBS) -o $(strip $(firstword $(PROGLIST)))
+	$(Q) $(NM) -u $(strip $(firstword $(PROGLIST)))
+	$(Q) install -m 0755 -D $(strip $(firstword $(PROGLIST))) $(firstword $(STRIPLIST))
+	$(Q) $(if $(STRIP),$(STRIP) $(firstword $(STRIPLIST)))
 	$(eval PROGLIST=$(filter-out $(firstword $(PROGLIST)),$(PROGLIST)))
+	$(eval STRIPLIST=$(filter-out $(firstword $(STRIPLIST)),$(STRIPLIST)))
 	$(eval PROGOBJ=$(filter-out $(firstword $(PROGOBJ)),$(PROGOBJ)))
 endif
 
