@@ -100,7 +100,7 @@ VPATH += :$(SRCDIR)
 # Targets follow
 
 all:: .built
-.PHONY: .proglist clean preconfig depend distclean
+.PHONY: clean preconfig depend distclean
 .PRECIOUS: $(APPDIR)/libapps$(LIBEXT)
 
 ifneq ($(CONFIG_BUILD_LOADABLE),y)
@@ -241,6 +241,8 @@ endif
 else
 context::
 endif
+else
+context::
 endif
 
 .depend: Makefile $(SRCS)
