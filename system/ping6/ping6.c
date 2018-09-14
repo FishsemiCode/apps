@@ -45,6 +45,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include <arpa/inet.h>
 #include <netutils/icmpv6_ping.h>
 
 /****************************************************************************
