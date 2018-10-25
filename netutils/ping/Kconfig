@@ -6,7 +6,7 @@
 config NETUTILS_PING
 	bool "ICMP ping support"
 	default n
-	depends on NET_IPv4 && NET_ICMP
+	depends on NET_ICMP_SOCKET
 	help
 		Build in support for a IPv4 ping command.  This command ping will
 		send the ICMP ECHO_REQUEST and wait for the ICMP ECHO_RESPONSE from
@@ -15,7 +15,7 @@ config NETUTILS_PING
  config NETUTILS_PING6
 	bool "ICMPv6 ping support"
 	default n
-	depends on NET_IPv6 && NET_ICMPv6
+	depends on NET_ICMPv6_SOCKET
 	help
 		Build in support for a IPv6 ping command.  This command ping will
 		send the ICMPv6 ECHO_REQUEST and wait for the ICMPv6 ECHO_RESPONSE
