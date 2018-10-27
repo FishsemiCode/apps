@@ -66,7 +66,7 @@
 
 #define PAP_RX_AUTH_FAIL  0x10
 #define PAP_TX_AUTH_FAIL  0x20
-#define PAP_RX_TIMEOUT    0x80
+#define PAP_RX_TIMEOUT    0x40
 #define PAP_TX_TIMEOUT    0x80
 
 /****************************************************************************

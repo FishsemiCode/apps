@@ -66,7 +66,7 @@
 
 /* Set the debug message level */
 
-#define    PACKET_RX_DEBUG 1
+#define    PACKET_RX_DEBUG PPP_DEBUG
 
 /****************************************************************************
  * Private Functions
@@ -101,7 +101,7 @@ static void ppp_reject_protocol(struct ppp_context_s *ctx, u16_t protocol,
   sptr = buffer + count;
   for (i = 0; i < count; ++i)
     {
-      *dptr-- = *sptr--;
+      *--dptr = *--sptr;
     }
 
   pkt = (LCPPKT *)buffer;
@@ -151,8 +151,10 @@ void ppp_init(struct ppp_context_s *ctx)
 {
 #ifdef PPP_STATISTICS
   ctx->ppp_rx_frame_count = 0;
+  ctx->ppp_tx_frame_count = 0;
 #endif
   ctx->ppp_flags = 0;
+  ctx->ppp_tx_mru = PPP_RX_BUFFER_SIZE;
   ctx->ip_no_data_time = 0;
   ctx->ppp_id = 0;
 
@@ -165,77 +167,6 @@ void ppp_init(struct ppp_context_s *ctx)
   ahdlc_init(ctx);
   ahdlc_rx_ready(ctx);
 }
-
-/****************************************************************************
- * raise_ppp() - This routine will try to bring up a PPP connection,
- *  It is blocking. In the future we probably want to pass a
- *  structure with all the options on bringing up a PPP link, like
- *  server/client, DSN server, username password for PAP... +++ for
- *  now just use config and bit defines
- *
- ****************************************************************************/
-
-#if 0
-u16_t ppp_raise(u8_t config, u8_t *username, u8_t *password)
-{
-  u16_t    status = 0;
-
-  /* Initialize PPP engine */
-  /* init_ppp(); */
-
-  pap_init();
-  ipcp_init();
-  lcp_init();
-
-  /* Enable PPP */
-
-  ppp_flags = PPP_RX_READY;
-
-  /* Try to bring up the layers */
-
-  while (status == 0)
-    {
-#ifdef SYSTEM_POLLER
-      /* If the serial interrupt is not hooked to ahdlc_rx, or the
-         system needs to handle other stuff while were blocking, call
-         the system poller.*/
-
-      system_poller();
-#endif
-
-      /* Call the lcp task to bring up the LCP layer */
-
-      lcp_task(ppp_tx_buffer);
-
-      /* If LCP is up, neg next layer */
-
-      if (lcp_state & LCP_TX_UP)
-        {
-          /* If LCP wants PAP, try to authenticate, else bring up IPCP */
-
-          if ((lcp_state & LCP_RX_AUTH) && (!(pap_state & PAP_TX_UP)))
-            {
-              pap_task(ppp_tx_buffer,username,password);
-            }
-          else
-            {
-              ipcp_task(ppp_tx_buffer);
-            }
-        }
-
-      /* If IPCP came up then our link should be up. */
-
-      if ((ipcp_state & IPCP_TX_UP) && (ipcp_state & IPCP_RX_UP))
-        {
-          break;
-        }
-
-      status = check_ppp_errors();
-    }
-
-  return status;
-}
-#endif
 
 /****************************************************************************
  * Name: ppp_connect
@@ -303,7 +234,7 @@ void ppp_poll(struct ppp_context_s *ctx)
 
   if ((ctx->ipcp_state & IPCP_TX_UP) && (ctx->ipcp_state & IPCP_RX_UP))
     {
-      lcp_echo_request(ctx, ctx->ip_buf);
+      lcp_echo_request(ctx);
       return;
     }
 
@@ -356,14 +287,9 @@ void ppp_poll(struct ppp_context_s *ctx)
 
 void ppp_upcall(struct ppp_context_s *ctx, u16_t protocol, u8_t *buffer, u16_t len)
 {
-#ifdef PPP_STATISTICS
-  ++ctx->ppp_rx_frame_count;
-
-#ifdef PPP_DEBUG
+#if PPP_DEBUG
   dump_ppp_packet(buffer, len);
 #endif
-
-#endif /* PPP_STATISTICS */
 
   /* Check to see if we have a packet waiting to be processed */
 
@@ -472,7 +398,7 @@ u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
 
           bptr += *bptr - 1;
         }
-  }
+    }
 
   /* Bad? if we we need to send a config Reject */
 

@@ -74,7 +74,7 @@
 
 #define PPP_ESCAPED         0x1
 #define PPP_RX_READY        0x2
-#define PPP_RX_ASYNC_MAP    0x8
+#define PPP_RX_ASYNC_MAP    0x4
 #define PPP_TX_ASYNC_MAP    0x8
 #define PPP_PFC             0x10
 #define PPP_ACFC            0x20
@@ -98,12 +98,6 @@
 #define ECHO_REQ            0x9
 #define ECHO_REP            0xa
 
-/* Raise PPP config bits */
-
-#define USE_PAP             0x1
-#define USE_NOACCMBUG       0x2
-#define USE_GETDNS          0x4
-
 /****************************************************************************
  * Public Types
  ****************************************************************************/
@@ -120,7 +114,6 @@ struct ppp_context_s
   /* Main status */
 
   u8_t  ppp_flags;
-  u8_t  ppp_status;
   u16_t ppp_tx_mru;
   u8_t  ppp_id;
 
@@ -149,7 +142,6 @@ struct ppp_context_s
   /* LCP */
 
   u8_t   lcp_state;
-  u16_t  lcp_tx_mru;
   u8_t   lcp_retry;
   time_t lcp_prev_seconds;
 
@@ -191,7 +183,7 @@ struct ppp_context_s
 
   /* PPPD Settings */
 
-  struct pppd_settings_s *settings;
+  const struct pppd_settings_s *settings;
 };
 
 /****************************************************************************

@@ -78,7 +78,9 @@ static const u8_t lcplist[] =
   LPC_MAGICNUMBER,
   LPC_PFC,
   LPC_ACFC,
+#ifdef CONFIG_NETUTILS_PPPD_PAP
   LPC_AUTH,
+#endif
   LPC_ACCM,
   LPC_MRU,
   0
@@ -113,7 +115,6 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
   u8_t error = 0;
   u8_t id;
   u16_t len, j;
-  struct pppd_settings_s *pppd_settings = ctx->settings;
 
   switch (*bptr++)
   {
@@ -121,6 +122,7 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
     /* Parse request and see if we can ACK it */
 
     id = *bptr++;
+    UNUSED(id);
     len = (*bptr++ << 8);
     len |= *bptr++;
     /*len -= 2;*/
@@ -128,7 +130,7 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
     /* In case of new peer connection */
 
     ipcp_init(ctx);
-    ctx->lcp_state &= ~LCP_TX_UP;
+    ctx->lcp_state &= ~LCP_RX_UP;
 
     DEBUG1(("received [LCP Config Request id %u\n", id));
     if (scan_packet(ctx, (u16_t)LCP, lcplist, buffer, bptr, (u16_t)(len-4)))
@@ -141,8 +143,7 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
       {
         /* Lets try to implement what peer wants */
 
-        tptr = bptr = buffer;
-        bptr += 4;            /* skip code, id, len */
+        tptr = bptr;
         error = 0;
 
         /* First scan for unknown values */
@@ -178,12 +179,13 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
                 {
                   // ok
                   DEBUG1(("<asyncmap sum=0x%04x>",j));
-                  //ahdlc_flags |= PPP_TX_ASYNC_MAP;
+                  ctx->ahdlc_flags |= PPP_TX_ASYNC_MAP;
                 }
-              else if (j!=0)
+              else if (j==0x3fc)
                 {
                   // ok
                   DEBUG1(("<asyncmap sum=0x%04x>, assume 0xffffffff",j));
+                  ctx->ahdlc_flags &= ~PPP_TX_ASYNC_MAP;
                 }
               else
                 {
@@ -207,26 +209,8 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
                 {
                   /* Negotiate PAP */
 
-                  if (strlen(pppd_settings->pap_username) > 0)
-                    {
-                      DEBUG1(("<auth pap> "));
-                      ctx->lcp_state |= LCP_RX_AUTH;
-                    }
-                  else
-                    {
-                      DEBUG1(("<rej auth pap> "));
-
-                      *tptr++ = CONF_REJ;
-                      tptr++;             // Keep ID
-                      *tptr++ = 0;
-                      *tptr++ = 8;
-                      *tptr++ = LPC_AUTH;
-                      *tptr++ = 0x4;
-                      *tptr++ = 0xc0;
-                      *tptr++ = 0x23;
-                      ahdlc_tx(ctx, LCP, 0, buffer, 0, (u16_t)(tptr-buffer));
-                      return;
-                    }
+                  DEBUG1(("<auth pap> "));
+                  ctx->lcp_state |= LCP_RX_AUTH;
                 }
               else
                 {
@@ -257,13 +241,13 @@ void lcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
             case LPC_PFC:
               bptr++;
               DEBUG1(("<pcomp> "));
-              /*tflag|=PPP_PFC;*/
+              ctx->ahdlc_flags |= PPP_PFC;
               break;
 
             case LPC_ACFC:
               bptr++;
               DEBUG1(("<accomp> "));
-              /*tflag|=PPP_ACFC;*/
+              ctx->ahdlc_flags |= PPP_ACFC;
               break;
             }
           }
@@ -432,47 +416,48 @@ void lcp_disconnect(struct ppp_context_s *ctx, u8_t id)
  * Name: lcp_echo_request
  ****************************************************************************/
 
-void lcp_echo_request(struct ppp_context_s *ctx, u8_t *buffer)
+void lcp_echo_request(struct ppp_context_s *ctx)
 {
+  u8_t buffer[8];
   u8_t *bptr;
   u16_t t;
   LCPPKT *pkt;
 
   if ((ctx->lcp_state & LCP_TX_UP) && (ctx->lcp_state & LCP_RX_UP))
-  {
-    if ((ppp_arch_clock_seconds() - ctx->lcp_prev_seconds) > LCP_ECHO_INTERVAL)
-      {
-        ctx->lcp_prev_seconds = ppp_arch_clock_seconds();
+    {
+      if ((ppp_arch_clock_seconds() - ctx->lcp_prev_seconds) > LCP_ECHO_INTERVAL)
+        {
+          ctx->lcp_prev_seconds = ppp_arch_clock_seconds();
 
-        pkt = (LCPPKT *)buffer;
+          pkt = (LCPPKT *)buffer;
 
-        /* Configure-Request only here, write id */
+          /* Configure-Request only here, write id */
 
-        pkt->code = ECHO_REQ;
-        pkt->id = ctx->ppp_id;
+          pkt->code = ECHO_REQ;
+          pkt->id = ctx->ppp_id;
 
-        bptr = pkt->data;
+          bptr = pkt->data;
 
-        *bptr++ = 0;
-        *bptr++ = 0;
-        *bptr++ = 0;
-        *bptr++ = 0;
+          *bptr++ = 0;
+          *bptr++ = 0;
+          *bptr++ = 0;
+          *bptr++ = 0;
 
-        /* Write length */
+          /* Write length */
 
-        t = bptr - buffer;
-        pkt->len = htons(t); /* length here -  code and ID + */
+          t = bptr - buffer;
+          pkt->len = htons(t); /* length here -  code and ID + */
 
-        DEBUG1((" len %d\n",t));
+          DEBUG1((" len %d\n",t));
 
-        /* Send packet */
-        /* Send packet ahdlc_txz(procol,header,data,headerlen,datalen); */
+          /* Send packet */
+          /* Send packet ahdlc_txz(procol,header,data,headerlen,datalen); */
 
-        DEBUG1(("\nWriting ECHO-REQUEST frame \n"));
-        ahdlc_tx(ctx, LCP, 0, buffer, 0, t);
-        DEBUG1(("- end ECHO-REQUEST Write frame\n"));
-      }
-  }
+          DEBUG1(("\nWriting ECHO-REQUEST frame \n"));
+          ahdlc_tx(ctx, LCP, 0, buffer, 0, t);
+          DEBUG1(("- end ECHO-REQUEST Write frame\n"));
+        }
+    }
 }
 
 /****************************************************************************
@@ -598,7 +583,7 @@ void lcp_task(struct ppp_context_s *ctx, u8_t *buffer)
 
           if (ctx->lcp_retry > LCP_RETRY_COUNT)
             {
-              ctx->lcp_state &= LCP_TX_TIMEOUT;
+              ctx->lcp_state |= LCP_TX_TIMEOUT;
             }
         }
     }

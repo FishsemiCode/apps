@@ -62,13 +62,6 @@
 #define LPC_PFC            0x7
 #define LPC_ACFC           0x8
 
-/* LCP Negotiated options flag equates */
-
-#define LCP_OPT_ACCM       0x1
-#define LCP_OPT_AUTH       0x2
-#define LCP_OPT_PFC        0x4
-#define LCP_OPT_ACFC       0x4
-
 /* LCP state machine flags */
 
 #define LCP_TX_UP          0x1
@@ -116,7 +109,7 @@ void lcp_init(struct ppp_context_s *ctx);
 void lcp_rx(struct ppp_context_s *ctx, u8_t *, u16_t);
 void lcp_task(struct ppp_context_s *ctx, u8_t *buffer);
 void lcp_disconnect(struct ppp_context_s *ctx, u8_t id);
-void lcp_echo_request(struct ppp_context_s *ctx, u8_t *buffer);
+void lcp_echo_request(struct ppp_context_s *ctx);
 
 #undef EXTERN
 #ifdef __cplusplus

@@ -68,7 +68,7 @@
 
 static const u8_t ipcplist[] =
 {
-  0x3,
+  IPCP_IPADDRESS,
   0
 };
 
@@ -84,10 +84,10 @@ static const u8_t ipcplist[] =
  * Name: printip
  ****************************************************************************/
 
-#if 0
-void printip(uip_ipaddr_t ip2)
+#if PPP_DEBUG
+void printip(struct in_addr ip2)
 {
-  char *ip = (u8_t*)ip2;
+  char *ip = (u8_t *)&ip2.s_addr;
   DEBUG1((" %d.%d.%d.%d ",ip[0],ip[1],ip[2],ip[3]));
 }
 #else
@@ -171,7 +171,7 @@ void ipcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
             ((u8_t*)&ctx->peer_ip)[3] = *bptr++;
 
             DEBUG1(("Peer IP "));
-            /* printip(peer_ip_addr); */
+            printip(ctx->peer_ip);
             DEBUG1(("\n"));
 
             netlib_set_dripv4addr((char*)ctx->ifname, &ctx->peer_ip);
@@ -262,27 +262,31 @@ void ipcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
           /* Dump length */
 
           bptr++;
-          ((u8_t*)ipaddr)[0] = *bptr++;
-          ((u8_t*)ipaddr)[1] = *bptr++;
-          ((u8_t*)ipaddr)[2] = *bptr++;
-          ((u8_t*)ipaddr)[3] = *bptr++;
+          ((u8_t*)&ctx->local_ip)[0] = *bptr++;
+          ((u8_t*)&ctx->local_ip)[1] = *bptr++;
+          ((u8_t*)&ctx->local_ip)[2] = *bptr++;
+          ((u8_t*)&ctx->local_ip)[3] = *bptr++;
           break;
 
+#ifdef IPCP_GET_PRI_DNS
         case IPCP_PRIMARY_DNS:
           bptr++;
-          ((u8_t*)pri_dns_addr)[0] = *bptr++;
-          ((u8_t*)pri_dns_addr)[1] = *bptr++;
-          ((u8_t*)pri_dns_addr)[2] = *bptr++;
-          ((u8_t*)pri_dns_addr)[3] = *bptr++;
+          ((u8_t*)&ctx->pri_dns_addr)[0] = *bptr++;
+          ((u8_t*)&ctx->pri_dns_addr)[1] = *bptr++;
+          ((u8_t*)&ctx->pri_dns_addr)[2] = *bptr++;
+          ((u8_t*)&ctx->pri_dns_addr)[3] = *bptr++;
           break;
+#endif
 
+#ifdef IPCP_GET_SEC_DNS
         case IPCP_SECONDARY_DNS:
           bptr++;
-          ((u8_t*)sec_dns_addr)[0] = *bptr++;
-          ((u8_t*)sec_dns_addr)[1] = *bptr++;
-          ((u8_t*)sec_dns_addr)[2] = *bptr++;
-          ((u8_t*)sec_dns_addr)[3] = *bptr++;
+          ((u8_t*)&ctx->sec_dns_addr)[0] = *bptr++;
+          ((u8_t*)&ctx->sec_dns_addr)[1] = *bptr++;
+          ((u8_t*)&ctx->sec_dns_addr)[2] = *bptr++;
+          ((u8_t*)&ctx->sec_dns_addr)[3] = *bptr++;
           break;
+#endif
 
         default:
            DEBUG1(("IPCP CONFIG_ACK problem1\n"));
@@ -294,12 +298,12 @@ void ipcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
     /*ppp_ipcp_state &= ~IPCP_RX_UP;*/
 
     DEBUG1(("were up! \n"));
-    //printip(pppif.ipaddr);
+    printip(ctx->local_ip);
 #ifdef IPCP_GET_PRI_DNS
-    printip(pri_dns_addr);
+    printip(ctx->pri_dns_addr);
 #endif
 #ifdef IPCP_GET_SEC_DNS
-    printip(sec_dns_addr);
+    printip(ctx->sec_dns_addr);
 #endif
     DEBUG1(("\n"));
     break;
@@ -343,6 +347,7 @@ void ipcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
           ((u8_t*)&ctx->pri_dns_addr)[1] = *bptr++;
           ((u8_t*)&ctx->pri_dns_addr)[2] = *bptr++;
           ((u8_t*)&ctx->pri_dns_addr)[3] = *bptr++;
+          netlib_set_ipv4dnsaddr(&ctx->pri_dns_addr);
           break;
 #endif
 
@@ -353,6 +358,7 @@ void ipcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
           ((u8_t*)&ctx->sec_dns_addr)[1] = *bptr++;
           ((u8_t*)&ctx->sec_dns_addr)[2] = *bptr++;
           ((u8_t*)&ctx->sec_dns_addr)[3] = *bptr++;
+          netlib_set_ipv4dnsaddr(&ctx->sec_dns_addr);
           break;
 #endif
 
@@ -363,12 +369,12 @@ void ipcp_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
 
     ctx->ppp_id++;
 
-    printip(pppif.ipaddr);
+    printip(ctx->local_ip);
 #ifdef IPCP_GET_PRI_DNS
-    printip(pri_dns_addr);
+    printip(ctx->pri_dns_addr);
 #endif
 #ifdef IPCP_GET_PRI_DNS
-    printip(sec_dns_addr);
+    printip(ctx->sec_dns_addr);
 #endif
     DEBUG1(("\n"));
     break;
@@ -468,7 +474,7 @@ void ipcp_task(struct ppp_context_s *ctx, u8_t *buffer)
           *bptr++ = (u8_t)((u8_t*)&ctx->local_ip)[3];
 
 #ifdef IPCP_GET_PRI_DNS
-          if (!(ppp_ipcp_state & IPCP_PRI_DNS_BIT))
+          if (!(ctx->ipcp_state & IPCP_PRI_DNS_BIT))
             {
               /* Write zeros for IP address the first time */
 
@@ -482,7 +488,7 @@ void ipcp_task(struct ppp_context_s *ctx, u8_t *buffer)
 #endif
 
 #ifdef IPCP_GET_SEC_DNS
-          if (!(ppp_ipcp_state & IPCP_SEC_DNS_BIT))
+          if (!(ctx->ipcp_state & IPCP_SEC_DNS_BIT))
             {
               /* Write zeros for IP address the first time */
 
@@ -517,7 +523,7 @@ void ipcp_task(struct ppp_context_s *ctx, u8_t *buffer)
 
           if (ctx->ipcp_retry > IPCP_RETRY_COUNT)
             {
-              ctx->ipcp_state &= IPCP_TX_TIMEOUT;
+              ctx->ipcp_state |= IPCP_TX_TIMEOUT;
             }
         }
     }

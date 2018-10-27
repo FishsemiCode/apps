@@ -110,7 +110,7 @@ static int tun_alloc(char *dev)
       return fd;
     }
 
-  printf("tun fd:%i\n", fd);
+  debug_printf("tun fd:%i\n", fd);
 
   if ((errcode = make_nonblock(fd)) < 0)
     {
@@ -140,7 +140,7 @@ static int tun_alloc(char *dev)
  * Name: open_tty
  ****************************************************************************/
 
-static int open_tty(char *dev)
+static int open_tty(const char *dev)
 {
   int fd;
   int errcode;
@@ -156,7 +156,7 @@ static int open_tty(char *dev)
       return errcode;
     }
 
-  printf("tty fd:%i\n", fd);
+  debug_printf("tty fd:%i\n", fd);
 
   return fd;
 }
@@ -204,7 +204,7 @@ void ppp_reconnect(struct ppp_context_s *ctx)
 {
   int ret;
   int retry = PPP_MAX_CONNECT;
-  struct pppd_settings_s *pppd_settings = ctx->settings;
+  const struct pppd_settings_s *pppd_settings = ctx->settings;
   netlib_ifdown((char*)ctx->ifname);
 
   lcp_disconnect(ctx, ++ctx->ppp_id);
@@ -220,7 +220,7 @@ void ppp_reconnect(struct ppp_context_s *ctx)
       ret = chat(&ctx->ctl, pppd_settings->disconnect_script);
       if (ret < 0)
         {
-          printf("ppp: disconnect script failed\n");
+          debug_printf("ppp: disconnect script failed\n");
         }
     }
 
@@ -231,7 +231,7 @@ void ppp_reconnect(struct ppp_context_s *ctx)
           ret = chat(&ctx->ctl, pppd_settings->connect_script);
           if (ret < 0)
             {
-              printf("ppp: connect script failed\n");
+              debug_printf("ppp: connect script failed\n");
               --retry;
               if (retry == 0)
                 {
@@ -314,7 +314,7 @@ int ppp_arch_putchar(struct ppp_context_s *ctx, u8_t c)
  * Name: pppd
  ****************************************************************************/
 
-int pppd(struct pppd_settings_s *pppd_settings)
+int pppd(const struct pppd_settings_s *pppd_settings)
 {
   struct pollfd fds[2];
   int ret;
@@ -335,7 +335,7 @@ int pppd(struct pppd_settings_s *pppd_settings)
   ctx->ctl.fd = open_tty(pppd_settings->ttyname);
   if (ctx->ctl.fd < 0)
     {
-      close(ctx->ctl.fd);
+      close(ctx->if_fd);
       free(ctx);
       return 2;
     }
@@ -362,7 +362,7 @@ int pppd(struct pppd_settings_s *pppd_settings)
       if (ret > 0 && fds[0].revents & POLLIN)
         {
           ret = read(ctx->if_fd, ctx->ip_buf, PPP_RX_BUFFER_SIZE);
-          printf("read from tun :%i\n", ret);
+          debug_printf("read from tun :%i\n", ret);
           if (ret > 0)
             {
               ctx->ip_len = ret;

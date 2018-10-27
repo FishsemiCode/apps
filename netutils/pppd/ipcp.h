@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/pppd/ipcp.c
+ * netutils/pppd/ipcp.h
  * Internet Protocol Control Protocol header file
  *
  *   Version: 0.1 Original Version June 3, 2000
@@ -51,11 +51,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Config options (move to pppconfig)
-   #define  IPCP_RETRY_COUNT  5
-   #define  IPCP_TIMEOUT      5
-*/
-
 /* IPCP Option Types */
 
 #define IPCP_IPADDRESS        0x03
@@ -68,8 +63,8 @@
 #define IPCP_RX_UP            0x02
 #define IPCP_IP_BIT           0x04
 #define IPCP_TX_TIMEOUT       0x08
-#define IPCP_PRI_DNS_BIT      0x08
-#define IPCP_SEC_DNS_BIT      0x10
+#define IPCP_PRI_DNS_BIT      0x10
+#define IPCP_SEC_DNS_BIT      0x20
 
 /****************************************************************************
  * Public Types

@@ -99,6 +99,7 @@ void pap_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
 
     /* Display message if debug */
 
+    bptr += 3;
     len = *bptr++;
     *(bptr + len) = 0;
     DEBUG1((" %s \n",bptr));
@@ -111,6 +112,7 @@ void pap_rx(struct ppp_context_s *ctx, u8_t *buffer, u16_t count)
 
     /* Display message if debug */
 
+    bptr += 3;
     len = *bptr++;
     *(bptr + len)=0;
     DEBUG1((" %s \n",bptr));
@@ -189,7 +191,7 @@ void pap_task(struct ppp_context_s *ctx, u8_t *buffer)
           if (ctx->pap_retry > PAP_RETRY_COUNT)
             {
               DEBUG1(("PAP - timout\n"));
-              ctx->pap_state &= PAP_TX_TIMEOUT;
+              ctx->pap_state |= PAP_TX_TIMEOUT;
             }
         }
     }

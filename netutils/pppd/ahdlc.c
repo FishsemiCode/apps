@@ -54,22 +54,8 @@
 #  define PACKET_TX_DEBUG 1
 #else
 #  define DEBUG1(x)
-#  undef  PACKET_TX_DEBUG
+#  define PACKET_TX_DEBUG 0
 #endif
-
-/* ahdlc flags bit defins, for ahdlc_flags variable */
-
-/* Escaped mode bit */
-
-#define AHDLC_ESCAPED        0x1
-
-/* Frame is ready bit */
-
-#define AHDLC_RX_READY       0x2
-#define AHDLC_RX_ASYNC_MAP   0x4
-#define AHDLC_TX_ASYNC_MAP   0x8
-#define AHDLC_PFC            0x10
-#define AHDLC_ACFC           0x20
 
 /****************************************************************************
  * Private Functions
@@ -112,11 +98,12 @@ static u16_t crcadd(u16_t crcvalue, u8_t c)
 
 void ahdlc_init(struct ppp_context_s *ctx)
 {
-  ctx->ahdlc_flags      = 0 | AHDLC_RX_ASYNC_MAP;
+  ctx->ahdlc_flags      = PPP_RX_ASYNC_MAP;
   ctx->ahdlc_rx_count   = 0;
   ctx->ahdlc_tx_offline = 0;
 
 #ifdef PPP_STATISTICS
+  ctx->ahdlc_crc_error      = 0;
   ctx->ahdlc_rx_tobig_error = 0;
 #endif
 }
@@ -131,7 +118,7 @@ void ahdlc_rx_ready(struct ppp_context_s *ctx)
 {
   ctx->ahdlc_rx_count = 0;
   ctx->ahdlc_rx_crc = 0xffff;
-  ctx->ahdlc_flags |= AHDLC_RX_READY;
+  ctx->ahdlc_flags |= PPP_RX_READY;
 }
 
 /****************************************************************************
@@ -152,13 +139,13 @@ u8_t ahdlc_rx(struct ppp_context_s *ctx, u8_t c)
      flow control set, but if host ignores it and sends us a char when
      the PPP Receive packet is in use, discard the character. */
 
-  if (ctx->ahdlc_flags & AHDLC_RX_READY)
+  if (ctx->ahdlc_flags & PPP_RX_READY)
     {
       /* Check to see if character is less than 0x20 hex we really
          should set AHDLC_RX_ASYNC_MAP on by default and only turn it
          off when it is negotiated off to handle some buggy stacks. */
 
-      if ((c < 0x20) && ((ctx->ahdlc_flags & AHDLC_RX_ASYNC_MAP) == 0))
+      if ((c < 0x20) && ((ctx->ahdlc_flags & PPP_RX_ASYNC_MAP) == 0))
         {
           /* Discard character */
 
@@ -168,11 +155,11 @@ u8_t ahdlc_rx(struct ppp_context_s *ctx, u8_t c)
 
       /* Are we in escaped mode? */
 
-      if (ctx->ahdlc_flags & AHDLC_ESCAPED)
+      if (ctx->ahdlc_flags & PPP_ESCAPED)
         {
           /* Set escaped to FALSE */
 
-          ctx->ahdlc_flags &= ~AHDLC_ESCAPED;
+          ctx->ahdlc_flags &= ~PPP_ESCAPED;
 
           /* If value is 0x7e then silently discard and reset receive packet */
 
@@ -211,13 +198,13 @@ u8_t ahdlc_rx(struct ppp_context_s *ctx, u8_t c)
 
               /* Lock PPP buffer */
 
-              ctx->ahdlc_flags &= ~AHDLC_RX_READY;
+              ctx->ahdlc_flags &= ~PPP_RX_READY;
 
              /*upcall routine must fully process frame before return
               *    as returning signifies that buffer belongs to AHDLC again.
               */
 
-              if ((c & 0x1) && (ctx->ahdlc_flags & PPP_PFC))
+              if ((ctx->ahdlc_rx_buffer[0] & 0x1) && (ctx->ahdlc_flags & PPP_PFC))
                 {
                   /* Send up packet */
 
