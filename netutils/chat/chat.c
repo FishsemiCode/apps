@@ -86,10 +86,10 @@ void chat_init(FAR struct chat* priv, FAR struct chat_ctl* ctl)
 /* Linear one-pass tokenizer. */
 
 static int chat_tokenise(FAR struct chat* priv,
-                         FAR char* script,
+                         FAR const char* script,
                          FAR struct chat_token** first_tok)
 {
-  FAR char *cursor = script;     /* pointer to the current character */
+  FAR const char *cursor = script;/* pointer to the current character */
   unsigned int quoted = 0;       /* two-valued:
                                   * 1: quoted (expecting a closing quote)
                                   * 0: not quoted */
@@ -431,7 +431,7 @@ static void chat_tokens_free(FAR struct chat_token* first_tok)
 
 /* Main parsing function. */
 
-static int chat_script_parse(FAR struct chat* priv, FAR char* script)
+static int chat_script_parse(FAR struct chat* priv, FAR const char* script)
 {
   FAR struct chat_token* first_tok;
   int ret;
@@ -709,7 +709,7 @@ static int chat_script_free(FAR struct chat* priv)
  * Public Functions
  ****************************************************************************/
 
-int chat(FAR struct chat_ctl* ctl, FAR char* script)
+int chat(FAR struct chat_ctl* ctl, FAR const char* script)
 {
   int ret = 0;
   struct chat priv;
