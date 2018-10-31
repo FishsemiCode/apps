@@ -84,8 +84,8 @@ struct ping6_info_s
   FAR const char *hostname; /* Host name to ping */
   uint16_t count;           /* Number of pings requested */
   uint16_t datalen;         /* Number of bytes to be sent */
-  int16_t delay;            /* Deciseconds to delay between pings */
-  int16_t timeout;          /* Deciseconds to wait response before timeout */
+  uint16_t delay;           /* Deciseconds to delay between pings */
+  uint16_t timeout;         /* Deciseconds to wait response before timeout */
   FAR void *priv;           /* Private context for callback */
   void (*callback)(FAR const struct ping6_result_s *result);
 };

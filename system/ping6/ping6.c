@@ -245,7 +245,7 @@ int ping6_main(int argc, char **argv)
           case 'i':
             {
               long delay = strtol(optarg, &endptr, 10);
-              if (delay < 1 || delay > INT16_MAX)
+              if (delay < 1 || delay > UINT16_MAX)
                 {
                   fprintf(stderr, "ERROR: <interval> out of range: %ld\n", delay);
                   goto errout_with_usage;
@@ -258,7 +258,7 @@ int ping6_main(int argc, char **argv)
           case 'W':
             {
               long timeout = strtol(optarg, &endptr, 10);
-              if (timeout < 1 || timeout > INT16_MAX)
+              if (timeout < 1 || timeout > UINT16_MAX)
                 {
                   fprintf(stderr, "ERROR: <timeout> out of range: %ld\n", timeout);
                   goto errout_with_usage;
