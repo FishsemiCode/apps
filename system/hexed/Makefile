@@ -51,7 +51,7 @@ MAINSRC = hexed.c
 CONFIG_XYZ_PROGNAME ?= hexed$(EXEEXT)
 PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" include}
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(SRCDIR)/include}
 
 VPATH += :src
 ROOTDEPPATH += --dep-path src
