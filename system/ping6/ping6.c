@@ -46,15 +46,21 @@
 #include <errno.h>
 
 #include <arpa/inet.h>
-#include <netutils/icmpv6_ping.h>
+
+#include "netutils/icmpv6_ping.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 #define ICMPv6_PING6_DATALEN 56
+
 #define ICMPv6_NPINGS        10    /* Default number of pings */
 #define ICMPv6_POLL_DELAY    1000  /* 1 second in milliseconds */
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
 
 /****************************************************************************
  * Name: show_usage
@@ -98,7 +104,8 @@ static void ping6_result(FAR const struct ping6_result_s *result)
   switch (result->code)
     {
       case ICMPv6_E_HOSTIP:
-        fprintf(stderr, "ERROR: ping6_gethostip(%s) failed\n", result->info->hostname);
+        fprintf(stderr, "ERROR: ping6_gethostip(%s) failed\n",
+                result->info->hostname);
         break;
 
       case ICMPv6_E_MEMORY:
@@ -130,7 +137,8 @@ static void ping6_result(FAR const struct ping6_result_s *result)
         break;
 
       case ICMPv6_W_TIMEOUT:
-        inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer,
+                  INET6_ADDRSTRLEN);
         printf("No response from %s: icmp_seq=%u time=%d ms\n",
                strbuffer, result->seqno, result->extra);
         break;
@@ -162,9 +170,11 @@ static void ping6_result(FAR const struct ping6_result_s *result)
         break;
 
       case ICMPv6_I_ROUNDTRIP:
-        inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer,
+                  INET6_ADDRSTRLEN);
         printf("%ld bytes from %s icmp_seq=%u time=%u ms\n",
-               result->info->datalen, strbuffer, result->seqno, result->extra);
+               result->info->datalen, strbuffer, result->seqno,
+               result->extra);
         break;
 
       case ICMPv6_W_RECVBIG:
@@ -190,7 +200,8 @@ static void ping6_result(FAR const struct ping6_result_s *result)
 
             /* Calculate the percentage of lost packets */
 
-            tmp = (100 * (result->nrequests - result->nreplies) + (result->nrequests >> 1)) /
+            tmp = (100 * (result->nrequests - result->nreplies) +
+                   (result->nrequests >> 1)) /
                    result->nrequests;
 
             printf("%u packets transmitted, %u received, %u%% packet loss, time %d ms\n",
@@ -215,11 +226,11 @@ int ping6_main(int argc, char **argv)
   int exitcode;
   int option;
 
-  info.count = ICMPv6_NPINGS;
-  info.datalen = ICMPv6_PING6_DATALEN;
-  info.delay = ICMPv6_POLL_DELAY;
-  info.timeout = ICMPv6_POLL_DELAY;
-  info.callback = ping6_result;
+  info.count     = ICMPv6_NPINGS;
+  info.datalen   = ICMPv6_PING6_DATALEN;
+  info.delay     = ICMPv6_POLL_DELAY;
+  info.timeout   = ICMPv6_POLL_DELAY;
+  info.callback  = ping6_result;
 
   /* Parse command line options */
 

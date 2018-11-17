@@ -179,10 +179,10 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
     * file.
     */
 
-  if (ret == OK && last != '\n')
-    {
-      nsh_output(vtbl, "\n");
-    }
+   if (ret == OK && last != '\n')
+     {
+       nsh_output(vtbl, "\n");
+     }
 
    /* Close the input file and return the result */
 

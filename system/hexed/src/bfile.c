@@ -67,6 +67,7 @@ static FAR void *bfallocbuf(FAR struct bfile_s *bf, long sz)
     }
 
   bf->buf = buf;
+
   /* Clear new memory */
 
   if (sz > bf->bufsz)

@@ -4,6 +4,11 @@
  *   Copyright (C) 2018 Pinecone Inc. All rights reserved.
  *   Author: Guiding Li<liguiding@pinecone.net>
  *
+ * Extracted from logic originally written by:
+ *
+ *   Copyright (C) 2017-2018 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -52,7 +57,8 @@
 
 #include <nuttx/clock.h>
 #include <nuttx/net/icmp.h>
-#include <netutils/icmp_ping.h>
+
+#include "netutils/icmp_ping.h"
 
 /****************************************************************************
  * Pre-processor Definitions

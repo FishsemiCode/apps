@@ -51,8 +51,8 @@
 #include "lcp.h"
 
 #ifdef CONFIG_NETUTILS_PPPD_PAP
-#include "pap.h"
-#endif /* CONFIG_NETUTILS_PPPD_PAP */
+#  include "pap.h"
+#endif
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -66,7 +66,7 @@
 
 /* Set the debug message level */
 
-#define    PACKET_RX_DEBUG PPP_DEBUG
+#define PACKET_RX_DEBUG PPP_DEBUG
 
 /****************************************************************************
  * Private Functions
@@ -77,16 +77,18 @@
  *
  ****************************************************************************/
 
-static void ppp_reject_protocol(struct ppp_context_s *ctx, u16_t protocol,
-                                u8_t *buffer, u16_t count)
+static void ppp_reject_protocol(FAR struct ppp_context_s *ctx,
+                                uint16_t protocol, FAR uint8_t * buffer,
+                                uint16_t count)
 {
-  u16_t    i;
-  u8_t *dptr, *sptr;
-  LCPPKT *pkt;
+  uint16_t i;
+  FAR uint8_t *dptr;
+  FAR uint8_t *sptr;
+  FAR LCPPKT *pkt;
 
-  /* first copy rejected packet back, start from end and work forward,
-     +++ Pay attention to buffer management when updated. Assumes fixed
-     PPP blocks. */
+  /* First copy rejected packet back, start from end and work forward, +++ Pay
+   * attention to buffer management when updated. Assumes fixed PPP blocks.
+   */
 
   DEBUG1(("Rejecting Protocol\n"));
   if ((count + 6) > PPP_RX_BUFFER_SIZE)
@@ -104,13 +106,15 @@ static void ppp_reject_protocol(struct ppp_context_s *ctx, u16_t protocol,
       *--dptr = *--sptr;
     }
 
-  pkt = (LCPPKT *)buffer;
-  pkt->code = PROT_REJ;        /* Write Conf_rej */
-  /*pkt->id = tid++;*/            /* write tid */
-  pkt->len = htons(count + 6);
-  *((u16_t *)(&pkt->data[0])) = htons(protocol);
+  pkt = (LCPPKT *) buffer;
+  pkt->code = PROT_REJ;         /* Write Conf_rej */
 
-  ahdlc_tx(ctx, LCP, buffer, 0, (u16_t)(count + 6), 0);
+  /* pkt->id = tid++;  write tid */
+
+  pkt->len = htons(count + 6);
+  *((FAR uint16_t *) (&pkt->data[0])) = htons(protocol);
+
+  ahdlc_tx(ctx, LCP, buffer, 0, (uint16_t)(count + 6), 0);
 }
 
 /****************************************************************************
@@ -122,19 +126,19 @@ static void ppp_reject_protocol(struct ppp_context_s *ctx, u16_t protocol,
  ****************************************************************************/
 
 #if PACKET_RX_DEBUG
-void dump_ppp_packet(u8_t *buffer, u16_t len)
+void dump_ppp_packet(FAR uint8_t * buffer, uint16_t len)
 {
   int i;
 
   DEBUG1(("\n"));
-  for (i = 0;i < len; ++i)
+  for (i = 0; i < len; ++i)
     {
       if ((i & 0x1f) == 0x10)
         {
           DEBUG1(("\n"));
         }
 
-      DEBUG1(("0x%02x ",buffer[i]));
+      DEBUG1(("0x%02x ", buffer[i]));
     }
 
   DEBUG1(("\n\n"));
@@ -147,7 +151,7 @@ void dump_ppp_packet(u8_t *buffer, u16_t len)
  *
  ****************************************************************************/
 
-void ppp_init(struct ppp_context_s *ctx)
+void ppp_init(FAR struct ppp_context_s *ctx)
 {
 #ifdef PPP_STATISTICS
   ctx->ppp_rx_frame_count = 0;
@@ -160,7 +164,7 @@ void ppp_init(struct ppp_context_s *ctx)
 
 #ifdef CONFIG_NETUTILS_PPPD_PAP
   pap_init(ctx);
-#endif /* CONFIG_NETUTILS_PPPD_PAP */
+#endif
   ipcp_init(ctx);
   lcp_init(ctx);
 
@@ -172,7 +176,7 @@ void ppp_init(struct ppp_context_s *ctx)
  * Name: ppp_connect
  ****************************************************************************/
 
-void ppp_connect(struct ppp_context_s *ctx)
+void ppp_connect(FAR struct ppp_context_s *ctx)
 {
   /* Initialize PPP engine */
 
@@ -180,7 +184,7 @@ void ppp_connect(struct ppp_context_s *ctx)
 
 #ifdef CONFIG_NETUTILS_PPPD_PAP
   pap_init(ctx);
-#endif /* CONFIG_NETUTILS_PPPD_PAP */
+#endif
   ipcp_init(ctx);
   lcp_init(ctx);
 
@@ -193,7 +197,7 @@ void ppp_connect(struct ppp_context_s *ctx)
  * Name: ppp_send
  ****************************************************************************/
 
-void ppp_send(struct ppp_context_s *ctx)
+void ppp_send(FAR struct ppp_context_s *ctx)
 {
   /* If IPCP came up then our link should be up. */
 
@@ -207,9 +211,9 @@ void ppp_send(struct ppp_context_s *ctx)
  * Name: ppp_poll
  ****************************************************************************/
 
-void ppp_poll(struct ppp_context_s *ctx)
+void ppp_poll(FAR struct ppp_context_s *ctx)
 {
-  u8_t c;
+  uint8_t c;
 
   ctx->ip_len = 0;
 
@@ -247,6 +251,7 @@ void ppp_poll(struct ppp_context_s *ctx)
   if ((ctx->lcp_state & LCP_TX_UP) && (ctx->lcp_state & LCP_RX_UP))
     {
       /* If LCP wants PAP, try to authenticate, else bring up IPCP */
+
 #ifdef CONFIG_NETUTILS_PPPD_PAP
       if ((ctx->lcp_state & LCP_RX_AUTH) && (!(ctx->pap_state & PAP_TX_UP)))
         {
@@ -259,11 +264,11 @@ void ppp_poll(struct ppp_context_s *ctx)
 #else
       if (ctx->lcp_state & LCP_RX_AUTH)
         {
-          /* lcp is asking for authentication but we do not support this.
-           * This should be communicated upstream but we do not have an
-           * interface for that right now, so just ignore it; nothing can be
-           * done.  This also should not have been hit because upcall does
-           * not know about the pap message type.
+          /* lcp is asking for authentication but we do not support this. This
+           * should be communicated upstream but we do not have an interface
+           * for that right now, so just ignore it; nothing can be done.  This
+           * also should not have been hit because upcall does not know about
+           * the pap message type.
            */
 
           DEBUG1(("Asking for PAP, but we do not know PAP\n"));
@@ -272,7 +277,7 @@ void ppp_poll(struct ppp_context_s *ctx)
         {
           ipcp_task(ctx, ctx->ip_buf);
         }
-#endif /* CONFIG_NETUTILS_PPPD_PAP */
+#endif
     }
 }
 
@@ -285,7 +290,8 @@ void ppp_poll(struct ppp_context_s *ctx)
  *
  ****************************************************************************/
 
-void ppp_upcall(struct ppp_context_s *ctx, u16_t protocol, u8_t *buffer, u16_t len)
+void ppp_upcall(FAR struct ppp_context_s *ctx, uint16_t protocol,
+                FAR uint8_t * buffer, uint16_t len)
 {
 #if PPP_DEBUG
   dump_ppp_packet(buffer, len);
@@ -299,27 +305,27 @@ void ppp_upcall(struct ppp_context_s *ctx, u16_t protocol, u8_t *buffer, u16_t l
 
       switch (protocol)
         {
-        case LCP:  /* We must support some level of LCP */
+        case LCP:              /* We must support some level of LCP */
           DEBUG1(("LCP Packet - "));
           lcp_rx(ctx, buffer, len);
           DEBUG1(("\n"));
           break;
 
 #ifdef CONFIG_NETUTILS_PPPD_PAP
-        case PAP:  /* PAP should be compile in optional */
+        case PAP:              /* PAP should be compile in optional */
           DEBUG1(("PAP Packet - "));
           pap_rx(ctx, buffer, len);
           DEBUG1(("\n"));
           break;
-#endif /* CONFIG_NETUTILS_PPPD_PAP */
+#endif
 
-        case IPCP: /* IPCP should be compile in optional. */
+        case IPCP:             /* IPCP should be compile in optional. */
           DEBUG1(("IPCP Packet - "));
           ipcp_rx(ctx, buffer, len);
           DEBUG1(("\n"));
           break;
 
-        case IPV4: /* We must support IPV4 */
+        case IPV4:             /* We must support IPV4 */
           DEBUG1(("IPV4 Packet---\n"));
           memcpy(ctx->ip_buf, buffer, len);
           ctx->ip_len = len;
@@ -328,7 +334,7 @@ void ppp_upcall(struct ppp_context_s *ctx, u16_t protocol, u8_t *buffer, u16_t l
           break;
 
         default:
-          DEBUG1(("Unknown PPP Packet Type 0x%04x - ",protocol));
+          DEBUG1(("Unknown PPP Packet Type 0x%04x - ", protocol));
           ppp_reject_protocol(ctx, protocol, buffer, len);
           DEBUG1(("\n"));
           break;
@@ -345,14 +351,17 @@ void ppp_upcall(struct ppp_context_s *ctx, u16_t protocol, u8_t *buffer, u16_t l
  *
  ****************************************************************************/
 
-u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
-                  u8_t *buffer, u8_t *options, u16_t len)
+uint16_t scan_packet(FAR struct ppp_context_s *ctx, uint16_t protocol,
+                     FAR const FAR uint8_t * list, FAR uint8_t * buffer,
+                     FAR uint8_t * options, uint16_t len)
 {
-  const u8_t *tlist;
-  u8_t *bptr;
-  u8_t *tptr;
-  u8_t bad = 0;
-  u8_t i, j, good;
+  FAR const FAR uint8_t *tlist;
+  FAR uint8_t *bptr;
+  FAR uint8_t *tptr;
+  uint8_t bad = 0;
+  uint8_t good;
+  uint8_t i;
+  uint8_t j;
 
   bptr = tptr = options;
 
@@ -360,8 +369,9 @@ u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
 
   while (bptr < options + len)
     {
-      /* Get code and see if it matches somwhere in the list, if not
-         we don't support it */
+      /* Get code and see if it matches somwhere in the list, if not we don't
+       * support it.
+       */
 
       i = *bptr++;
 
@@ -372,6 +382,7 @@ u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
       while (*tlist)
         {
           /* DEBUG2("%x ",*tlist); */
+
           if (i == *tlist++)
             {
               good = 1;
@@ -383,7 +394,7 @@ u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
         {
           /* We don't understand it, write it back */
 
-          DEBUG1(("We don't understand option 0x%02x\n",i));
+          DEBUG1(("We don't understand option 0x%02x\n", i));
           bad = 1;
           *tptr++ = i;
           j = *tptr++ = *bptr++;
@@ -407,8 +418,8 @@ u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
       /* Write the config Rej packet we've built above, take on the header */
 
       bptr = buffer;
-      *bptr++ = CONF_REJ;  /* Write Conf_rej */
-      bptr++;              /* skip over ID */
+      *bptr++ = CONF_REJ;       /* Write Conf_rej */
+      bptr++;                   /* skip over ID */
       *bptr++ = 0;
       *bptr = tptr - buffer;
 
@@ -417,7 +428,7 @@ u16_t scan_packet(struct ppp_context_s *ctx, u16_t protocol, const u8_t *list,
       /* Write the reject frame */
 
       DEBUG1(("Writing Reject frame --\n"));
-      ahdlc_tx(ctx, protocol, buffer, 0, (u16_t)(tptr - buffer), 0);
+      ahdlc_tx(ctx, protocol, buffer, 0, (uint16_t)(tptr - buffer), 0);
       DEBUG1(("\nEnd writing reject \n"));
     }
 

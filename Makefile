@@ -37,7 +37,6 @@
 
 APPDIR := $(patsubst %/,%,$(dir $(firstword $(MAKEFILE_LIST))))
 TOPDIR ?= $(APPDIR)/import
-
 -include $(TOPDIR)/Make.defs
 -include $(APPDIR)/Make.defs
 

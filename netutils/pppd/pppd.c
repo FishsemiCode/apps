@@ -63,11 +63,11 @@
 #include "netutils/pppd.h"
 
 /****************************************************************************
- * Extenal Functions
+ * External Functions
  ****************************************************************************/
 
 #ifdef PPP_ARCH_HAVE_MODEM_RESET
-extern void ppp_arch_modem_reset(const char *tty);
+void ppp_arch_modem_reset(const char *tty);
 #endif
 
 /****************************************************************************
@@ -165,9 +165,9 @@ static int open_tty(const char *dev)
  * Name: ppp_check_errors
  ****************************************************************************/
 
-static u8_t ppp_check_errors(struct ppp_context_s *ctx)
+static uint8_t ppp_check_errors(FAR struct ppp_context_s *ctx)
 {
-  u8_t ret = 0;
+  uint8_t ret = 0;
 
   /* Check Errors */
 
@@ -182,7 +182,7 @@ static u8_t ppp_check_errors(struct ppp_context_s *ctx)
     {
       ret = 2;
     }
-#endif /* CONFIG_NETUTILS_PPPD_PAP */
+#endif
 
   if (ctx->ipcp_state & (IPCP_TX_TIMEOUT))
     {
@@ -200,12 +200,12 @@ static u8_t ppp_check_errors(struct ppp_context_s *ctx)
  * Name: ppp_reconnect
  ****************************************************************************/
 
-void ppp_reconnect(struct ppp_context_s *ctx)
+void ppp_reconnect(FAR struct ppp_context_s *ctx)
 {
   int ret;
   int retry = PPP_MAX_CONNECT;
   const struct pppd_settings_s *pppd_settings = ctx->settings;
-  netlib_ifdown((char*)ctx->ifname);
+  netlib_ifdown((char *)ctx->ifname);
 
   lcp_disconnect(ctx, ++ctx->ppp_id);
   sleep(1);
@@ -276,7 +276,7 @@ time_t ppp_arch_clock_seconds(void)
  * Name: ppp_arch_getchar
  ****************************************************************************/
 
-int ppp_arch_getchar(struct ppp_context_s *ctx, u8_t *c)
+int ppp_arch_getchar(FAR struct ppp_context_s *ctx, FAR uint8_t * c)
 {
   int ret;
 
@@ -288,7 +288,7 @@ int ppp_arch_getchar(struct ppp_context_s *ctx, u8_t *c)
  * Name: ppp_arch_putchar
  ****************************************************************************/
 
-int ppp_arch_putchar(struct ppp_context_s *ctx, u8_t c)
+int ppp_arch_putchar(FAR struct ppp_context_s *ctx, uint8_t c)
 {
   int ret;
   struct pollfd fds;
@@ -318,14 +318,14 @@ int pppd(const struct pppd_settings_s *pppd_settings)
 {
   struct pollfd fds[2];
   int ret;
-  struct ppp_context_s *ctx;
+  FAR struct ppp_context_s *ctx;
 
-  ctx = (struct ppp_context_s*)malloc(sizeof(struct ppp_context_s));
+  ctx = (struct ppp_context_s *)malloc(sizeof(struct ppp_context_s));
   memset(ctx, 0, sizeof(struct ppp_context_s));
-  strcpy((char*)ctx->ifname, "ppp%d");
+  strcpy((char *)ctx->ifname, "ppp%d");
 
   ctx->settings = pppd_settings;
-  ctx->if_fd = tun_alloc((char*)ctx->ifname);
+  ctx->if_fd = tun_alloc((char *)ctx->ifname);
   if (ctx->if_fd < 0)
     {
       free(ctx);
@@ -340,7 +340,7 @@ int pppd(const struct pppd_settings_s *pppd_settings)
       return 2;
     }
 
-  ctx->ctl.echo    = true;
+  ctx->ctl.echo = true;
   ctx->ctl.verbose = true;
   ctx->ctl.timeout = 30;
 

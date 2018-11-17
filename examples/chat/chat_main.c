@@ -74,7 +74,7 @@ struct chat_app
   int argc;                        /* number of command-line arguments */
   FAR char** argv;                 /* command-line arguments */
   char tty[CHAT_TTYNAME_SIZE];     /* modem TTY device node */
-  FAR const char* script;          /* raw chat script - input to the parser */
+  FAR const char *script;          /* raw chat script - input to the parser */
   bool script_dynalloc;            /* true iff the script should be freed */
 };
 
@@ -105,7 +105,7 @@ static void chat_show_usage(void)
          "-v         : verbose mode\n");
 }
 
-static int chat_chardev(FAR struct chat_app* priv)
+static int chat_chardev(FAR struct chat_app *priv)
 {
   int flags;
 
@@ -124,7 +124,7 @@ static int chat_chardev(FAR struct chat_app* priv)
   return 0;
 }
 
-static int chat_script_preset(FAR struct chat_app* priv, int script_number)
+static int chat_script_preset(FAR struct chat_app *priv, int script_number)
 {
   int ret = 0;
 
@@ -159,21 +159,21 @@ static int chat_script_preset(FAR struct chat_app* priv, int script_number)
 static int chat_script_read(FAR struct chat_app* priv,
                             FAR const char* filepath)
 {
-  FAR char* scriptp;
-  size_t spare_size = CONFIG_EXAMPLES_CHAT_SIZE-1;
+  FAR char *scriptp;
+  size_t spare_size = CONFIG_EXAMPLES_CHAT_SIZE - 1;
   ssize_t read_size;
   bool eof = false;
   int ret = 0;
   int fd;
 
   scriptp = malloc(CONFIG_EXAMPLES_CHAT_SIZE);
-  if (!scriptp)
+  if (scriptp == NULL)
     {
       return -ENOMEM;
     }
 
   priv->script_dynalloc = true;
-  priv->script = scriptp;
+  priv->script          = scriptp;
   memset(scriptp, 0, CONFIG_EXAMPLES_CHAT_SIZE);
 
   fd = open(filepath, O_RDONLY);
@@ -219,8 +219,7 @@ static int chat_script_read(FAR struct chat_app* priv,
 
 static int chat_parse_args(FAR struct chat_app* priv)
 {
-  /*
-   * -d TTY device node (non-Linux feature)
+  /* -d TTY device node (non-Linux feature)
    * -e echo to stderr
    * -f script file
    * -p preprogrammed script (non-Linux feature)

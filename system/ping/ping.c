@@ -45,13 +45,14 @@
 #include <string.h>
 #include <errno.h>
 
-#include <netutils/icmp_ping.h>
+#include "netutils/icmp_ping.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 #define ICMP_PING_DATALEN  56
+
 #define ICMP_NPINGS        10    /* Default number of pings */
 #define ICMP_POLL_DELAY    1000  /* 1 second in milliseconds */
 
@@ -99,7 +100,8 @@ static void ping_result(FAR const struct ping_result_s *result)
   switch (result->code)
     {
       case ICMP_E_HOSTIP:
-        fprintf(stderr, "ERROR: ping_gethostip(%s) failed\n", result->info->hostname);
+        fprintf(stderr, "ERROR: ping_gethostip(%s) failed\n",
+                result->info->hostname);
         break;
 
       case ICMP_E_MEMORY:
@@ -201,7 +203,8 @@ static void ping_result(FAR const struct ping_result_s *result)
 
             /* Calculate the percentage of lost packets */
 
-            tmp = (100 * (result->nrequests - result->nreplies) + (result->nrequests >> 1)) /
+            tmp = (100 * (result->nrequests - result->nreplies) +
+                  (result->nrequests >> 1)) /
                    result->nrequests;
 
             printf("%u packets transmitted, %u received, %u%% packet loss, time %d ms\n",
@@ -226,11 +229,11 @@ int ping_main(int argc, char **argv)
   int exitcode;
   int option;
 
-  info.count = ICMP_NPINGS;
-  info.datalen = ICMP_PING_DATALEN;
-  info.delay = ICMP_POLL_DELAY;
-  info.timeout = ICMP_POLL_DELAY;
-  info.callback = ping_result;
+  info.count     = ICMP_NPINGS;
+  info.datalen   = ICMP_PING_DATALEN;
+  info.delay     = ICMP_POLL_DELAY;
+  info.timeout   = ICMP_POLL_DELAY;
+  info.callback  = ping_result;
 
   /* Parse command line options */
 

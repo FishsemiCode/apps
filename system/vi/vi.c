@@ -1,7 +1,7 @@
 /****************************************************************************
  * apps/system/vi/vi.c
  *
- *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2014, 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -144,7 +144,7 @@
 
 /* Output */
 
-#define vi_error(vi, fmt, ...) vi_printf(vi, "ERROR: ", fmt, ##__VA_ARGS__)
+#define vi_error(vi, fmt, ...)   vi_printf(vi, "ERROR: ", fmt, ##__VA_ARGS__)
 #define vi_message(vi, fmt, ...) vi_printf(vi, NULL, fmt, ##__VA_ARGS__)
 
 /* Debug */
@@ -327,7 +327,8 @@ static void     vi_clrscreen(FAR struct vi_s *vi);
 
 /* Final Line display */
 
-static void     vi_printf(FAR struct vi_s *vi, FAR const char *prefix, FAR const char *fmt, ...);
+static void     vi_printf(FAR struct vi_s *vi, FAR const char *prefix,
+                  FAR const char *fmt, ...);
 
 /* Line positioning */
 
@@ -819,7 +820,8 @@ static void vi_scrolldown(FAR struct vi_s *vi, uint16_t nlines)
  *
  ****************************************************************************/
 
-static void vi_printf(FAR struct vi_s *vi, FAR const char *prefix, FAR const char *fmt, ...)
+static void vi_printf(FAR struct vi_s *vi, FAR const char *prefix,
+                      FAR const char *fmt, ...)
 {
   struct vi_pos_s cursor;
   va_list ap;
