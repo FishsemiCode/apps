@@ -39,6 +39,7 @@
 
 #include <nuttx/config.h>
 
+#include <nuttx/power/pm.h>
 #include <sys/boardctl.h>
 #include <sys/utsname.h>
 #include <stdlib.h>
@@ -177,6 +178,65 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   return ERROR;
 }
 #endif /* CONFIG_BOARDCTL_POWEROFF && !CONFIG_NSH_DISABLE_SHUTDOWN */
+
+/****************************************************************************
+ * Name: cmd_pmconfig
+ ****************************************************************************/
+
+#if defined(CONFIG_PM) && !defined(CONFIG_NSH_DISABLE_PMCONFIG)
+int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+{
+  enum pm_state_e state = PM_IDLE;
+
+  if (argc == 1)
+    {
+      nsh_output(vtbl, "Current pm stay [%d, %d, %d, %d]\n",
+              pm_staycount(0, PM_NORMAL), pm_staycount(0, PM_IDLE),
+              pm_staycount(0, PM_STANDBY), pm_staycount(0, PM_SLEEP));
+      return 0;
+    }
+  else if (argc == 3)
+    {
+      if (strcmp(argv[2], "normal") == 0)
+        {
+          state = PM_NORMAL;
+        }
+      else if (strcmp(argv[2], "idle") == 0)
+        {
+          state = PM_IDLE;
+        }
+      else if (strcmp(argv[2], "standby") == 0)
+        {
+          state = PM_STANDBY;
+        }
+      else if (strcmp(argv[2], "sleep") == 0)
+        {
+          state = PM_SLEEP;
+        }
+      else
+        {
+          nsh_output(vtbl, g_fmtarginvalid, argv[2]);
+          return ERROR;
+        }
+    }
+
+  if (strcmp(argv[1], "stay") == 0)
+    {
+      pm_stay(0, state);
+    }
+  else if (strcmp(argv[1], "relax") == 0)
+    {
+      pm_relax(0, state);
+    }
+  else
+    {
+      nsh_output(vtbl, g_fmtarginvalid, argv[1]);
+      return ERROR;
+    }
+
+  return 0;
+}
+#endif
 
 /****************************************************************************
  * Name: cmd_poweroff
