@@ -83,7 +83,7 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # Build targets
 
 all: $(BIN)
-.PHONY: import install dirlinks context context_serialize clean_context context_rest .depdirs preconfig depend clean distclean
+.PHONY: import install dirlinks context context_serialize clean_context context_rest .depdirs preconfig depend clean distclean all_target
 .PRECIOUS: libapps$(LIBEXT)
 
 define MAKE_template
@@ -137,10 +137,13 @@ $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 
 else
 
-$(EXETABSRC): install
+all_target: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+
+$(EXETABSRC): all_target
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINIST_DIR) $@
 
-$(MODTABSRC): install
+$(MODTABSRC): all_target
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mkmodsymtab.sh $(LIBIST_DIR) $@
 
 $(SYMTABOBJ): %$(OBJEXT): %.c
