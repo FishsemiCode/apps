@@ -215,7 +215,6 @@ endif # BUILD_MODULE
 preconfig::
 
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
-ifeq ($(BUILD_MODULE),y)
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(APPNAME)_main.bdat)
 APPLIST := $(APPNAME)
 
@@ -229,9 +228,6 @@ $(REGLIST): $(DEPCONFIG) Makefile
 	$(if $(filter-out $(firstword $(STACKSIZE)),$(STACKSIZE)),$(eval STACKSIZE=$(filter-out $(firstword $(STACKSIZE)),$(STACKSIZE))))
 
 context:: $(REGLIST)
-else
-context::
-endif
 else
 context::
 endif
