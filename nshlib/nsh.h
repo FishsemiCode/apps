@@ -289,6 +289,12 @@
 #  ifndef NSH_USBKBD_DEVNAME
 #    define NSH_USBKBD_DEVNAME "/dev/kbda"
 #  endif
+
+/* In this case NSH_ALTSTDIN should be "/dev/kbda" */
+
+#  undef CONFIG_NSH_ALTSTDIN
+#  define CONFIG_NSH_ALTSTDIN NSH_USBKBD_DEVNAME
+
 #endif /* HAVE_USB_KEYBOARD */
 
 /* USB trace settings */
