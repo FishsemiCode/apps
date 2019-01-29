@@ -1,10 +1,8 @@
 ############################################################################
-# apps/system/cfgdata/Makefile
+# apps/testing/Makefile
 #
-#   Copyright (C) 2018 Gregory Nutt. All rights reserved.
-#   Copyright (C) 2018 Ken Pettit. All rights reserved.
-#   Author: Ken Pettit <pettitkd@gmail.com>
-#           Gregory Nutt <gnutt@nuttx.org>
+#   Copyright (C) 2009-2012 Gregory Nutt. All rights reserved.
+#   Author: Gregory Nutt <spudmonkey@racsa.co.cr>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -35,26 +33,24 @@
 #
 ############################################################################
 
-# TODO, this makefile should run make under the app dirs, instead of
-# sourcing the Make.defs!
-
 -include $(TOPDIR)/Make.defs
 
-# config Application
-# TODO: appname can be automatically extracted from the directory name
+# CXX test program
 
-CONFIG_SYSTEM_CFGDATA_STACKSIZE ?= 2048
-CONFIG_SYSTEM_CFGDATA_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+ASRCS =
+CSRCS =
+CXXSRCS =
+MAINSRC = cxxtest_main.cxx
 
-APPNAME = cfgdata
-PRIORITY = $(CONFIG_SYSTEM_CFGDATA_PRIORITY)
-STACKSIZE = $(CONFIG_SYSTEM_CFGDATA_STACKSIZE)
-
-MAINSRC = cfgdata_main.c
-
-CONFIG_XYZ_PROGNAME ?= cfgdata$(EXEEXT)
+CONFIG_XYZ_PROGNAME ?= cxxtest$(EXEEXT)
 PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
-MODULE = CONFIG_SYSTEM_CFGDATA
+# cxxtest built-in application info
+
+APPNAME = cxxtest
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 4096
+
+MODULE = CONFIG_TESTINGCXXTEST
 
 include $(APPDIR)/Application.mk

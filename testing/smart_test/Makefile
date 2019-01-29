@@ -1,10 +1,9 @@
 ############################################################################
-# apps/system/cfgdata/Makefile
+# apps/system/smart_test/Makefile
 #
-#   Copyright (C) 2018 Gregory Nutt. All rights reserved.
-#   Copyright (C) 2018 Ken Pettit. All rights reserved.
+#   Copyright (C) 2013 Ken Pettit. All rights reserved.
 #   Author: Ken Pettit <pettitkd@gmail.com>
-#           Gregory Nutt <gnutt@nuttx.org>
+#           Greg Nutt
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -35,26 +34,25 @@
 #
 ############################################################################
 
-# TODO, this makefile should run make under the app dirs, instead of
-# sourcing the Make.defs!
-
 -include $(TOPDIR)/Make.defs
 
-# config Application
-# TODO: appname can be automatically extracted from the directory name
+ifeq ($(WINTOOL),y)
+INCDIROPT = -w
+endif
 
-CONFIG_SYSTEM_CFGDATA_STACKSIZE ?= 2048
-CONFIG_SYSTEM_CFGDATA_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+# SMART filesystem test tool
 
-APPNAME = cfgdata
-PRIORITY = $(CONFIG_SYSTEM_CFGDATA_PRIORITY)
-STACKSIZE = $(CONFIG_SYSTEM_CFGDATA_STACKSIZE)
+APPNAME = smart_test
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 4096
 
-MAINSRC = cfgdata_main.c
+ASRCS =
+CSRCS =
+MAINSRC = smart_test.c
 
-CONFIG_XYZ_PROGNAME ?= cfgdata$(EXEEXT)
+CONFIG_XYZ_PROGNAME ?= smart_test$(EXEEXT)
 PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
-MODULE = CONFIG_SYSTEM_CFGDATA
+MODULE = CONFIG_TESTING_SMART_TEST
 
 include $(APPDIR)/Application.mk

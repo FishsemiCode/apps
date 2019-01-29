@@ -69,11 +69,11 @@
  * Name: base64_tab
  ****************************************************************************/
 
-static const char *base64_tab(bool websafe)
+static FAR const char *base64_tab(bool websafe)
 {
-  static const char *_tab =
+  static FAR const char *_tab =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  static const char *_tab_w =
+  static FAR const char *_tab_w =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789__";
 
   return websafe ? _tab_w : _tab;
@@ -100,14 +100,15 @@ static const char *base64_tab(bool websafe)
  *
  ****************************************************************************/
 
-static char *_base64_encode(FAR const char *src, size_t len, FAR char *dst,
-                            FAR size_t *out_len, bool websafe)
+static FAR char *_base64_encode(FAR const char *src, size_t len,
+                                FAR char *dst, FAR size_t *out_len,
+                                bool websafe)
 {
-  char *out;
-  char *pos;
-  const char *end;
-  const char *in;
-  const char *base64_table;
+  FAR char *out;
+  FAR char *pos;
+  FAR const char *end;
+  FAR const char *in;
+  FAR const char *base64_table;
   size_t olen;
   char ch = '=';
 
@@ -192,13 +193,13 @@ static char *_base64_encode(FAR const char *src, size_t len, FAR char *dst,
 static char *_base64_decode(FAR const char *src, size_t len, FAR char *dst,
                             FAR size_t *out_len, bool websafe)
 {
-  char *out;
-  char *pos;
-  char block[4];
-  char *tmp;
+  FAR char *out;
+  FAR char *pos;
+  FAR char block[4];
+  FAR char *tmp;
+  FAR const char *base64_table;
   size_t count;
   size_t i;
-  const char *base64_table;
   char ch = '=';
 
   if (websafe)
@@ -268,8 +269,8 @@ size_t base64_encode_length(size_t len)
  * Name: base64_encode
  ****************************************************************************/
 
-void *base64_encode(FAR const void *src, size_t len,
-                    FAR void *dst, FAR size_t *out_len)
+FAR void *base64_encode(FAR const void *src, size_t len, FAR void *dst,
+                       FAR size_t *out_len)
 {
   return _base64_encode(src, len, dst, out_len, false);
 }
@@ -287,8 +288,8 @@ size_t base64_decode_length(size_t len)
  * Name: base64_decode
  ****************************************************************************/
 
-void *base64_decode(FAR const void *src, size_t len,
-                    FAR void *dst, FAR size_t *out_len)
+FAR void *base64_decode(FAR const void *src, size_t len, FAR void *dst,
+                        FAR size_t *out_len)
 {
   return _base64_decode(src, len, dst, out_len, false);
 }
@@ -297,8 +298,8 @@ void *base64_decode(FAR const void *src, size_t len,
  * Name: base64w_encode
  ****************************************************************************/
 
-void *base64w_encode(FAR const void *src, size_t len,
-                     FAR void *dst, FAR size_t *out_len)
+FAR void *base64w_encode(FAR const void *src, size_t len, FAR void *dst,
+                         FAR size_t *out_len)
 {
   return _base64_encode(src, len, dst, out_len, true);
 }
@@ -307,8 +308,8 @@ void *base64w_encode(FAR const void *src, size_t len,
  * Name: base64w_decode
  ****************************************************************************/
 
-void *base64w_decode(FAR const void *src, size_t len,
-                     FAR void *dst, FAR size_t *out_len)
+FAR void *base64w_decode(FAR const void *src, size_t len, FAR void *dst,
+                         FAR size_t *out_len)
 {
   return _base64_decode(src, len, dst, out_len, true);
 }

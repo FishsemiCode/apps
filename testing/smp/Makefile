@@ -1,10 +1,8 @@
 ############################################################################
-# apps/system/cfgdata/Makefile
+# apps/testing/smp/Makefile
 #
-#   Copyright (C) 2018 Gregory Nutt. All rights reserved.
-#   Copyright (C) 2018 Ken Pettit. All rights reserved.
-#   Author: Ken Pettit <pettitkd@gmail.com>
-#           Gregory Nutt <gnutt@nuttx.org>
+#   Copyright (C) 2016 Gregory Nutt. All rights reserved.
+#   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -35,26 +33,26 @@
 #
 ############################################################################
 
-# TODO, this makefile should run make under the app dirs, instead of
-# sourcing the Make.defs!
-
 -include $(TOPDIR)/Make.defs
 
-# config Application
-# TODO: appname can be automatically extracted from the directory name
+# SMP built-in application info
 
-CONFIG_SYSTEM_CFGDATA_STACKSIZE ?= 2048
-CONFIG_SYSTEM_CFGDATA_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_TESTING_SMP_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_TESTING_SMP_STACKSIZE ?= 2048
 
-APPNAME = cfgdata
-PRIORITY = $(CONFIG_SYSTEM_CFGDATA_PRIORITY)
-STACKSIZE = $(CONFIG_SYSTEM_CFGDATA_STACKSIZE)
+APPNAME = smp
+PRIORITY = $(CONFIG_TESTING_SMP_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_SMP_STACKSIZE)
 
-MAINSRC = cfgdata_main.c
+# SMP Example
 
-CONFIG_XYZ_PROGNAME ?= cfgdata$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
+ASRCS =
+CSRCS =
+MAINSRC = smp_main.c
 
-MODULE = CONFIG_SYSTEM_CFGDATA
+CONFIG_TESTING_SMP_PROGNAME ?= smp$(EXEEXT)
+PROGNAME = $(CONFIG_TESTING_SMP_PROGNAME)
+
+MODULE = CONFIG_TESTING_SMP
 
 include $(APPDIR)/Application.mk

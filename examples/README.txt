@@ -228,40 +228,6 @@ examples/cpuhog
   back mode.  This may be useful if you are trying run down other problems
   that you think might only occur when the system is very busy.
 
-examples/cxxtest
-^^^^^^^^^^^^^^^^
-
-  This is a test of the C++ standard library.  At present a port of the uClibc++
-  C++ library is available.  Due to licensing issues, the uClibc++ C++ library
-  is not included in the NuttX source tree by default, but must be installed
-  (see the README.txt file in the uClibc++ download package for installation).
-
-  The uClibc++ test includes simple test of:
-
-    - iostreams,
-    - STL,
-    - RTTI, and
-    - Exceptions
-
-  Example Configuration Options
-  -----------------------------
-    CONFIG_EXAMPLES_CXXTEST=y - Eanbles the example
-    CONFIG_EXAMPLES_CXXTEST_CXXINITIALIZE=y - By default, if CONFIG_HAVE_CXX
-      and CONFIG_HAVE_CXXINITIALIZE are defined, then this example
-      will call the NuttX function to initialize static C++ constructors.
-      This option may be disabled, however, if that static initialization
-      was performed elsewhere.
-
-  Other Required Configuration Settings
-  -------------------------------------
-  Other NuttX setting that are required include:
-
-    CONFIG_HAVE_CXX=y
-    CONFIG_HAVE_CXXINITIALIZE=y
-    CONFIG_UCLIBCXX=y
-
-  Additional uClibc++ settings may be required in your build environment.
-
 examples/dac
 ^^^^^^^^^^^^
 
@@ -450,24 +416,6 @@ examples/ft80x
   This examples has ports of several FTDI demos for the FTDI/BridgeTek FT80x
   GUI chip.  As an example configuration, see
   nuttx/configs/viewtool-stm32f107/ft80x/defconfig.
-
-examples/fstest
-^^^^^^^^^^^^^^
-
-  This is a generic file system test that derives from examples/nxffs.  It
-  was created to test the tmpfs file system, but should work with any file
-  system provided that all initialization has already been performed prior
-  to starting the test.
-
-  * CONFIG_EXAMPLES_FSTEST: Enable the file system example
-  * CONFIG_EXAMPLES_FSTEST_MAXNAME: Determines the maximum size of names used
-    in the filesystem
-  * CONFIG_EXAMPLES_FSTEST_MAXFILE: Determines the maximum size of a file
-  * CONFIG_EXAMPLES_FSTEST_MAXIO: Max I/O, default 347.
-  * CONFIG_EXAMPLES_FSTEST_MAXOPEN: Max open files.
-  * CONFIG_EXAMPLES_FSTEST_MOUNTPT: Path where the file system is mounted.
-  * CONFIG_EXAMPLES_FSTEST_NLOOPS: Number of test loops. default 100
-  * CONFIG_EXAMPLES_FSTEST_VERBOSE: Verbose output
 
 examples/ftpc
 ^^^^^^^^^^^^^
@@ -1090,14 +1038,6 @@ examples/nxterm
     CONFIG_EXAMPLES_NXTERM_NOTIFYSIGNO -- The signal number to use with
       nx_eventnotify().  Default: 4
 
-examples/nxffs
-^^^^^^^^^^^^^^
-
-  This is a test of the NuttX NXFFS FLASH file system.  This is an NXFFS
-  stress test and beats on the file system very hard.  It should only
-  be used in a simulation environment!  Putting this NXFFS test on real
-  hardware will most likely destroy your FLASH.  You have been warned.
-
 examples/nxflat
 ^^^^^^^^^^^^^^^
 
@@ -1645,50 +1585,6 @@ examples/slcd
 
   * CONFIG_EXAMPLES_SLCD - Enable the SLCD test
 
-examples/smart
-^^^^^^^^^^^^^^
-
-  This is a test of the SMART file system that derives from
-  examples/nxffs.
-
-  * CONFIG_EXAMPLES_SMART: - Enable the SMART file system example
-  * CONFIG_EXAMPLES_SMART_ARCHINIT: The default is to use the RAM MTD
-    device at drivers/mtd/rammtd.c.  But an architecture-specific MTD
-    driver can be used instead by defining CONFIG_EXAMPLES_SMART_ARCHINIT.  In
-    this case, the initialization logic will call smart_archinitialize()
-    to obtain the MTD driver instance.
-  * CONFIG_EXAMPLES_SMART_NEBLOCKS: When CONFIG_EXAMPLES_SMART_ARCHINIT is not
-    defined, this test will use the RAM MTD device at drivers/mtd/rammtd.c
-    to simulate FLASH.  In this case, this value must be provided to give
-    the nubmer of erase blocks in MTD RAM device.  The size of the allocated
-    RAM drive will be: CONFIG_RAMMTD_ERASESIZE * CONFIG_EXAMPLES_SMART_NEBLOCKS
-  * CONFIG_EXAMPLES_SMART_MAXNAME: Determines the maximum size of names used
-    in the filesystem
-  * CONFIG_EXAMPLES_SMART_MAXFILE: Determines the maximum size of a file
-  * CONFIG_EXAMPLES_SMART_MAXIO: Max I/O, default 347.
-  * CONFIG_EXAMPLES_SMART_MAXOPEN: Max open files.
-  * CONFIG_EXAMPLES_SMART_MOUNTPT: SMART mountpoint
-  * CONFIG_EXAMPLES_SMART_NLOOPS: Number of test loops. default 100
-  * CONFIG_EXAMPLES_SMART_VERBOSE: Verbose output
-
-examples/smart_test
-^^^^^^^^^^^^^^^^^^^
-
-  Performs a file-based test on a SMART (or any) filesystem. Validates
-  seek, append and seek-with-write operations.
-
-    * CONFIG_EXAMPLES_SMART_TEST=y
-
-  Dependencies:
-
-    * CONFIG_NSH_BUILTIN_APPS=y: This test can be built only as an NSH
-      command
-
-examples/smp
-^^^^^^^^^^^^
-
-  This is a simple test for SMP functionality.  It is basically just the
-  pthread barrier test with some custom instrumentation.
 
 examples/smps
 ^^^^^^^^^^^^^

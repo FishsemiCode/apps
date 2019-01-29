@@ -68,16 +68,16 @@ extern "C"
  ****************************************************************************/
 
 #ifdef CONFIG_CODECS_BASE64
-size_t base64_encode_length(size_t len);
-void *base64_encode(const void *src, size_t len,
-                    void *dst, size_t *out_len);
+size_t    base64_encode_length(size_t len);
+FAR void *base64_encode(FAR const void *src, size_t len, FAR void *dst,
+                        FAR size_t *out_len);
 size_t base64_decode_length(size_t len);
-void *base64_decode(const void *src, size_t len,
-                    void *dst, size_t *out_len);
-void *base64w_encode(const void *src, size_t len,
-                     void *dst, size_t *out_len);
-void *base64w_decode(const void *src, size_t len,
-                     void *dst, size_t *out_len);
+FAR void *base64_decode(FAR const void *src, size_t len, FAR void *dst,
+                        FAR size_t *out_len);
+FAR void *base64w_encode(FAR const void *src, size_t len, FAR void *dst,
+                         FAR size_t *out_len);
+FAR void *base64w_decode(FAR const void *src, size_t len, FAR void *dst,
+                         FAR size_t *out_len);
 #endif /* CONFIG_CODECS_BASE64 */
 
 #ifdef __cplusplus

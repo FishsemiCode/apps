@@ -148,11 +148,11 @@ int rz_main(int argc, FAR char **argv)
 
   zm_rawmode(fd);
 
-#  ifdef CONFIG_SYSTEM_ZMODEM_FLOWC
+#ifdef CONFIG_SYSTEM_ZMODEM_FLOWC
   /* Enable hardware Rx/Tx flow control */
 
   zm_flowc(fd);
-#  endif
+#endif
 #endif
 
   /* Get the Zmodem handle */
@@ -180,11 +180,12 @@ errout_with_zmodem:
 
 errout_with_device:
 #ifdef CONFIG_SERIAL_TERMIOS
-#  ifdef CONFIG_SYSTEM_ZMODEM_FLOWC
+#ifdef CONFIG_SYSTEM_ZMODEM_FLOWC
   /* Flush the serial output to assure do not hang trying to drain it */
 
   tcflush(fd, TCIOFLUSH);
-#  endif
+#endif
+
   /* Restore the saved terminal setting */
 
   tcsetattr(fd, TCSANOW, &saveterm);
