@@ -177,9 +177,7 @@ typedef int (*nsh_netdev_callback_t)(FAR struct nsh_vtbl_s *vtbl,
  * Name: net_statistics
  ****************************************************************************/
 
-#if defined(CONFIG_NET_STATISTICS) && defined(CONFIG_FS_PROCFS) && \
-   !defined(CONFIG_FS_PROCFS_EXCLUDE_NET) && \
-   !defined(CONFIG_NSH_DISABLE_IFCONFIG)
+#if !defined(CONFIG_NSH_DISABLE_IFCONFIG)
 static inline void net_statistics(FAR struct nsh_vtbl_s *vtbl)
 {
   (void)nsh_catfile(vtbl, "ifconfig", CONFIG_NSH_PROC_MOUNTPOINT "/net/stat");
