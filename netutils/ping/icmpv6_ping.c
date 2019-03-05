@@ -73,26 +73,9 @@
  * Private Data
  ****************************************************************************/
 
-/* NOTE: This will not work in the kernel build where there will be a
- * separate instance of g_ping6_id in every process space.
- */
-
-static uint16_t g_ping6_id = 0;
-
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Name: ping6_newid
- ****************************************************************************/
-
-static inline uint16_t ping6_newid(void)
-{
-  /* Revisit:  No thread safe */
-
-  return ++g_ping6_id;
-}
 
 /****************************************************************************
  * Name: ping6_gethostip
@@ -190,11 +173,15 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
   int ch;
   int i;
 
+  /* Set the clock as the seed to pseudo-random number generator */
+
+  srand(clock());
+
   /* Initialize result structure */
 
   memset(&result, 0, sizeof(result));
   result.info = info;
-  result.id = ping6_newid();
+  result.id = rand();
   result.outsize = ICMPv6_IOBUFFER_SIZE(info->datalen);
   if (ping6_gethostip(info->hostname, &result.dest) < 0)
     {
