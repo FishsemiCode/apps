@@ -171,13 +171,16 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_I_ROUNDTRIP:
-        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d ms\n",
+      case ICMP_I_PKTDUP:
+        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d ms %s\n",
                result->info->datalen,
                (result->dest.s_addr      ) & 0xff,
                (result->dest.s_addr >> 8 ) & 0xff,
                (result->dest.s_addr >> 16) & 0xff,
                (result->dest.s_addr >> 24) & 0xff,
-               result->seqno, result->extra);
+               result->seqno, result->extra,
+               (result->code == ICMP_I_PKTDUP) ?
+               "(DUP!)" : "");
         break;
 
       case ICMP_W_RECVBIG:

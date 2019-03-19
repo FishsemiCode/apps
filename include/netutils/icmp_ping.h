@@ -55,7 +55,8 @@
 
 #define ICMP_I_BEGIN       0   /* extra: not used      */
 #define ICMP_I_ROUNDTRIP   1   /* extra: packet delay  */
-#define ICMP_I_FINISH      2   /* extra: elapsed time  */
+#define ICMP_I_PKTDUP      2   /* extra: packet dup    */
+#define ICMP_I_FINISH      3   /* extra: elapsed time  */
 
 /* Negative odd number represent error(unrecoverable) */
 

@@ -70,6 +70,15 @@
 #define ICMPv6_IOBUFFER_SIZE(x) (SIZEOF_ICMPV6_ECHO_REQUEST_S(0) + (x))
 
 /****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct rcvdmap_s {
+    uint8_t marker;
+    clock_t clock;
+};
+
+/****************************************************************************
  * Private Data
  ****************************************************************************/
 
@@ -153,21 +162,22 @@ static void icmp6_callback(FAR struct ping6_result_s *result, int code, int extr
 
 void icmp6_ping(FAR const struct ping6_info_s *info)
 {
-  struct ping6_result_s result;
+  struct ping6_result_s result, reply;
   struct sockaddr_in6 destaddr;
   struct sockaddr_in6 fromaddr;
   struct icmpv6_echo_request_s outhdr;
   FAR struct icmpv6_echo_reply_s *inhdr;
+  FAR struct rcvdmap_s *maps;
   struct pollfd recvfd;
   FAR uint8_t *iobuffer;
   FAR uint8_t *ptr;
+  uint16_t timeout;
   int32_t elapsed;
+  int32_t interval;
   clock_t kickoff;
-  clock_t start;
   socklen_t addrlen;
   ssize_t nsent;
   ssize_t nrecvd;
-  bool retry;
   int sockfd;
   int ret;
   int ch;
@@ -189,12 +199,20 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
       return;
     }
 
+  maps = (struct rcvdmap_s *)malloc(info->count * sizeof(struct rcvdmap_s));
+  if (maps == NULL)
+    {
+      icmp6_callback(&result, ICMPv6_E_MEMORY, 0);
+      return;
+    }
+
   /* Allocate memory to hold ping buffer */
 
   iobuffer = (FAR uint8_t *)malloc(result.outsize);
   if (iobuffer == NULL)
     {
       icmp6_callback(&result, ICMPv6_E_MEMORY, 0);
+      free(maps);
       return;
     }
 
@@ -202,6 +220,7 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
   if (sockfd < 0)
     {
       icmp6_callback(&result, ICMPv6_E_SOCKET, errno);
+      free(maps);
       free(iobuffer);
       return;
     }
@@ -240,7 +259,8 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
             }
         }
 
-      start = clock();
+      maps[result.seqno].clock = clock();
+      maps[result.seqno].marker = 0;
       nsent = sendto(sockfd, iobuffer, result.outsize, 0,
                      (FAR struct sockaddr*)&destaddr,
                      sizeof(struct sockaddr_in6));
@@ -258,15 +278,18 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
       result.nrequests++;
 
       elapsed = 0;
-      do
-        {
-          retry           = false;
+      timeout = info->timeout;
 
+      while (timeout >= elapsed)
+        {
           recvfd.fd       = sockfd;
           recvfd.events   = POLLIN;
           recvfd.revents  = 0;
 
-          ret = poll(&recvfd, 1, info->timeout - elapsed);
+          ret = poll(&recvfd, 1, timeout - elapsed);
+
+          elapsed = (unsigned int)TICK2MSEC(clock() - maps[result.seqno].clock);
+
           if (ret < 0)
             {
               icmp6_callback(&result, ICMPv6_E_POLL, errno);
@@ -274,7 +297,11 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
             }
           else if (ret == 0)
             {
-              icmp6_callback(&result, ICMPv6_W_TIMEOUT, info->timeout);
+              if (maps[result.seqno].marker)
+                {
+                  break;
+                }
+              icmp6_callback(&result, ICMPv6_W_TIMEOUT, timeout);
               continue;
             }
 
@@ -294,34 +321,45 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
              goto done;
             }
 
-          elapsed = (unsigned int)TICK2MSEC(clock() - start);
           inhdr   = (FAR struct icmpv6_echo_reply_s *)iobuffer;
+          interval = (unsigned int)TICK2MSEC(clock() - maps[ntohs(inhdr->seqno)].clock);
 
           if (inhdr->type == ICMPv6_ECHO_REPLY)
             {
               if (ntohs(inhdr->id) != result.id)
                 {
                   icmp6_callback(&result, ICMPv6_W_IDDIFF, ntohs(inhdr->id));
-                  retry = true;
                 }
               else if (ntohs(inhdr->seqno) > result.seqno)
                 {
                   icmp6_callback(&result, ICMPv6_W_SEQNOBIG, ntohs(inhdr->seqno));
-                  retry = true;
                 }
               else
                 {
-                  bool verified = true;
-                  int32_t pktdelay = elapsed;
+                  bool verified = false;
 
-                  if (ntohs(inhdr->seqno) < result.seqno)
+                  if (maps[ntohs(inhdr->seqno)].marker)
+                    {
+                      memcpy(&reply, &result, sizeof(reply));
+                      reply.seqno = ntohs(inhdr->seqno);
+                      icmp6_callback(&reply, ICMPv6_I_PKTDUP, interval);
+                    }
+                  else if (ntohs(inhdr->seqno) < result.seqno)
                     {
                       icmp6_callback(&result, ICMPv6_W_SEQNOSMALL, ntohs(inhdr->seqno));
-                      pktdelay += info->delay;
-                      retry     = true;
+                      memcpy(&reply, &result, sizeof(reply));
+                      reply.seqno = ntohs(inhdr->seqno);
+                      icmp6_callback(&reply, ICMPv6_I_ROUNDTRIP, interval);
+                      verified = true;
+                    }
+                  else
+                    {
+                      timeout = info->delay;
+                      icmp6_callback(&result, ICMPv6_I_ROUNDTRIP, interval);
+                      verified = true;
                     }
 
-                  icmp6_callback(&result, ICMPv6_I_ROUNDTRIP, pktdelay);
+                  maps[ntohs(inhdr->seqno)].marker = 1;
 
                   /* Verify the payload data */
 
@@ -364,27 +402,6 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
               icmp6_callback(&result, ICMPv6_W_TYPE, inhdr->type);
             }
         }
-      while (retry && info->delay > elapsed && info->timeout > elapsed);
-
-      /* Wait if necessary to preserved the requested ping rate */
-
-      elapsed = (unsigned int)TICK2MSEC(clock() - start);
-      if (elapsed < info->delay)
-        {
-          struct timespec rqt;
-          unsigned int remaining;
-          unsigned int sec;
-          unsigned int frac;  /* In deciseconds */
-
-          remaining   = info->delay - elapsed;
-          sec         = remaining / MSEC_PER_SEC;
-          frac        = remaining - MSEC_PER_SEC * sec;
-
-          rqt.tv_sec  = sec;
-          rqt.tv_nsec = frac * NSEC_PER_MSEC;
-
-          (void)nanosleep(&rqt, NULL);
-        }
 
       outhdr.seqno = htons(++result.seqno);
     }
@@ -392,5 +409,6 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
 done:
   icmp6_callback(&result, ICMPv6_I_FINISH, TICK2MSEC(clock() - kickoff));
   close(sockfd);
+  free(maps);
   free(iobuffer);
 }

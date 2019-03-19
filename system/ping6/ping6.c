@@ -170,11 +170,13 @@ static void ping6_result(FAR const struct ping6_result_s *result)
         break;
 
       case ICMPv6_I_ROUNDTRIP:
+      case ICMPv6_I_PKTDUP:
         inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer,
                   INET6_ADDRSTRLEN);
-        printf("%ld bytes from %s icmp_seq=%u time=%u ms\n",
+        printf("%ld bytes from %s icmp_seq=%u time=%u ms %s\n",
                result->info->datalen, strbuffer, result->seqno,
-               result->extra);
+               result->extra, (result->code == ICMPv6_I_PKTDUP) ?
+               "(DUP!)" : "");
         break;
 
       case ICMPv6_W_RECVBIG:
