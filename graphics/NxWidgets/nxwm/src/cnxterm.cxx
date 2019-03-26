@@ -1,7 +1,7 @@
 /********************************************************************************************
  * apps/graphics/NxWidgets/nxwm/src/cnxterm.cxx
  *
- *   Copyright (C) 2012. 2104 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2012. 2014, 2019 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,9 +44,11 @@
 #include <cunistd>
 #include <ctime>
 
+#include <sys/boardctl.h>
 #include <fcntl.h>
 #include <semaphore.h>
 #include <sched.h>
+#include <assert.h>
 #include <debug.h>
 
 #include "nshlib/nshlib.h"
@@ -81,22 +83,22 @@
 
 namespace NxWM
 {
-    /**
-     * This structure is used to pass start up parameters to the NxTerm task and to assure the
-     * the NxTerm is successfully started.
-     */
+  /**
+   * This structure is used to pass start up parameters to the NxTerm task and to assure the
+   * the NxTerm is successfully started.
+   */
 
-    struct SNxTerm
-    {
-      FAR void              *console; /**< The console 'this' pointer use with on_exit() */
-      sem_t                  exclSem; /**< Sem that gives exclusive access to this structure */
-      sem_t                  waitSem; /**< Sem that posted when the task is initialized */
-      NXTKWINDOW             hwnd;    /**< Window handle */
-      NXTERM                 nxterm;  /**< NxTerm handle */
-      int                    minor;   /**< Next device minor number */
-      struct nxterm_window_s wndo;    /**< Describes the NxTerm window */
-      bool                   result;  /**< True if successfully initialized */
-    };
+  struct SNxTerm
+  {
+    FAR void              *console; /**< The console 'this' pointer use with on_exit() */
+    sem_t                  exclSem; /**< Sem that gives exclusive access to this structure */
+    sem_t                  waitSem; /**< Sem that posted when the task is initialized */
+    NXTKWINDOW             hwnd;    /**< Window handle */
+    NXTERM                 nxterm;  /**< NxTerm handle */
+    int                    minor;   /**< Next device minor number */
+    struct nxterm_window_s wndo;    /**< Describes the NxTerm window */
+    bool                   result;  /**< True if successfully initialized */
+  };
 
 /********************************************************************************************
  * Private Data
@@ -248,6 +250,10 @@ bool CNxTerm::run(void)
   g_nxtermvars.wndo.fcolor[0] = CONFIG_NXWM_NXTERM_FONTCOLOR;
   g_nxtermvars.wndo.fontid    = CONFIG_NXWM_NXTERM_FONTID;
 
+  // Remember the device minor number (before it is incremented)
+
+  m_minor                     = g_nxtermvars.minor;
+
   // Get the size of the window
 
   (void)window->getSize(&g_nxtermvars.wndo.wsize);
@@ -345,9 +351,13 @@ void CNxTerm::stop(void)
       window->redirectNxTerm((NXTERM)0);
 #endif
 
-      // Unregister the NxTerm driver
+      // Unlink the NxTerm driver
+      // Construct the driver name using this minor number
 
-      nxterm_unregister(m_nxterm);
+      char devname[32];
+      snprintf(devname, 32, "/dev/nxterm%d", m_minor);
+
+      (void)unlink(devname);
       m_nxterm = 0;
     }
 }
@@ -401,13 +411,16 @@ void CNxTerm::redraw(void)
 
   // Redraw the entire NxTerm window
 
-  struct nxgl_rect_s rect;
-  rect.pt1.x = 0;
-  rect.pt1.y = 0;
-  rect.pt2.x = windowSize.w - 1;
-  rect.pt2.y = windowSize.h - 1;
+  struct boardioc_nxterm_redraw_s redraw;
 
-  nxterm_redraw(m_nxterm, &rect, false);
+  redraw.handle     = m_nxterm;
+  redraw.rect.pt1.x = 0;
+  redraw.rect.pt1.y = 0;
+  redraw.rect.pt2.x = windowSize.w - 1;
+  redraw.rect.pt2.y = windowSize.h - 1;
+  redraw.more       = false;
+
+  (void)boardctl(BOARDIOC_NXTERM_KBDIN, (uintptr_t)&redraw);
 }
 
 /**
@@ -434,6 +447,7 @@ int CNxTerm::nxterm(int argc, char *argv[])
   // of 'int fd'
 
   int fd = -1;
+  int ret = OK;
 
   // Set up an on_exit() event that will be called when this task exits
 
@@ -445,13 +459,23 @@ int CNxTerm::nxterm(int argc, char *argv[])
 
   // Use the window handle to create the NX console
 
-  g_nxtermvars.nxterm = nxtk_register(g_nxtermvars.hwnd, &g_nxtermvars.wndo,
-                                    g_nxtermvars.minor);
-  if (!g_nxtermvars.nxterm)
+  struct boardioc_nxterm_create_s nxcreate;
+
+  nxcreate.nxterm              = (FAR void *)0;
+  nxcreate.hwnd                = g_nxtermvars.hwnd;
+  nxcreate.wndo                = g_nxtermvars.wndo;
+  nxcreate.type                = BOARDIOC_XTERM_FRAMED;
+  nxcreate.minor               = g_nxtermvars.minor;
+
+  ret = boardctl(BOARDIOC_NXTERM, (uintptr_t)&nxcreate);
+  if (ret < 0)
     {
-      gerr("ERROR: Failed register the console device\n");
+      gerr("ERROR: boardctl(BOARDIOC_NXTERM) failed: %d\n", errno);
       goto errout;
     }
+
+  g_nxtermvars.nxterm = nxcreate.nxterm;
+  DEBUGASSERT(g_nxtermvars.nxterm != NULL);
 
   // Construct the driver name using this minor number
 
@@ -472,7 +496,8 @@ int CNxTerm::nxterm(int argc, char *argv[])
   if (fd < 0)
     {
       gerr("ERROR: Failed open the console device\n");
-      goto errout_with_nxterm;
+      (void)unlink(devname);
+      goto errout;
     }
 
   // Now re-direct stdout and stderr so that they use the NX console driver.
@@ -503,7 +528,10 @@ int CNxTerm::nxterm(int argc, char *argv[])
 
   // And we can close our original driver file descriptor
 
-  std::close(fd);
+  if (fd > 2)
+    {
+      std::close(fd);
+    }
 
   // Inform the parent thread that we successfully initialized
 
@@ -521,9 +549,6 @@ int CNxTerm::nxterm(int argc, char *argv[])
   // which, in turn, calls exit()
 
   return EXIT_SUCCESS;
-
-errout_with_nxterm:
-  nxterm_unregister(g_nxtermvars.nxterm);
 
 errout:
   g_nxtermvars.nxterm = 0;

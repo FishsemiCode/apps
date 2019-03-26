@@ -247,8 +247,6 @@ examples/dhcpd
   NuttX configuration settings:
 
     CONFIG_NET=y                   - Of course
-    CONFIG_NSOCKET_DESCRIPTORS     - And, of course, you must allocate some
-                                     socket descriptors.
     CONFIG_NET_UDP=y               - UDP support is required for DHCP
                                      (as well as various other UDP-related
                                      configuration settings)
@@ -1254,7 +1252,6 @@ examples/poll
   stdin, and a TCP/IP socket.  In order to build this test, you must the
   following selected in your NuttX configuration file:
 
-  CONFIG_NFILE_DESCRIPTORS          - Defined to be greater than 0
   CONFIG_DISABLE_POLL               - NOT defined
 
   In order to use the TCP/IP select test, you have also the following
@@ -1262,7 +1259,6 @@ examples/poll
 
   CONFIG_NET                        - Defined for general network support
   CONFIG_NET_TCP                    - Defined for TCP/IP support
-  CONFIG_NSOCKET_DESCRIPTORS        - Defined to be greater than 0
   CONFIG_NET_TCP_READAHEAD          - Defined
   CONFIG_NET_NTCP_READAHEAD_BUFFERS - Defined to be greater than zero
 
@@ -1397,6 +1393,25 @@ examples/pty_test
 ^^^^^^^^^^^^^^^^^
 
   A test of NuttX pseudo-terminals.  Provided by Alan Carvalho de Assis.
+
+examples/pwfb
+^^^^^^^^^^^^^
+
+  A graphics example using pre-window frame buffers.  The example shows
+  three windows containing text moving around, crossing each other from
+  "above" and from "below".  The example application is NOT updating the
+  windows any anyway!  The application is only changing the window
+  position.  The windows are being updated from the per-winidow
+  framebuffers automatically.
+
+  This example is reminescent of Pong:  Each window travels in straight
+  line until it hits an edge, then it bounces off.  The window is also
+  raised when it hits the edge (gets "focus").  This tests all
+  combinations of overap.
+
+  NOTE:  A significant amount of RAM, usually external SDRAM, is required
+  to run this demo.  At 16bpp and a 480x272 display, each window requires
+  about 70Kb of RAM for its framebuffer.
 
 examples/pwm
 ^^^^^^^^^^^^
@@ -1596,7 +1611,8 @@ examples/sotest
 
   This example builds a small shared library module test case.  The test
   shared library is built using the relocatable ELF format and installed
-  in a ROMFS file system.  At run time, the shared library is installed and exercised.  Requires CONFIG_LIBC_DLLFCN.  Other configuration options:
+  in a ROMFS file system.  At run time, the shared library is installed
+  and exercised.  Requires CONFIG_LIBC_DLFCN.  Other configuration options:
 
     CONFIG_EXAMPLES_SOTEST_DEVMINOR - The minor device number of the ROMFS block
       driver. For example, the N in /dev/ramN. Used for registering the RAM
@@ -1656,6 +1672,11 @@ examples/stat
 
   A simple test of stat(), fstat(), and statfs().  This is useful primarily for
   bringing up a new file system and verifying the correctness of these operations.
+
+examples/sx127x_demo
+^^^^^^^^^^^^^
+
+  This example demonstrates the use of the SX127X radio/
 
 examples/system
 ^^^^^^^^^^^^^^^
@@ -1863,7 +1884,7 @@ examples/unionfs
   nuttx/fs/unionfs/README.txt.  Dependencies:
 
     CONFIG_DISABLE_MOUNTPOINT          - Mountpoint support must not be disabled
-    CONFIG_NFILE_DESCRIPTORS < 4       - Some file descriptors must be allocated
+    CONFIG_NFILE_DESCRIPTORS > 4       - Some file descriptors must be allocated
     CONFIG_FS_ROMFS                    - ROMFS support is required
     CONFIG_FS_UNIONFS                  - Union File System support is required
 
@@ -2032,8 +2053,6 @@ examples/webserver
   required.  These include:
 
     CONFIG_NET=y                 - Of course
-    CONFIG_NSOCKET_DESCRIPTORS   - And, of course, you must allocate some
-                                   socket descriptors.
     CONFIG_NET_UDP=y             - UDP support is required for DHCP
                                    (as well as various other UDP-related
                                    configuration settings).
