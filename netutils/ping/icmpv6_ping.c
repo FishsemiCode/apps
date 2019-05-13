@@ -336,7 +336,7 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
                 }
               else
                 {
-                  bool verified = false;
+                  bool verified = true;
 
                   if (maps[ntohs(inhdr->seqno)].marker)
                     {
@@ -350,13 +350,11 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
                       memcpy(&reply, &result, sizeof(reply));
                       reply.seqno = ntohs(inhdr->seqno);
                       icmp6_callback(&reply, ICMPv6_I_ROUNDTRIP, interval);
-                      verified = true;
                     }
                   else
                     {
                       timeout = info->delay;
                       icmp6_callback(&result, ICMPv6_I_ROUNDTRIP, interval);
-                      verified = true;
                     }
 
                   maps[ntohs(inhdr->seqno)].marker = 1;

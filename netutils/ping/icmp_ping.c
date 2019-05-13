@@ -334,7 +334,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
                 }
               else
                 {
-                  bool verified = false;
+                  bool verified = true;
 
                   if (maps[ntohs(inhdr->seqno)].marker)
                     {
@@ -348,13 +348,11 @@ void icmp_ping(FAR const struct ping_info_s *info)
                       memcpy(&reply, &result, sizeof(reply));
                       reply.seqno = ntohs(inhdr->seqno);
                       icmp_callback(&reply, ICMP_I_ROUNDTRIP, interval);
-                      verified = true;
                     }
                   else
                     {
                       timeout = info->delay;
                       icmp_callback(&result, ICMP_I_ROUNDTRIP, interval);
-                      verified = true;
                     }
 
                   maps[ntohs(inhdr->seqno)].marker = 1;
