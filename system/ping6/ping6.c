@@ -59,6 +59,15 @@
 #define ICMPv6_POLL_DELAY    1000  /* 1 second in milliseconds */
 
 /****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct ping6_priv_s
+{
+  int total;
+};
+
+/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -99,6 +108,7 @@ static void show_usage(FAR const char *progname, int exitcode)
 
 static void ping6_result(FAR const struct ping6_result_s *result)
 {
+  struct ping6_priv_s *priv = result->info->priv;
   char strbuffer[INET6_ADDRSTRLEN];
 
   switch (result->code)
@@ -177,6 +187,7 @@ static void ping6_result(FAR const struct ping6_result_s *result)
                result->info->datalen, strbuffer, result->seqno,
                result->extra, (result->code == ICMPv6_I_PKTDUP) ?
                "(DUP!)" : "");
+        priv->total += result->extra;
         break;
 
       case ICMPv6_W_RECVBIG:
@@ -206,8 +217,9 @@ static void ping6_result(FAR const struct ping6_result_s *result)
                    (result->nrequests >> 1)) /
                    result->nrequests;
 
-            printf("%u packets transmitted, %u received, %u%% packet loss, time %d ms\n",
-                   result->nrequests, result->nreplies, tmp, result->extra);
+            printf("%u packets transmitted, %u received, %u%% packet loss, avetime %d ms\n",
+                    result->nrequests, result->nreplies, tmp,
+                    result->nreplies ? priv->total / result->nreplies : 0);
           }
         break;
     }
@@ -223,6 +235,7 @@ int main(int argc, FAR char *argv[])
 int ping6_main(int argc, char **argv)
 #endif
 {
+  struct ping6_priv_s priv = {0};
   struct ping6_info_s info;
   FAR char *endptr;
   int exitcode;
@@ -233,6 +246,7 @@ int ping6_main(int argc, char **argv)
   info.delay     = ICMPv6_POLL_DELAY;
   info.timeout   = ICMPv6_POLL_DELAY;
   info.callback  = ping6_result;
+  info.priv      = &priv;
 
   /* Parse command line options */
 

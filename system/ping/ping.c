@@ -57,6 +57,15 @@
 #define ICMP_POLL_DELAY    1000  /* 1 second in milliseconds */
 
 /****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct ping_priv_s
+{
+  int total;
+};
+
+/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -97,6 +106,8 @@ static void show_usage(FAR const char *progname, int exitcode)
 
 static void ping_result(FAR const struct ping_result_s *result)
 {
+  struct ping_priv_s *priv = result->info->priv;
+
   switch (result->code)
     {
       case ICMP_E_HOSTIP:
@@ -181,6 +192,7 @@ static void ping_result(FAR const struct ping_result_s *result)
                result->seqno, result->extra,
                (result->code == ICMP_I_PKTDUP) ?
                "(DUP!)" : "");
+        priv->total += result->extra;
         break;
 
       case ICMP_W_RECVBIG:
@@ -202,16 +214,19 @@ static void ping_result(FAR const struct ping_result_s *result)
       case ICMP_I_FINISH:
         if (result->nrequests > 0)
           {
-            unsigned int tmp;
+            unsigned int tmp = 0;
 
             /* Calculate the percentage of lost packets */
 
-            tmp = (100 * (result->nrequests - result->nreplies) +
-                  (result->nrequests >> 1)) /
-                   result->nrequests;
+            if (result->nrequests > result->nreplies)
+              {
+                tmp = (100 * (result->nrequests - result->nreplies) +
+                      (result->nrequests >> 1)) / result->nrequests;
+              }
 
-            printf("%u packets transmitted, %u received, %u%% packet loss, time %d ms\n",
-                   result->nrequests, result->nreplies, tmp, result->extra);
+            printf("%u packets transmitted, %u received, %u%% packet loss, avetime %d ms\n",
+                    result->nrequests, result->nreplies, tmp,
+                    result->nreplies ? priv->total / result->nreplies : 0);
           }
         break;
     }
@@ -227,6 +242,7 @@ int main(int argc, FAR char *argv[])
 int ping_main(int argc, char **argv)
 #endif
 {
+  struct ping_priv_s priv = {0};
   struct ping_info_s info;
   FAR char *endptr;
   int exitcode;
@@ -237,6 +253,7 @@ int ping_main(int argc, char **argv)
   info.delay     = ICMP_POLL_DELAY;
   info.timeout   = ICMP_POLL_DELAY;
   info.callback  = ping_result;
+  info.priv      = &priv;
 
   /* Parse command line options */
 
