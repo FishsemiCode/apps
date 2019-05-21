@@ -193,7 +193,8 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   if (argc == 1)
     {
-      nsh_output(vtbl, "Current pm stay [%d, %d, %d, %d]\n",
+      nsh_output(vtbl, "Current state %d, pm stay [%d, %d, %d, %d]\n",
+              pm_querystate(0),
               pm_staycount(0, PM_NORMAL), pm_staycount(0, PM_IDLE),
               pm_staycount(0, PM_STANDBY), pm_staycount(0, PM_SLEEP));
       return 0;
