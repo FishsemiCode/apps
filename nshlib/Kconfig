@@ -491,7 +491,7 @@ config NSH_DISABLE_ROUTE
 
 config NSH_DISABLE_RPTUN
 	bool "Disable rptun"
-	default n
+	default y
 	depends on RPTUN
 
 config NSH_DISABLE_SET
