@@ -58,14 +58,6 @@
 #include "cu.h"
 
 /****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#ifndef SIGKILL
-#  define SIGKILL 9
-#endif
-
-/****************************************************************************
  * Private Types
  ****************************************************************************/
 
@@ -122,7 +114,6 @@ static FAR void *cu_listener(FAR void *parameter)
 
 static void sigint(int sig)
 {
-  pthread_cancel(g_cu.listener);
   tcflush(g_cu.outfd, TCIOFLUSH);
   close(g_cu.outfd);
   close(g_cu.infd);
@@ -292,7 +283,7 @@ int cu_main(int argc, FAR char *argv[])
 
   memset(&sa, 0, sizeof(sa));
   sa.sa_handler = sigint;
-  sigaction(SIGKILL, &sa, NULL);
+  sigaction(SIGINT, &sa, NULL);
 
   while ((option = getopt(argc, argv, "l:s:eor?")) != ERROR)
     {
