@@ -91,6 +91,10 @@ static int nxplayer_cmd_reset(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_device(FAR struct nxplayer_s *pPlayer, char *parg);
 #endif
 
+#ifdef CONFIG_SYSTEM_I2CTOOL
+static int nxplayer_cmd_i2c(FAR struct nxplayer_s *pPlayer, char *parg);
+#endif
+
 #ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
 static int nxplayer_cmd_pause(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_resume(FAR struct nxplayer_s *pPlayer, char *parg);
@@ -142,6 +146,9 @@ static struct mp_cmd_s g_nxplayer_cmds[] =
 #ifdef CONFIG_NXPLAYER_INCLUDE_HELP
   { "h",        "",         nxplayer_cmd_help,      NXPLAYER_HELP_TEXT(Display help for commands) },
   { "help",     "",         nxplayer_cmd_help,      NXPLAYER_HELP_TEXT(Display help for commands) },
+#endif
+#ifdef CONFIG_SYSTEM_I2CTOOL
+  { "i2c",      "",         nxplayer_cmd_i2c,       NXPLAYER_HELP_TEXT(I2C read/write) },
 #endif
 #ifdef CONFIG_NXPLAYER_INCLUDE_MEDIADIR
   { "mediadir", "path",     nxplayer_cmd_mediadir,  NXPLAYER_HELP_TEXT(Change the media directory) },
@@ -524,20 +531,18 @@ static int nxplayer_cmd_mw(FAR struct nxplayer_s *pPlayer, char *parg)
   argc = 1;
   argv[0] = "mw";
 
-  while (argc < 4)
+  while (argc <= 3 && *parg != '\0')
     {
-      char *tmp = strchr(parg, ' ');
-      if (!tmp)
+      argv[argc] = parg;
+      argc++;
+
+      parg = strchr(parg, ' ');
+      if (!parg)
         {
-          argv[argc] = parg;
-          argc++;
           break;
         }
 
-      *tmp = '\0';
-      argv[argc] = parg;
-      argc++;
-      parg = tmp + 1;
+      *parg++ = '\0';
     }
 
   ret = mem_parse(argc, argv, &mem);
@@ -690,6 +695,40 @@ static int nxplayer_cmd_device(FAR struct nxplayer_s *pPlayer, char *parg)
   return OK;
 }
 #endif  /* CONFIG_NXPLAYER_INCLUDE_PREFERRED_DEVICE */
+
+/****************************************************************************
+ * Name: nxplayer_cmd_i2c
+ *
+ *   nxplayer_cmd_i2c() i2c read/write
+ ****************************************************************************/
+
+#ifdef CONFIG_SYSTEM_I2CTOOL
+extern int i2c_main(int argc, char *argv[]);
+static int nxplayer_cmd_i2c(FAR struct nxplayer_s *pPlayer, char *parg)
+{
+  char *argv[16];
+  int argc;
+
+  argc = 1;
+  argv[0] = "i2c";
+
+  while (argc <= 16 && *parg != '\0')
+    {
+      argv[argc] = parg;
+      argc++;
+
+      parg = strchr(parg, ' ');
+      if (!parg)
+        {
+          break;
+        }
+
+      *parg++ = '\0';
+    }
+
+  return i2c_main(argc, argv);
+}
+#endif /* CONFIG_SYSTEM_I2CTOOL */
 
 /****************************************************************************
  * Name: nxplayer_cmd_quit
