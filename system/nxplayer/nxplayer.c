@@ -1945,6 +1945,14 @@ static int nxplayer_playinternal(FAR struct nxplayer_s *pplayer,
       ioctl(pplayer->devFd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
     }
 
+  /* Set AUDIO_EU_HW_FORMAT */
+
+  cap_desc.caps.ac_type = AUDIO_TYPE_EXTENSION;
+  cap_desc.caps.ac_format.hw = AUDIO_EU_HW_FORMAT;
+  cap_desc.caps.ac_controls.hw[0] = AUDIO_HWFMT_PDM | AUDIO_HWFMT_NB_NF | AUDIO_HWFMT_CBS_CFS;
+
+  ioctl(pplayer->devFd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
+
   /* Create a message queue for the playthread */
 
   attr.mq_maxmsg  = 16;
