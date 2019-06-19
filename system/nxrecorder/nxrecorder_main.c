@@ -80,6 +80,7 @@ struct mp_cmd_s
  ****************************************************************************/
 
 static int nxrecorder_cmd_quit(FAR struct nxrecorder_s *pRecorder, char *parg);
+static int nxrecorder_cmd_mw(FAR struct nxrecorder_s *pRecorder, char *parg);
 static int nxrecorder_cmd_recordraw(FAR struct nxrecorder_s *pRecorder, char *parg);
 static int nxrecorder_cmd_device(FAR struct nxrecorder_s *pRecorder, char *parg);
 
@@ -107,6 +108,7 @@ static const struct mp_cmd_s g_nxrecorder_cmds[] =
   { "h",         "",         nxrecorder_cmd_help,      NXRECORDER_HELP_TEXT(Display help for commands) },
   { "help",      "",         nxrecorder_cmd_help,      NXRECORDER_HELP_TEXT(Display help for commands) },
 #endif
+  { "mw",       "...",       nxrecorder_cmd_mw,         NXRECORDER_HELP_TEXT(WR registers) },
   { "recordraw", "filename", nxrecorder_cmd_recordraw, NXRECORDER_HELP_TEXT(Record a pcm raw file) },
 #ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
   { "pause",     "",         nxrecorder_cmd_pause,     NXRECORDER_HELP_TEXT(Pause record) },
@@ -124,6 +126,125 @@ static const int g_nxrecorder_cmd_count = sizeof(g_nxrecorder_cmds) / sizeof(str
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: nxplayer_cmd_mw
+ *
+ *   nxplayer_cmd_mw() read/write registers.
+ *
+ ****************************************************************************/
+
+struct dbgmem_s
+{
+  bool         dm_write;  /* true: perfrom write operation */
+  FAR void    *dm_addr;   /* Address to access */
+  uint32_t     dm_value;  /* Value to write */
+  unsigned int dm_count;  /* The number of bytes to access */
+};
+
+static int mem_parse(int argc, FAR char **argv, FAR struct dbgmem_s *mem)
+{
+  FAR char *pcvalue = strchr(argv[1], '=');
+  unsigned long lvalue = 0;
+
+  /* Check if we are writing a value */
+
+  if (pcvalue)
+    {
+      *pcvalue = '\0';
+      pcvalue++;
+
+      lvalue = strtoul(pcvalue, NULL, 16);
+      if (lvalue > 0xffffffffL)
+        {
+          return -EINVAL;
+        }
+
+      mem->dm_write = true;
+      mem->dm_value = (uint32_t)lvalue;
+    }
+  else
+    {
+      mem->dm_write = false;
+      mem->dm_value = 0;
+    }
+
+  /* Get the address to be accessed */
+
+  mem->dm_addr = (FAR void *)((uintptr_t)strtoul(argv[1], NULL, 16));
+
+  /* Get the number of bytes to access */
+
+  if (argc > 2)
+    {
+      mem->dm_count = (unsigned int)strtoul(argv[2], NULL, 16);
+    }
+  else
+    {
+      mem->dm_count = 1;
+    }
+
+  return OK;
+}
+
+static int nxrecorder_cmd_mw(FAR struct nxrecorder_s *pRecorder, char *parg)
+{
+  struct dbgmem_s mem;
+  FAR volatile uint32_t *ptr;
+  unsigned int i;
+  char *argv[3];
+  int argc;
+  int ret;
+
+  argc = 1;
+  argv[0] = "mw";
+
+  while (argc <= 3 && *parg != '\0')
+    {
+      argv[argc] = parg;
+      argc++;
+
+      parg = strchr(parg, ' ');
+      if (!parg)
+        {
+          break;
+        }
+
+      *parg++ = '\0';
+    }
+
+  ret = mem_parse(argc, argv, &mem);
+  if (ret == 0)
+    {
+      /* Loop for the number of requested bytes */
+
+      for (i = 0, ptr = (volatile uint32_t*)mem.dm_addr; i < mem.dm_count; i += 4, ptr++)
+        {
+          /* Print the value at the address */
+
+          printf("  %p = 0x%08x", ptr, *ptr);
+
+          /* Are we supposed to write a value to this address? */
+
+          if (mem.dm_write)
+            {
+              /* Write the value and re-read the address so that we print its
+               * current value (if the address is a process address, then the
+               * value read might not necessarily be the value written).
+               */
+
+              *ptr = mem.dm_value;
+              printf(" -> 0x%08x", *ptr);
+            }
+
+          /* Make sure we end it with a newline */
+
+          printf("\n", *ptr);
+        }
+    }
+
+  return ret;
+}
 
 /****************************************************************************
  * Name: nxrecorder_cmd_recordraw

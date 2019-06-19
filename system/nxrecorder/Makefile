@@ -40,7 +40,7 @@ CSRCS = nxrecorder.c
 
 APPNAME = nxrecorder
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = 4096
 
 ifeq ($(CONFIG_SYSTEM_NXRECORDER),m)
 MAINSRC = nxrecorder_main.c

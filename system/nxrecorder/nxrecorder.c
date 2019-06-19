@@ -872,6 +872,13 @@ int nxrecorder_recordraw(FAR struct nxrecorder_s *precorder,
       goto err_out;
     }
 
+  /* Set AUDIO_EU_HW_FORMAT, this must set before AUDIO_TYPE_OUTPUT */
+
+  cap_desc.caps.ac_type = AUDIO_TYPE_EXTENSION;
+  cap_desc.caps.ac_format.hw = AUDIO_EU_HW_FORMAT;
+  cap_desc.caps.ac_controls.hw[0] = AUDIO_HWFMT_DSP_A | AUDIO_HWFMT_NB_NF | AUDIO_HWFMT_CBS_CFS;
+  ioctl(precorder->devFd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
+
 #ifdef CONFIG_AUDIO_MULTI_SESSION
   cap_desc.session = precorder->session;
 #endif
