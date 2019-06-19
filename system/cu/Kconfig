@@ -7,6 +7,7 @@ menuconfig SYSTEM_CUTERM
 	tristate "CU minimal serial terminal"
 	default n
 	depends on ARCH_HAVE_SERIAL_TERMIOS
+	select SCHED_EXIT_KILL_CHILDREN
 	select SERIAL_TERMIOS
 	---help---
 		Enable the CU serial terminal.  This is a minimalistic
