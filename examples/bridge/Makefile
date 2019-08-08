@@ -61,11 +61,11 @@ PROGNAME = $(CONFIG_EXAMPLES_BRIDGE_PROGNAME)
 
 $(HOST_OBJS): %.o: %.c
 	@echo "CC: $<"
-	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) $< -o $@
+	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) -I. $< -o $@
 
-bridge_config.h: $(TOPDIR)/include/nuttx/config.h
+bridge_config.h: $(OUTDIR)/include/nuttx/config.h
 	@echo "CP: brigetconfig.h"
-	$(Q) cp $(TOPDIR)/include/nuttx/config.h bridge_config.h
+	$(Q) cp $(OUTDIR)/include/nuttx/config.h bridge_config.h
 
 $(HOST_BIN1): bridge_config.h $(HOST_OBJS1)
 	@echo "LD: $@"

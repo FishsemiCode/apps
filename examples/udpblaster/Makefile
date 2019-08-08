@@ -65,10 +65,10 @@ STACKSIZE = $(CONFIG_EXAMPLES_UDPBLASTER_STACKSIZE)
 ifneq ($(CONFIG_EXAMPLES_UDPBLASTER_LOOPBACK),y)
 $(HOST_OBJS): %$(HOSTOBJEXT): %.c
 	@echo "CC:  $<"
-	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) $< -o $@
+	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) -I. $< -o $@
 endif
 
-config.h: $(TOPDIR)/include/nuttx/config.h
+config.h: $(OUTDIR)/include/nuttx/config.h
 	@echo "CP:  $<"
 	$(Q) cp $< $@
 
