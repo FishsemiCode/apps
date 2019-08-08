@@ -113,10 +113,10 @@ endif
 ifneq ($(CONFIG_EXAMPLES_FLOWC_TARGET2),y)
 $(HOST_OBJS): %.$(HOSTOBJSEXT): %.c
 	@echo "CC:  $<"
-	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) $< -o $@
+	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) -I. $< -o $@
 endif
 
-config.h: $(TOPDIR)/include/nuttx/config.h
+config.h: $(OUTDIR)/include/nuttx/config.h
 	@echo "CP:  $<"
 	$(Q) cp $< $@
 
