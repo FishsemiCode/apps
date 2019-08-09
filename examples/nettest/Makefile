@@ -135,12 +135,12 @@ ifneq ($(CONFIG_EXAMPLES_NETTEST_LOOPBACK),y)
 
 $(HOST_OBJS): %.$(HOSTOBJEXT): %.c
 	@echo "CC:  $<"
-	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) -I. $< -o $@
+	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) $< -o $@
 
 endif
 endif
 
-config.h: $(OUTDIR)/include/nuttx/config.h
+config.h: $(TOPDIR)/include/nuttx/config.h
 	@echo "CP:  $<"
 	$(Q) cp $< $@
 
