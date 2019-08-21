@@ -64,7 +64,11 @@ struct nxplayer_s
   pthread_t   playId;         /* Thread ID of the playthread */
   int         crefs;          /* Number of references to the player */
   sem_t       sem;            /* Thread sync semaphore */
-  int         fd;         /* File descriptor of open file */
+  int         fd;             /* File descriptor of open file */
+  int         loop;           /* Loop play or not */
+  char        *rambuf;        /* Load data to ram then play, flash is slow */
+  int         ramlen;         /* data len */
+  int         ramoff;         /* data offset */
 #ifdef CONFIG_NXPLAYER_INCLUDE_PREFERRED_DEVICE
   char        prefdevice[CONFIG_NAME_MAX]; /* Preferred audio device */
   int         prefformat;     /* Formats supported by preferred device */

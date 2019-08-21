@@ -41,6 +41,7 @@
 #include <nuttx/config.h>
 #include <nuttx/audio/audio.h>
 
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +49,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <fcntl.h>
 
 #include "system/readline.h"
 #include "system/nxplayer.h"
@@ -79,6 +81,8 @@ struct mp_cmd_s {
  * Private Function Prototypes
  ****************************************************************************/
 
+static int nxplayer_cmd_anc(FAR struct nxplayer_s *pPlayer, char *parg);
+static int nxplayer_cmd_load(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_quit(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_play(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_playraw(FAR struct nxplayer_s *pPlayer, char *parg);
@@ -104,6 +108,7 @@ static int nxplayer_cmd_resume(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_mediadir(FAR struct nxplayer_s *pPlayer, char *parg);
 #endif
 
+static int nxplayer_cmd_mb(FAR struct nxplayer_s *pPlayer, char *parg);
 static int nxplayer_cmd_mw(FAR struct nxplayer_s *pPlayer, char *parg);
 
 #ifndef CONFIG_AUDIO_EXCLUDE_STOP
@@ -132,6 +137,7 @@ static int nxplayer_cmd_help(FAR struct nxplayer_s *pPlayer, char *parg);
 
 static struct mp_cmd_s g_nxplayer_cmds[] =
 {
+  { "anc",      "d%",       nxplayer_cmd_anc,       NXPLAYER_HELP_TEXT(Open/close anc) },
 #ifndef CONFIG_AUDIO_EXCLUDE_VOLUME
 #ifndef CONFIG_AUDIO_EXCLUDE_BALANCE
   { "balance",  "d%",       nxplayer_cmd_balance,   NXPLAYER_HELP_TEXT(Set balance percentage (< 50% means more left)) },
@@ -150,9 +156,11 @@ static struct mp_cmd_s g_nxplayer_cmds[] =
 #ifdef CONFIG_SYSTEM_I2CTOOL
   { "i2c",      "",         nxplayer_cmd_i2c,       NXPLAYER_HELP_TEXT(I2C read/write) },
 #endif
+  { "load",     "filename", nxplayer_cmd_load,      NXPLAYER_HELP_TEXT(Load small file to ram) },
 #ifdef CONFIG_NXPLAYER_INCLUDE_MEDIADIR
   { "mediadir", "path",     nxplayer_cmd_mediadir,  NXPLAYER_HELP_TEXT(Change the media directory) },
 #endif
+  { "mb",       "...",      nxplayer_cmd_mb,        NXPLAYER_HELP_TEXT(WR registers) },
   { "mw",       "...",      nxplayer_cmd_mw,        NXPLAYER_HELP_TEXT(WR registers) },
   { "play",     "filename", nxplayer_cmd_play,      NXPLAYER_HELP_TEXT(Play a media file) },
   { "playraw",  "filename", nxplayer_cmd_playraw,   NXPLAYER_HELP_TEXT(Play a raw data file) },
@@ -184,6 +192,114 @@ static const int g_nxplayer_cmd_count = sizeof(g_nxplayer_cmds) / sizeof(struct 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: nxplayer_cmd_anc
+ *
+ *   nxplayer_cmd_anc() open/close ANC feature
+ *
+ ****************************************************************************/
+
+static int nxplayer_cmd_anc(FAR struct nxplayer_s *pPlayer, char *parg)
+{
+  bool on = true;
+  int fd;
+
+  if (parg && *parg != '\0')
+    {
+      on = (bool)atoi(parg);
+    }
+
+  fd = open("/dev/audio/pcm3p", 0);
+  if (fd < 0)
+      return fd;
+
+  if (on)
+    {
+      struct audio_caps_desc_s cap_desc;
+
+      cap_desc.caps.ac_len            = sizeof(struct audio_caps_s);
+      cap_desc.caps.ac_type           = AUDIO_TYPE_INPUT;
+      cap_desc.caps.ac_channels       = 2;
+      cap_desc.caps.ac_controls.hw[0] = (uint16_t)768000;
+      cap_desc.caps.ac_controls.b[3]  = (uint8_t)(768000 >> 16);
+      cap_desc.caps.ac_controls.b[2]  = 16;
+      ioctl(fd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
+
+      cap_desc.caps.ac_len            = sizeof(struct audio_caps_s);
+      cap_desc.caps.ac_type           = AUDIO_TYPE_OUTPUT;
+      cap_desc.caps.ac_channels       = 2;
+      cap_desc.caps.ac_controls.hw[0] = (uint16_t)48000;
+      cap_desc.caps.ac_controls.b[3]  = (uint8_t)(48000 >> 16);
+      cap_desc.caps.ac_controls.b[2]  = 16;
+      ioctl(fd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
+
+      cap_desc.caps.ac_type = AUDIO_TYPE_EXTENSION;
+      cap_desc.caps.ac_format.hw = AUDIO_EU_HW_FORMAT;
+      cap_desc.caps.ac_controls.hw[0] = AUDIO_HWFMT_PDM | AUDIO_HWFMT_NB_NF | AUDIO_HWFMT_CBS_CFS;
+      ioctl(fd, AUDIOIOC_CONFIGURE, (unsigned long)&cap_desc);
+
+      ioctl(fd, AUDIOIOC_START, 0);
+      printf("anc on...\n");
+    }
+  else
+    {
+      ioctl(fd, AUDIOIOC_STOP, 0);
+      printf("anc off...\n");
+    }
+
+  close(fd);
+  return 0;
+}
+
+/****************************************************************************
+ * Name: nxplayer_cmd_load
+ *
+ *   nxplayer_cmd_load() open/close ANC feature
+ *
+ ****************************************************************************/
+
+static int nxplayer_cmd_load(FAR struct nxplayer_s *pPlayer, char *parg)
+{
+  int act, len = 4096;
+  int ret = 0;
+  int fd;
+
+  if (!parg || *parg == '\0')
+    {
+      printf("Load no file name\n");
+      return -EINVAL;
+    }
+
+  fd = open(parg, O_RDONLY);
+  if (fd < 0)
+      return fd;
+
+  if (!pPlayer->rambuf)
+    {
+      pPlayer->rambuf = malloc(len);
+      if (!pPlayer->rambuf)
+        {
+          ret = -ENOMEM;
+          goto out;
+        }
+    }
+
+  act = read(fd, pPlayer->rambuf, len);
+  if (act < 0)
+    {
+      ret = act;
+          goto out;
+    }
+
+  pPlayer->ramlen = act;
+
+  printf("Load file %s to rambuf, len %d\n", parg, pPlayer->ramlen);
+
+out:
+  close(fd);
+  return ret;
+}
 
 /****************************************************************************
  * Name: nxplayer_cmd_play
@@ -255,7 +371,7 @@ static int nxplayer_cmd_playraw(FAR struct nxplayer_s *pPlayer, char *parg)
   int samprate = 0;
   char filename[128];
 
-  sscanf(parg, "%s %d %d %d", filename, &channels, &bpsamp, &samprate);
+  sscanf(parg, "%s %d %d %d %d", filename, &channels, &bpsamp, &samprate, &pPlayer->loop);
 
   /* Try to play the file specified */
 
@@ -519,6 +635,72 @@ static int mem_parse(int argc, FAR char **argv, FAR struct dbgmem_s *mem)
   return OK;
 }
 
+static int nxplayer_cmd_mb(FAR struct nxplayer_s *pPlayer, char *parg)
+{
+  struct dbgmem_s mem;
+  FAR volatile uint8_t *ptr;
+  unsigned int i;
+  char *argv[3];
+  int argc;
+  int ret;
+
+  argc = 1;
+  argv[0] = "mb";
+
+  while (argc <= 3 && *parg != '\0')
+    {
+      argv[argc] = parg;
+      argc++;
+
+      parg = strchr(parg, ' ');
+      if (!parg)
+        {
+          break;
+        }
+
+      *parg++ = '\0';
+    }
+
+  ret = mem_parse(argc, argv, &mem);
+  if (ret == 0)
+    {
+      /* Loop for the number of requested bytes */
+
+      for (i = 0, ptr = (volatile uint8_t*)mem.dm_addr; i < mem.dm_count; i++, ptr++)
+        {
+          /* Print the value at the address */
+
+          printf("  %p = 0x%02x", ptr, *ptr);
+
+          /* Are we supposed to write a value to this address? */
+
+          if (mem.dm_write)
+            {
+              /* Yes, was the supplied value within range? */
+
+              if (mem.dm_value > 0x000000ff)
+                {
+                  return ERROR;
+                }
+
+              /* Write the value and re-read the address so that we print its
+               * current value (if the address is a process address, then the
+               * value read might not necessarily be the value written).
+               */
+
+              *ptr = (uint8_t)mem.dm_value;
+              printf(" -> 0x%02x", *ptr);
+            }
+
+          /* Make sure we end it with a newline */
+
+          printf("\n", *ptr);
+        }
+    }
+
+  return ret;
+}
+
 static int nxplayer_cmd_mw(FAR struct nxplayer_s *pPlayer, char *parg)
 {
   struct dbgmem_s mem;
@@ -743,6 +925,11 @@ static int nxplayer_cmd_quit(FAR struct nxplayer_s *pPlayer, char *parg)
 #ifndef CONFIG_AUDIO_EXCLUDE_STOP
   nxplayer_stop(pPlayer);
 #endif
+
+  if (pPlayer->rambuf)
+    {
+      free(pPlayer->rambuf);
+    }
 
   return OK;
 }

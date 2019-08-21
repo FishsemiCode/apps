@@ -626,6 +626,40 @@ static int nxplayer_mediasearch(FAR struct nxplayer_s *pplayer,
 static int nxplayer_readbuffer(FAR struct nxplayer_s *pplayer,
                                FAR struct ap_buffer_s *apb)
 {
+  if (pplayer->rambuf && pplayer->ramlen > 0)
+    {
+      apb->curbyte = 0;
+      apb->flags   = 0;
+      apb->nbytes  = 0;
+
+      if (pplayer->ramoff)
+        {
+          memcpy(&apb->samp[apb->nbytes],
+                 &pplayer->rambuf[pplayer->ramoff],
+                 pplayer->ramlen - pplayer->ramoff);
+          apb->nbytes = pplayer->ramlen - pplayer->ramoff;
+          pplayer->ramoff = 0;
+        }
+
+      while (1)
+        {
+          int n = apb->nmaxbytes - apb->nbytes;
+
+          n = n > pplayer->ramlen ? pplayer->ramlen : n;
+
+          memcpy(&apb->samp[apb->nbytes], pplayer->rambuf, n);
+          apb->nbytes += n;
+
+          if (n < pplayer->ramlen)
+            {
+              pplayer->ramoff = n;
+              break;
+            }
+        }
+
+      return 0;
+    }
+
   /* Validate the file is still open.  It will be closed automatically when
    * we encounter the end of file (or, perhaps, a read error that we cannot
    * handle.
@@ -642,26 +676,30 @@ static int nxplayer_readbuffer(FAR struct nxplayer_s *pplayer,
 
   /* Read data into the buffer. */
 
-  apb->nbytes  = read(pplayer->fd, apb->samp, apb->nmaxbytes);
+  apb->nbytes  = 0;
   apb->curbyte = 0;
   apb->flags   = 0;
 
-#ifdef CONFIG_NXPLAYER_HTTP_STREAMING_SUPPORT
-  /* read data up to nmaxbytes from network */
-
-  while (0 < apb->nbytes && apb->nbytes < apb->nmaxbytes)
+  while (apb->nbytes < apb->nmaxbytes)
     {
       int n   = apb->nmaxbytes - apb->nbytes;
       int ret = read(pplayer->fd, &apb->samp[apb->nbytes], n);
 
-      if (0 >= ret)
+      if (ret < 0)
+        {
+          break;
+        }
+      else if (pplayer->loop && ret != n)
+        {
+          lseek(pplayer->fd, 0, SEEK_SET);
+        }
+      else if (0 >= ret)
         {
           break;
         }
 
       apb->nbytes += ret;
     }
-#endif
 
   if (apb->nbytes < apb->nmaxbytes)
     {
@@ -2139,7 +2177,7 @@ FAR struct nxplayer_s *nxplayer_create(void)
 
   /* Allocate the memory */
 
-  pplayer = (FAR struct nxplayer_s *) malloc(sizeof(struct nxplayer_s));
+  pplayer = (FAR struct nxplayer_s *) zalloc(sizeof(struct nxplayer_s));
   if (pplayer == NULL)
     {
       return NULL;
