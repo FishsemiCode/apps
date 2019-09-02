@@ -1,0 +1,20 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_ILI9486_LCD
+	tristate "ILI9486 LCD test"
+	default n
+	---help---
+		Enables a simple test of an ili9486 LCD
+
+if EXAMPLES_ILI9486_LCD
+
+config EXAMPLES_ILI9486_LCD_DEVNAME
+	string "ILI9486 LCD device path"
+	default "/dev/ili9486"
+	---help---
+		The full path to the ILI9486 LCD device to be tested
+
+endif
