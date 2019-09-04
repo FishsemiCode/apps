@@ -1,59 +1,27 @@
-/****************************************************************************
- * apps/graphics/littlevgl/lv_conf.h
+/**
+ * @file lv_conf.h
  *
- *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
- *   Author: Gábor Kiss-Vámosi <kisvegabor@gmail.com>
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name NuttX nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- ****************************************************************************/
+ */
 
-#ifndef __APPS_GRAPHICS_LITTLEVGL_LV_CONF_H
-#define __APPS_GRAPHICS_LITTLEVGL_LV_CONF_H
+/*
+ * COPY THIS FILE AS `lv_conf.h` NEXT TO the `lvgl` FOLDER
+ */
 
-/****************************************************************************
- * Included Files
- ****************************************************************************/
+#if 0 /*Set it to "1" to enable content*/
+
+#ifndef LV_CONF_H
+#define LV_CONF_H
+/* clang-format off */
+
 #include <stdint.h>
-#include <nuttx/config.h>
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
 
 /*====================
    Graphical settings
  *====================*/
 
 /* Maximal horizontal and vertical resolution to support by the library.*/
-#define LV_HOR_RES_MAX          CONFIG_LV_HOR_RES
-#define LV_VER_RES_MAX          CONFIG_LV_VER_RES
+#define LV_HOR_RES_MAX          (480)
+#define LV_VER_RES_MAX          (320)
 
 /* Color depth:
  * - 1:  1 byte per pixel
@@ -61,7 +29,7 @@
  * - 16: RGB565
  * - 32: ARGB8888
  */
-#define LV_COLOR_DEPTH     CONFIG_LV_COLOR_DEPTH
+#define LV_COLOR_DEPTH     16
 
 /* Swap the 2 bytes of RGB565 color.
  * Useful if the display has a 8 bit interface (e.g. SPI)*/
@@ -76,24 +44,16 @@
 #define LV_COLOR_TRANSP    LV_COLOR_LIME         /*LV_COLOR_LIME: pure green*/
 
 /* Enable anti-aliasing (lines, and radiuses will be smoothed) */
-#ifdef CONFIG_LV_ANTIALIAS
-#  define LV_ANTIALIAS      CONFIG_LV_ANTIALIAS
-#else
-#  define LV_ANTIALIAS      0
-#endif
-
+#define LV_ANTIALIAS        1
 
 /* Default display refresh period.
  * Can be changed in the display driver (`lv_disp_drv_t`).*/
-#define LV_DISP_DEF_REFR_PERIOD      CONFIG_LV_REFR_PERIOD      /*[ms]*/
+#define LV_DISP_DEF_REFR_PERIOD      30      /*[ms]*/
 
 /* Dot Per Inch: used to initialize default sizes.
  * E.g. a button with width = LV_DPI / 2 -> half inch wide
  * (Not so important, you can adjust it to modify default sizes and spaces)*/
-#define LV_DPI              CONFIG_LV_DPI     /*[px]*/
-
-#define LV_INV_BUF_SIZE     CONFIG_LV_INV_FIFO_SIZE
-
+#define LV_DPI              100     /*[px]*/
 
 /* Type of coordinates. Should be `int16_t` (or `int32_t` for extreme cases) */
 typedef int16_t lv_coord_t;
@@ -106,7 +66,7 @@ typedef int16_t lv_coord_t;
  * The graphical objects and other related data are stored here. */
 
 /* 1: use custom malloc/free, 0: use the built-in `lv_mem_alloc` and `lv_mem_free` */
-#define LV_MEM_CUSTOM      1
+#define LV_MEM_CUSTOM      0
 #if LV_MEM_CUSTOM == 0
 /* Size of the memory used by `lv_mem_alloc` in bytes (>= 2kB)*/
 #  define LV_MEM_SIZE    (32U * 1024U)
@@ -143,33 +103,28 @@ typedef int16_t lv_coord_t;
  * Can be changed in the Input device driver (`lv_indev_drv_t`)*/
 
 /* Input device read period in milliseconds */
-#define LV_INDEV_DEF_READ_PERIOD          CONFIG_LV_INDEV_READ_PERIOD
+#define LV_INDEV_DEF_READ_PERIOD          30
 
 /* Drag threshold in pixels */
-#define LV_INDEV_DEF_DRAG_LIMIT           CONFIG_LV_INDEV_DRAG_LIMIT
+#define LV_INDEV_DEF_DRAG_LIMIT           10
 
 /* Drag throw slow-down in [%]. Greater value -> faster slow-down */
-#define LV_INDEV_DEF_DRAG_THROW           CONFIG_LV_INDEV_DRAG_THROW
+#define LV_INDEV_DEF_DRAG_THROW           20
 
 /* Long press time in milliseconds.
  * Time to send `LV_EVENT_LONG_PRESSSED`) */
-#define LV_INDEV_DEF_LONG_PRESS_TIME      CONFIG_LV_INDEV_LONG_PRESS_TIME
+#define LV_INDEV_DEF_LONG_PRESS_TIME      400
 
 /* Repeated trigger period in long press [ms]
  * Time between `LV_EVENT_LONG_PRESSED_REPEAT */
-#define LV_INDEV_DEF_LONG_PRESS_REP_TIME  CONFIG_LV_INDEV_LONG_PRESS_REP_TIME
+#define LV_INDEV_DEF_LONG_PRESS_REP_TIME  100
 
 /*==================
  * Feature usage
  *==================*/
 
 /*1: Enable the Animations */
-#ifdef CONFIG_USE_LV_ANIMATION
-#  define LV_USE_ANIMATION   CONFIG_USE_LV_ANIMATION
-#else
-#  define LV_USE_ANIMATION   0
-#endif
-
+#define LV_USE_ANIMATION        1
 #if LV_USE_ANIMATION
 
 /*Declare the type of the user data of animations (can be e.g. `void *`, `int`, `struct`)*/
@@ -178,37 +133,19 @@ typedef void * lv_anim_user_data_t;
 #endif
 
 /* 1: Enable shadow drawing*/
-#ifdef CONFIG_USE_LV_SHADOW
-#  define LV_USE_SHADOW      CONFIG_USE_LV_SHADOW
-#else
-#  define LV_USE_SHADOW      0
-#endif
+#define LV_USE_SHADOW           1
 
 /* 1: Enable object groups (for keyboard/encoder navigation) */
-#ifdef CONFIG_USE_LV_GROUP
-  #define LV_USE_GROUP       CONFIG_USE_LV_GROUP
-#else
-#  define LV_USE_GROUP       0
-#endif
-
+#define LV_USE_GROUP            1
 #if LV_USE_GROUP
 typedef void * lv_group_user_data_t;
 #endif  /*LV_USE_GROUP*/
 
 /* 1: Enable GPU interface*/
-#ifdef CONFIG_USE_LV_GPU
-#  define LV_USE_GPU         CONFIG_USE_LV_GPU
-#else
-#  define LV_USE_GPU         0
-#endif
+#define LV_USE_GPU              1
 
 /* 1: Enable file system (might be required for images */
-#ifdef CONFIG_USE_LV_FILESYSTEM
-#  define LV_USE_FILESYSTEM  CONFIG_USE_LV_FILESYSTEM
-#else
-#  define LV_USE_FILESYSTEM  0
-#endif
-
+#define LV_USE_FILESYSTEM       1
 #if LV_USE_FILESYSTEM
 /*Declare the type of the user data of file system drivers (can be e.g. `void *`, `int`, `struct`)*/
 typedef void * lv_fs_drv_user_data_t;
@@ -276,7 +213,7 @@ typedef void * lv_indev_drv_user_data_t;            /*Type of user data in the i
  *===============*/
 
 /*1: Enable the log module*/
-#define LV_USE_LOG      1
+#define LV_USE_LOG      0
 #if LV_USE_LOG
 /* How important log should be added:
  * LV_LOG_LEVEL_TRACE       A lot of logs to give detailed information
@@ -289,7 +226,7 @@ typedef void * lv_indev_drv_user_data_t;            /*Type of user data in the i
 
 /* 1: Print the log with 'printf';
  * 0: user need to register a callback with `lv_log_register_print`*/
-#  define LV_LOG_PRINTF   1
+#  define LV_LOG_PRINTF   0
 #endif  /*LV_USE_LOG*/
 
 /*================
@@ -297,68 +234,14 @@ typedef void * lv_indev_drv_user_data_t;            /*Type of user data in the i
  *================*/
 #define LV_THEME_LIVE_UPDATE    0   /*1: Allow theme switching at run time. Uses 8..10 kB of RAM*/
 
-/* Just for test */
-
-#ifdef CONFIG_USE_LV_THEME_TEMPL
-#  define LV_USE_THEME_TEMPL     CONFIG_USE_LV_THEME_TEMPL
-#else
-#  define LV_USE_THEME_TEMPL     0
-#endif
-
-/* Built mainly from the built-in styles. Consumes very few RAM */
-
-#ifdef CONFIG_USE_LV_THEME_DEFAULT
-#  define LV_USE_THEME_DEFAULT   CONFIG_USE_LV_THEME_DEFAULT
-#else
-#  define LV_USE_THEME_DEFAULT   0
-#endif
-
-/* Dark futuristic theme */
-
-#ifdef CONFIG_USE_LV_THEME_ALIEN
-#  define LV_USE_THEME_ALIEN     CONFIG_USE_LV_THEME_ALIEN
-#else
-#  define LV_USE_THEME_ALIEN     0
-#endif
-
-/* Dark elegant theme */
-
-#ifdef CONFIG_USE_LV_THEME_NIGHT
-#  define LV_USE_THEME_NIGHT     CONFIG_USE_LV_THEME_NIGHT
-#else
-#  define LV_USE_THEME_NIGHT     0
-#endif
-
-/* Mono color theme for monochrome displays */
-
-#ifdef CONFIG_USE_LV_THEME_MONO
-#  define LV_USE_THEME_MONO      CONFIG_USE_LV_THEME_MONO
-#else
-#  define LV_USE_THEME_MONO      0
-#endif
-
-/* Flat theme with bold colors and light shadows (Planned) */
-
-#ifdef CONFIG_USE_LV_THEME_MATERIAL
-#  define LV_USE_THEME_MATERIAL  CONFIG_USE_LV_THEME_MATERIAL
-#else
-#  define LV_USE_THEME_MATERIAL  0
-#endif
-
-/* Peaceful, mainly black and white theme (Planned) */
-
-#ifdef CONFIG_USE_LV_THEME_ZEN
-#  define LV_USE_THEME_ZEN       CONFIG_USE_LV_THEME_ZEN
-#else
-#  define LV_USE_THEME_ZEN       0
-#endif
-
-#ifdef CONFIG_USE_LV_THEME_NEMO
-#  define LV_USE_THEME_NEMO       CONFIG_USE_LV_THEME_NEMO
-#else
-#  define LV_USE_THEME_NEMO       0
-#endif
-
+#define LV_USE_THEME_TEMPL      0   /*Just for test*/
+#define LV_USE_THEME_DEFAULT    0   /*Built mainly from the built-in styles. Consumes very few RAM*/
+#define LV_USE_THEME_ALIEN      0   /*Dark futuristic theme*/
+#define LV_USE_THEME_NIGHT      0   /*Dark elegant theme*/
+#define LV_USE_THEME_MONO       0   /*Mono color theme for monochrome displays*/
+#define LV_USE_THEME_MATERIAL   0   /*Flat theme with bold colors and light shadows*/
+#define LV_USE_THEME_ZEN        0   /*Peaceful, mainly light theme */
+#define LV_USE_THEME_NEMO       0   /*Water-like theme based on the movie "Finding Nemo"*/
 
 /*==================
  *    FONT USAGE
@@ -412,7 +295,7 @@ typedef void * lv_font_user_data_t;
 #define LV_TXT_ENC LV_TXT_ENC_UTF8
 
  /*Can break (wrap) texts on these chars*/
-#define LV_TXT_BREAK_CHARS                  CONFIG_LV_TXT_BREAK_CHARS
+#define LV_TXT_BREAK_CHARS                  " ,.;:-_"
 
 /*===================
  *  LV_OBJ SETTINGS
@@ -442,31 +325,17 @@ typedef void * lv_obj_user_data_t;
 #define LV_USE_ARC      1
 
 /*Bar (dependencies: -)*/
-#ifdef CONFIG_USE_LV_BAR
-#  define LV_USE_BAR        CONFIG_USE_LV_BAR
-#else
-#  define LV_USE_BAR        0
-#endif
+#define LV_USE_BAR      1
 
 /*Button (dependencies: lv_cont*/
-#ifdef CONFIG_USE_LV_BTN
-#  define LV_USE_BTN         CONFIG_USE_LV_BTN
-#else
-#  define LV_USE_BTN         0
-#endif
-
+#define LV_USE_BTN      1
 #if LV_USE_BTN != 0
 /*Enable button-state animations - draw a circle on click (dependencies: LV_USE_ANIMATION)*/
 #  define LV_BTN_INK_EFFECT   0
 #endif
 
 /*Button matrix (dependencies: -)*/
-#ifdef CONFIG_USE_LV_BTNM
-#  define LV_USE_BTNM        CONFIG_USE_LV_BTNM
-#else
-#  define LV_USE_BTNM        0
-#endif
-
+#define LV_USE_BTNM     1
 
 /*Calendar (dependencies: -)*/
 #define LV_USE_CALENDAR 1
@@ -475,51 +344,29 @@ typedef void * lv_obj_user_data_t;
 #define LV_USE_CANVAS   1
 
 /*Check box (dependencies: lv_btn, lv_label)*/
-#ifdef CONFIG_USE_LV_CB
-#  define LV_USE_CB          CONFIG_USE_LV_CB
-#else
-#  define LV_USE_CB          0
-#endif
+#define LV_USE_CB       1
 
 /*Chart (dependencies: -)*/
-#ifdef CONFIG_USE_LV_CHART
-#  define LV_USE_CHART       CONFIG_USE_LV_CHART
-#else
-#  define LV_USE_CHART       0
-#endif
-
+#define LV_USE_CHART    1
 #if LV_USE_CHART
 #  define LV_CHART_AXIS_TICK_LABEL_MAX_LEN    20
 #endif
 
 /*Container (dependencies: -*/
-#ifdef CONFIG_USE_LV_CONT
-#  define LV_USE_CONT        CONFIG_USE_LV_CONT
-#else
-#  define LV_USE_CONT        0
-#endif
+#define LV_USE_CONT     1
 
 /*Drop down list (dependencies: lv_page, lv_label, lv_symbol_def.h)*/
-#ifdef CONFIG_USE_LV_DDLIST
-#  define LV_USE_DDLIST      CONFIG_USE_LV_DDLIST
-#else
-#  define LV_USE_DDLIST      0
-#endif
-
+#define LV_USE_DDLIST    1
 #if LV_USE_DDLIST != 0
 /*Open and close default animation time [ms] (0: no animation)*/
 #  define LV_DDLIST_DEF_ANIM_TIME     200
 #endif
 
 /*Gauge (dependencies:lv_bar, lv_lmeter)*/
-#define LV_USE_GAUGE   1
+#define LV_USE_GAUGE    1
 
 /*Image (dependencies: lv_label*/
-#ifdef CONFIG_USE_LV_IMG
-#  define LV_USE_IMG         CONFIG_USE_LV_IMG
-#else
-#  define LV_USE_IMG         0
-#endif
+#define LV_USE_IMG      1
 
 /*Image Button (dependencies: lv_btn*/
 #define LV_USE_IMGBTN   1
@@ -529,19 +376,10 @@ typedef void * lv_obj_user_data_t;
 #endif
 
 /*Keyboard (dependencies: lv_btnm)*/
-#ifdef CONFIG_USE_LV_KB
-#  define LV_USE_KB          CONFIG_USE_LV_KB
-#else
-#  define LV_USE_KB          0
-#endif
+#define LV_USE_KB       1
 
 /*Label (dependencies: -*/
-#ifdef CONFIG_USE_LV_LABEL
-#  define LV_USE_LABEL       CONFIG_USE_LV_LABEL
-#else
-#  define LV_USE_LABEL       0
-#endif
-
+#define LV_USE_LABEL    1
 #if LV_USE_LABEL != 0
 /*Hor, or ver. scroll speed [px/sec] in 'LV_LABEL_LONG_ROLL/ROLL_CIRC' mode*/
 #  define LV_LABEL_DEF_SCROLL_SPEED       25
@@ -557,60 +395,33 @@ typedef void * lv_obj_user_data_t;
 #endif
 
 /*LED (dependencies: -)*/
-#ifdef CONFIG_USE_LV_LED
-#  define LV_USE_LED         CONFIG_USE_LV_LED
-#else
-#  define LV_USE_LED         0
-#endif
+#define LV_USE_LED      1
 
 /*Line (dependencies: -*/
-#ifdef CONFIG_USE_LV_LINE
-#  define LV_USE_LINE        CONFIG_USE_LV_LINE
-#else
-#  define LV_USE_LINE        0
-#endif
+#define LV_USE_LINE     1
 
 /*List (dependencies: lv_page, lv_btn, lv_label, (lv_img optionally for icons ))*/
-#ifdef CONFIG_USE_LV_LIST
-#  define LV_USE_LIST        CONFIG_USE_LV_LIST
-#else
-#  define LV_USE_LIST        0
-#endif
-
+#define LV_USE_LIST     1
 #if LV_USE_LIST != 0
 /*Default animation time of focusing to a list element [ms] (0: no animation)  */
 #  define LV_LIST_DEF_ANIM_TIME  100
 #endif
 
 /*Line meter (dependencies: *;)*/
-#ifdef CONFIG_USE_LV_LMETER
-#  define LV_USE_LMETER      CONFIG_USE_LV_LMETER
-#else
-#  define LV_USE_LMETER      0
-#endif
+#define LV_USE_LMETER   1
 
 /*Message box (dependencies: lv_rect, lv_btnm, lv_label)*/
-#ifdef CONFIG_USE_LV_MBOX
-#  define LV_USE_MBOX        CONFIG_USE_LV_MBOX
-#else
-#  define LV_USE_MBOX        0
-#endif
-
+#define LV_USE_MBOX     1
 
 /*Page (dependencies: lv_cont)*/
-#ifdef CONFIG_USE_LV_PAGE
-#  define LV_USE_PAGE        CONFIG_USE_LV_PAGE
-#else
-#  define LV_USE_PAGE        0
-#endif
-
+#define LV_USE_PAGE     1
 #if LV_USE_PAGE != 0
 /*Focus default animation time [ms] (0: no animation)*/
 #  define LV_PAGE_DEF_ANIM_TIME     400
 #endif
 
 /*Preload (dependencies: lv_arc, lv_anim)*/
-#define LV_USE_PRELOAD      0
+#define LV_USE_PRELOAD      1
 #if LV_USE_PRELOAD != 0
 #  define LV_PRELOAD_DEF_ARC_LENGTH   60      /*[deg]*/
 #  define LV_PRELOAD_DEF_SPIN_TIME    1000    /*[ms]*/
@@ -618,12 +429,7 @@ typedef void * lv_obj_user_data_t;
 #endif
 
 /*Roller (dependencies: lv_ddlist)*/
-#ifdef CONFIG_USE_LV_ROLLER
-#  define LV_USE_ROLLER      CONFIG_USE_LV_ROLLER
-#else
-#  define LV_USE_ROLLER      0
-#endif
-
+#define LV_USE_ROLLER    1
 #if LV_USE_ROLLER != 0
 /*Focus animation time [ms] (0: no animation)*/
 #  define LV_ROLLER_DEF_ANIM_TIME     200
@@ -633,30 +439,16 @@ typedef void * lv_obj_user_data_t;
 #endif
 
 /*Slider (dependencies: lv_bar)*/
-#ifdef CONFIG_USE_LV_SLIDER
-#  define LV_USE_SLIDER      CONFIG_USE_LV_SLIDER
-#else
-#  define LV_USE_SLIDER      0
-#endif
-
+#define LV_USE_SLIDER    1
 
 /*Spinbox (dependencies: lv_ta)*/
 #define LV_USE_SPINBOX       1
 
 /*Switch (dependencies: lv_slider)*/
-#ifdef CONFIG_USE_LV_SW
-#  define LV_USE_SW          CONFIG_USE_LV_SW
-#else
-#  define LV_USE_SW          0
-#endif
+#define LV_USE_SW       1
 
 /*Text area (dependencies: lv_label, lv_page)*/
-#ifdef CONFIG_USE_LV_TA
-#  define LV_USE_TA          CONFIG_USE_LV_TA
-#else
-#  define LV_USE_TA          0
-#endif
-
+#define LV_USE_TA       1
 #if LV_USE_TA != 0
 #  define LV_TA_DEF_CURSOR_BLINK_TIME 400     /*ms*/
 #  define LV_TA_DEF_PWD_SHOW_TIME     1500    /*ms*/
@@ -669,33 +461,21 @@ typedef void * lv_obj_user_data_t;
 #endif
 
 /*Tab (dependencies: lv_page, lv_btnm)*/
-#ifdef CONFIG_USE_LV_TABVIEW
-#  define LV_USE_TABVIEW     CONFIG_USE_LV_TABVIEW
-#else
-#  define LV_USE_TABVIEW     0
-#endif
-
+#define LV_USE_TABVIEW      1
 #  if LV_USE_TABVIEW != 0
 /*Time of slide animation [ms] (0: no animation)*/
 #  define LV_TABVIEW_DEF_ANIM_TIME    300
 #endif
 
-
 /*Tileview (dependencies: lv_page) */
-#define LV_USE_TILEVIEW      1
-
+#define LV_USE_TILEVIEW     1
 #if LV_USE_TILEVIEW
 /*Time of slide animation [ms] (0: no animation)*/
 #  define LV_TILEVIEW_DEF_ANIM_TIME   300
 #endif
 
 /*Window (dependencies: lv_cont, lv_btn, lv_label, lv_img, lv_page)*/
-#ifdef CONFIG_USE_LV_WIN
-#  define LV_USE_WIN         CONFIG_USE_LV_WIN
-#else
-#  define LV_USE_WIN         0
-#endif
-
+#define LV_USE_WIN      1
 
 /*==================
  * Non-user section
@@ -710,5 +490,6 @@ typedef void * lv_obj_user_data_t;
 /*Be sure every define has a default value*/
 #include "lvgl/src/lv_conf_checker.h"
 
+#endif /*LV_CONF_H*/
 
-#endif /*__APPS_GRAPHICS_LITTLEVGL_LV_CONF_H*/
+#endif /*End of "Content enable"*/

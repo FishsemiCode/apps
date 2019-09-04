@@ -22,13 +22,13 @@ menu "Graphics settings"
 
 config LV_HOR_RES
 	int "Horizontal resolution."
-	default 320
+	default 480
 	---help---
 		Number of pixels in horizontally.
 
 config LV_VER_RES
 	int "Vertical resolution."
-	default 240
+	default 320
 	---help---
 		Number of pixels vertically. Double it if anti aliasing is used
 
@@ -148,11 +148,11 @@ endmenu
 menu "Feature usage"
 config USE_LV_ANIMATION
 	bool "Enable animations"
-	default y
+	default n
 
 config USE_LV_SHADOW
 	bool "Enable shadows"
-	default y
+	default n
 
 config USE_LV_GROUP
 	bool "Enable object groups (for keyboard)"
@@ -160,7 +160,7 @@ config USE_LV_GROUP
 
 config USE_LV_GPU
 	bool "Enable GPU (hardware acceleration) API"
-	default y
+	default n
 
 config USE_LV_REAL_DRAW
 	bool "Enable function which draw directly to the frame buffer instead of VDB"
@@ -168,38 +168,42 @@ config USE_LV_REAL_DRAW
 
 config USE_LV_FILESYSTEM
 	bool "Enable filesystem (required for images, lv_img)"
-	default y
+	default n
 endmenu
 
 menu "Theme usage"
 
 config USE_LV_THEME_TEMPL
 	bool "Use Template theme: just for test"
-	default n
+	default y
 
 config USE_LV_THEME_DEFAULT
 	bool "Use Default theme: uses the built-in style"
-	default n
+	default y
 
 config USE_LV_THEME_ALIEN
 	bool "Use Alien theme: dark futuristic theme"
-	default n
+	default y
 
 config USE_LV_THEME_NIGHT
 	bool "Use Night theme: dark elegant theme"
-	default n
+	default y
 
 config USE_LV_THEME_MONO
 	bool "Use Mono theme: mono color theme"
-	default n
+	default y
 	
 config USE_LV_THEME_MATERIAL
 	bool "Use Mono theme: material theme with bold colors"
-	default n
+	default y
 	
 config USE_LV_THEME_ZEN
 	bool "Use Mono theme: light, peaceful theme"
-	default n
+	default y
+
+config USE_LV_THEME_NEMO
+	bool "Use nemo theme: Water-like theme"
+	default y
 
 endmenu
 

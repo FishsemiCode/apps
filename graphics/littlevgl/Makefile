@@ -43,13 +43,15 @@ VPATH =
 
 # LVGL Libraries
 
--include ./lvgl/lv_core/lv_core.mk
--include ./lvgl/lv_hal/lv_hal.mk
--include ./lvgl/lv_objx/lv_objx.mk
--include ./lvgl/lv_misc/lv_fonts/lv_fonts.mk
--include ./lvgl/lv_misc/lv_misc.mk
--include ./lvgl/lv_themes/lv_themes.mk
--include ./lvgl/lv_draw/lv_draw.mk
+CURR_DIR = $(APPDIR)/graphics/littlevgl
+
+-include $(CURR_DIR)/lvgl/src/lv_core/lv_core.mk
+-include $(CURR_DIR)/lvgl/src/lv_hal/lv_hal.mk
+-include $(CURR_DIR)/lvgl/src/lv_objx/lv_objx.mk
+-include $(CURR_DIR)/lvgl/src/lv_font/lv_font.mk
+-include $(CURR_DIR)/lvgl/src/lv_misc/lv_misc.mk
+-include $(CURR_DIR)/lvgl/src/lv_themes/lv_themes.mk
+-include $(CURR_DIR)/lvgl/src/lv_draw/lv_draw.mk
 
 # Set up build configuration and environment
 
@@ -81,14 +83,14 @@ $(APPDIR)/include/graphics/lvgl.h: $(LVGL_UNPACKNAME) lvgl/lvgl.h
 	@echo "CP: lvgl/lvgl.h"
 	$(Q) cp lvgl/lvgl.h $(APPDIR)/include/graphics/lvgl.h
 
-context:: $(LVGL_UNPACKNAME) $(APPDIR)/include/graphics/lvgl.h
+#context:: $(LVGL_UNPACKNAME) $(APPDIR)/include/graphics/lvgl.h
 
 clean::
 	$(call DELDIR, build)
 
-distclean::
-	$(call DELDIR, $(LVGL_UNPACKNAME))
-	$(call DELFILE, $(LVGL_TARBALL))
-	$(call DELFILE, $(APPDIR)/include/graphics/lvgl.h)
+#distclean::
+#	$(call DELDIR, $(LVGL_UNPACKNAME))
+#	$(call DELFILE, $(LVGL_TARBALL))
+#	$(call DELFILE, $(APPDIR)/include/graphics/lvgl.h)
 
 include $(APPDIR)/Application.mk
