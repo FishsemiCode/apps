@@ -50,9 +50,11 @@
 
 #include "fbdev.h"
 #include "tp.h"
-#include "demo.h"
 #include "tp_cal.h"
-
+#include "lv_test_theme_1.h"
+#include "lv_test_group.h"
+#include "demo.h"
+#include "lv_test_preload.h"
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -166,14 +168,20 @@ int lvgldemo_main(int argc, char *argv[])
 
   lv_init();
 
+
   /* Display interface initialization */
 
   fbdev_init();
 
   /* Basic LittlevGL display driver initialization */
 
+  static lv_disp_buf_t disp_buf_1;
+  static lv_color_t buf1_1[LV_HOR_RES_MAX * 50];                      /*A buffer for 10 rows*/
+  lv_disp_buf_init(&disp_buf_1, buf1_1, NULL, LV_HOR_RES_MAX * 50);   /*Initialize the display buffer*/
+
   lv_disp_drv_init(&disp_drv);
-  disp_drv.disp_flush = fbdev_flush;
+  disp_drv.flush_cb = fbdev_flush;
+  disp_drv.buffer = &disp_buf_1;
   lv_disp_drv_register(&disp_drv);
 
   /* Tick interface initialization */
@@ -181,7 +189,7 @@ int lvgldemo_main(int argc, char *argv[])
   pthread_create(&tick_thread, NULL, tick_func, NULL);
 
   /* Touchpad Initialization */
-
+#if 0
   tp_init();
   lv_indev_drv_t indev_drv;
   lv_indev_drv_init(&indev_drv);
@@ -193,15 +201,14 @@ int lvgldemo_main(int argc, char *argv[])
 
   indev_drv.read = tp_read;
   lv_indev_drv_register(&indev_drv);
-
-  /* Demo initialization */
-
-  demo_init();
+#endif
+  
+  demo_create();
 
   /* Start TP calibration */
-
+#if 0
   tp_cal_create();
-
+#endif
   /* Handle LittlevGL tasks */
 
   while (1)

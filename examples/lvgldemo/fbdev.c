@@ -54,32 +54,25 @@
 #include <nuttx/video/fb.h>
 #include <nuttx/video/rgbcolors.h>
 
+#include <nuttx/lcd/ili9486_lcd_ioctl.h>
+
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 #ifndef FBDEV_PATH
-#  define FBDEV_PATH  "/dev/fb0"
+#  define FBDEV_PATH  "/dev/ili9486"
 #endif
 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
-struct fb_state_s
-{
-  int fd;
-  struct fb_videoinfo_s vinfo;
-  struct fb_planeinfo_s pinfo;
-  FAR void *fbmem;
-};
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
-struct fb_state_s state;
-
+static int fd;
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -99,93 +92,34 @@ struct fb_state_s state;
 
 int fbdev_init(void)
 {
-  FAR const char *fbdev = "/dev/fb0";
-  int ret;
-
-  /* Open the framebuffer driver */
-
-  state.fd = open(fbdev, O_RDWR);
-  if (state.fd < 0)
+  fd = open(FBDEV_PATH, O_RDWR);
+  if (fd < 0)
     {
-      int errcode = errno;
-      fprintf(stderr, "ERROR: Failed to open %s: %d\n", fbdev, errcode);
+      syslog(LOG_ERR, "Failed to open %s: %d\n", FBDEV_PATH, errno);
       return EXIT_FAILURE;
     }
-
-  /* Get the characteristics of the framebuffer */
-
-  ret = ioctl(state.fd, FBIOGET_VIDEOINFO,
-              (unsigned long)((uintptr_t)&state.vinfo));
-  if (ret < 0)
-    {
-      int errcode = errno;
-
-      fprintf(stderr, "ERROR: ioctl(FBIOGET_VIDEOINFO) failed: %d\n",
-              errcode);
-      close(state.fd);
-      return EXIT_FAILURE;
-    }
-
-  printf("VideoInfo:\n");
-  printf("      fmt: %u\n", state.vinfo.fmt);
-  printf("     xres: %u\n", state.vinfo.xres);
-  printf("     yres: %u\n", state.vinfo.yres);
-  printf("  nplanes: %u\n", state.vinfo.nplanes);
-
-  ret = ioctl(state.fd, FBIOGET_PLANEINFO,
-              (unsigned long)((uintptr_t)&state.pinfo));
-  if (ret < 0)
-    {
-      int errcode = errno;
-      fprintf(stderr, "ERROR: ioctl(FBIOGET_PLANEINFO) failed: %d\n",
-              errcode);
-      close(state.fd);
-      return EXIT_FAILURE;
-    }
-
-  printf("PlaneInfo (plane 0):\n");
-  printf("    fbmem: %p\n", state.pinfo.fbmem);
-  printf("    fblen: %lu\n", (unsigned long)state.pinfo.fblen);
-  printf("   stride: %u\n", state.pinfo.stride);
-  printf("  display: %u\n", state.pinfo.display);
-  printf("      bpp: %u\n", state.pinfo.bpp);
-
-  /* Only these pixel depths are supported.  viinfo.fmt is ignored, only
-   * certain color formats are supported.
-   */
-
-  if (state.pinfo.bpp != 32 && state.pinfo.bpp != 16 &&
-      state.pinfo.bpp != 8  && state.pinfo.bpp != 1)
-    {
-      fprintf(stderr, "ERROR: bpp=%u not supported\n", state.pinfo.bpp);
-      close(state.fd);
-      return EXIT_FAILURE;
-    }
-
-  /* mmap() the framebuffer.
-   *
-   * NOTE: In the FLAT build the frame buffer address returned by the
-   * FBIOGET_PLANEINFO IOCTL command will be the same as the framebuffer
-   * address.  mmap(), however, is the preferred way to get the framebuffer
-   * address because in the KERNEL build, it will perform the necessary
-   * address mapping to make the memory accessible to the application.
-   */
-
-  state.fbmem = mmap(NULL, state.pinfo.fblen, PROT_READ|PROT_WRITE,
-                     MAP_SHARED|MAP_FILE, state.fd, 0);
-  if (state.fbmem == MAP_FAILED)
-    {
-      int errcode = errno;
-      fprintf(stderr, "ERROR: ioctl(FBIOGET_PLANEINFO) failed: %d\n",
-              errcode);
-      close(state.fd);
-      return EXIT_FAILURE;
-    }
-
-  printf("Mapped FB: %p\n", state.fbmem);
-
   return EXIT_SUCCESS;
 }
+
+static int ili9486_lcd_flush(int len, uint16_t *matrix)
+{
+  ssize_t nwritten;
+
+  nwritten = write(fd, (char *)matrix, len);
+  if (nwritten < 0)
+    {
+      int errcode = errno;
+      printf("write failed: %d\n", errcode);
+
+      if (errcode != EINTR)
+        {
+          exit(EXIT_FAILURE);
+        }
+    }
+
+  return OK;
+}
+
 
 /****************************************************************************
  * Name: fbdev_flush
@@ -205,369 +139,24 @@ int fbdev_init(void)
  *
  ****************************************************************************/
 
-void fbdev_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
-                 FAR const lv_color_t *color_p)
+void fbdev_flush(struct _disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t * color_p)
 {
-#ifdef CONFIG_LCD_UPDATE
-  struct nxgl_rect_s rect;
-#endif
-  int32_t act_x1;
-  int32_t act_y1;
-  int32_t act_x2;
-  int32_t act_y2;
-  long int location = 0;
+  int ret;
 
-  if (state.fbmem == NULL)
+  struct ili9486_lcd_matrix_s matrix;
+  matrix.x = area->x1;
+  matrix.y = area->y1;
+  matrix.w = lv_area_get_width(area);
+  matrix.h = lv_area_get_height(area);
+  syslog(LOG_INFO, "fbdev_flush:%d,%d,%d,%d\n", matrix.x, matrix.y, matrix.w, matrix.h);
+  ret = ioctl(fd, ILI9486_LCDIOC_SET_MATRIX, (unsigned long)&matrix);
+  if (ret < 0)
     {
-      return;
+      printf("ioctl(ILI9486_LCDIOC_SET_MATRIX) failed: %d\n", errno);
+      goto clean;
     }
-
-  /* Return if the area is out the screen */
-
-  if (x2 < 0)
-    {
-      return;
-    }
-
-  if (y2 < 0)
-    {
-      return;
-    }
-
-  if (x1 > state.vinfo.xres - 1)
-    {
-      return;
-    }
-
-  if (y1 > state.vinfo.yres - 1)
-    {
-      return;
-    }
-
-  /* Truncate the area to the screen */
-
-  act_x1 = x1 < 0 ? 0 : x1;
-  act_y1 = y1 < 0 ? 0 : y1;
-  act_x2 = x2 > state.vinfo.xres - 1 ? state.vinfo.xres - 1 : x2;
-  act_y2 = y2 > state.vinfo.yres - 1 ? state.vinfo.yres - 1 : y2;
-
-  if (state.pinfo.bpp == 8)
-    {
-      uint8_t *fbp8 = (uint8_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-          for (x = act_x1; x <= act_x2; x++)
-            {
-              location = x + (y * state.vinfo.xres);
-              fbp8[location] = color_p->full;
-              color_p++;
-            }
-
-          color_p += x2 - act_x2;
-        }
-    }
-
-  if (state.pinfo.bpp == 16)
-    {
-      uint16_t *fbp16 = (uint16_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-          for (x = act_x1; x <= act_x2; x++)
-            {
-              location = x + (y * state.vinfo.xres);
-              fbp16[location] = color_p->full;
-              color_p++;
-            }
-
-          color_p += x2 - act_x2;
-        }
-    }
-
-  if (state.pinfo.bpp == 24 || state.pinfo.bpp == 32)
-    {
-      uint32_t *fbp32 = (uint32_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-          for (x = act_x1; x <= act_x2; x++)
-            {
-              location = x + (y * state.vinfo.xres);
-              fbp32[location] = color_p->full;
-              color_p++;
-            }
-
-          color_p += x2 - act_x2;
-        }
-    }
-
-#ifdef CONFIG_LCD_UPDATE
-  rect.pt1.x = act_x1;
-  rect.pt1.y = act_y1;
-  rect.pt2.x = act_x2;
-  rect.pt2.y = act_y2;
-  ioctl(state.fd, FBIO_UPDATE, (unsigned long)((uintptr_t)&rect));
-#endif
-
+  ili9486_lcd_flush(matrix.w * matrix.h, (uint16_t *)color_p);
+clean:
   /* Tell the flushing is ready */
-
-  lv_flush_ready();
-}
-
-/****************************************************************************
- * Name: fbdev_fill
- *
- * Description:
- *   Fill an area with a color
- *
- * Input Parameters:
- *   x1    - Left coordinate
- *   y1    - Top coordinate
- *   x2    - Right coordinate
- *   y2    - Bottom coordinate
- *   color - The fill color
- *
- * Returned Value:
- *   None
- *
- ****************************************************************************/
-
-void fbdev_fill(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
-                lv_color_t color)
-{
-#ifdef CONFIG_LCD_UPDATE
-  struct nxgl_rect_s rect;
-#endif
-  int32_t act_x1;
-  int32_t act_y1;
-  int32_t act_x2;
-  int32_t act_y2;
-  long int location = 0;
-
-  if (state.fbmem == NULL)
-    {
-      return;
-    }
-
-  /* Return if the area is out the screen */
-
-  if (x2 < 0)
-    {
-      return;
-    }
-
-  if (y2 < 0)
-    {
-      return;
-    }
-
-  if (x1 > state.vinfo.xres - 1)
-    {
-      return;
-    }
-
-  if (y1 > state.vinfo.yres - 1)
-    {
-      return;
-    }
-
-  /* Truncate the area to the screen */
-
-  act_x1 = x1 < 0 ? 0 : x1;
-  act_y1 = y1 < 0 ? 0 : y1;
-  act_x2 = x2 > state.vinfo.xres - 1 ? state.vinfo.xres - 1 : x2;
-  act_y2 = y2 > state.vinfo.yres - 1 ? state.vinfo.yres - 1 : y2;
-
-  if (state.pinfo.bpp == 8)
-    {
-      uint8_t *fbp8 = (uint8_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-          for (x = act_x1; x <= act_x2; x++)
-            {
-              location = x + (y * state.vinfo.xres);
-              fbp8[location] = color.full;
-            }
-        }
-    }
-
-  if (state.pinfo.bpp == 16)
-    {
-      uint16_t *fbp16 = (uint16_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-          for (x = act_x1; x <= act_x2; x++)
-            {
-              location = x + (y * state.vinfo.xres);
-              fbp16[location] = color.full;
-            }
-        }
-    }
-
-  if (state.pinfo.bpp == 24 || state.pinfo.bpp == 32)
-    {
-      uint32_t *fbp32 = (uint32_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-          for (x = act_x1; x <= act_x2; x++)
-            {
-              location = x + (y * state.vinfo.xres);
-              fbp32[location] = color.full;
-            }
-        }
-    }
-
-#ifdef CONFIG_LCD_UPDATE
-  rect.pt1.x = act_x1;
-  rect.pt1.y = act_y1;
-  rect.pt2.x = act_x2;
-  rect.pt2.y = act_y2;
-  ioctl(state.fd, FBIO_UPDATE, (unsigned long)((uintptr_t)&rect));
-#endif
-}
-
-/****************************************************************************
- * Name: fbdev_map
- *
- * Description:
- *   Write an array of pixels (like an image) to the marked area
- *
- * Input Parameters:
- *   x1      - Left coordinate
- *   y1      - Top coordinate
- *   x2      - Right coordinate
- *   y2      - Bottom coordinate
- *   color_p - An array of colors
- *
- * Returned Value:
- *   None
- *
- ****************************************************************************/
-
-void fbdev_map(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
-               FAR const lv_color_t *color_p)
-{
-#ifdef CONFIG_LCD_UPDATE
-  struct nxgl_rect_s rect;
-#endif
-  int32_t act_x1;
-  int32_t act_y1;
-  int32_t act_x2;
-  int32_t act_y2;
-  long int location = 0;
-
-  if (state.fbmem == NULL)
-    {
-      return;
-    }
-
-  /* Return if the area is out the screen */
-
-  if (x2 < 0)
-    {
-      return;
-    }
-
-  if (y2 < 0)
-    {
-      return;
-    }
-
-  if (x1 > state.vinfo.xres - 1)
-    {
-      return;
-    }
-
-  if (y1 > state.vinfo.yres - 1)
-    {
-      return;
-    }
-
-  /* Truncate the area to the screen */
-
-  act_x1 = x1 < 0 ? 0 : x1;
-  act_y1 = y1 < 0 ? 0 : y1;
-  act_x2 = x2 > state.vinfo.xres - 1 ? state.vinfo.xres - 1 : x2;
-  act_y2 = y2 > state.vinfo.yres - 1 ? state.vinfo.yres - 1 : y2;
-
-  if (state.pinfo.bpp == 8)
-    {
-      uint8_t *fbp8 = (uint8_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-            for (x = act_x1; x <= act_x2; x++)
-              {
-                location = x + (y * state.vinfo.xres);
-                fbp8[location] = color_p->full;
-                color_p++;
-              }
-
-            color_p += x2 - act_x2;
-        }
-    }
-
-  if (state.pinfo.bpp == 16)
-    {
-      uint16_t *fbp16 = (uint16_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-            for (x = act_x1; x <= act_x2; x++)
-              {
-                location = x + (y * state.vinfo.xres);
-                fbp16[location] = color_p->full;
-                color_p++;
-              }
-
-            color_p += x2 - act_x2;
-        }
-    }
-
-  if (state.pinfo.bpp == 24 || state.pinfo.bpp == 32)
-    {
-      uint32_t *fbp32 = (uint32_t*)state.fbmem;
-      uint32_t x;
-      uint32_t y;
-
-      for (y = act_y1; y <= act_y2; y++)
-        {
-            for (x = act_x1; x <= act_x2; x++)
-              {
-                location = x + (y * state.vinfo.xres);
-                fbp32[location] = color_p->full;
-                color_p++;
-              }
-
-            color_p += x2 - act_x2;
-        }
-    }
-
-#ifdef CONFIG_LCD_UPDATE
-  rect.pt1.x = act_x1;
-  rect.pt1.y = act_y1;
-  rect.pt2.x = act_x2;
-  rect.pt2.y = act_y2;
-  ioctl(state.fd, FBIO_UPDATE, (unsigned long)((uintptr_t)&rect));
-#endif
+  lv_disp_flush_ready(disp_drv);
 }

@@ -21,7 +21,7 @@ config EXAMPLES_LVGLDEMO_PRIORITY
 
 config EXAMPLES_LVGLDEMO_STACKSIZE
 	int "lvgldemo stack size"
-	default 16384
+	default 3072
 
 config EXAMPLES_LGVLDEMO_MINOR
 	int "Touchscreen minor device number"
