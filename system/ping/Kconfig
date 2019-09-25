@@ -27,7 +27,7 @@ config SYSTEM_PING_PRIORITY
 
 config SYSTEM_PING_STACKSIZE
 	int "Ping stack size"
-	default 2048
+	default 4096
 
 endif
 
