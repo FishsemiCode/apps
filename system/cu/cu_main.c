@@ -112,6 +112,14 @@ static FAR void *cu_listener(FAR void *parameter)
   return NULL;
 }
 
+static void sigint(int sig)
+{
+  tcflush(g_cu.outfd, TCIOFLUSH);
+  close(g_cu.outfd);
+  close(g_cu.infd);
+  exit(0);
+}
+
 static int enable_crlf_conversion(int fd)
 {
 #ifdef CONFIG_SERIAL_TERMIOS
@@ -270,6 +278,12 @@ int cu_main(int argc, FAR char *argv[])
   /* Initialize global data */
 
   memset(&g_cu, 0, sizeof(struct cu_globals_s));
+
+  /* Install signal handlers */
+
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = sigint;
+  sigaction(SIGINT, &sa, NULL);
 
   while ((option = getopt(argc, argv, "l:s:eor?")) != ERROR)
     {
