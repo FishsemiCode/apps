@@ -397,7 +397,7 @@ int main(int argc, FAR char *argv[])
 int nxrecorder_main(int argc, char *argv[])
 #endif
 {
-  char                    buffer[64];
+  char                    buffer[CONFIG_NSH_LINELEN];
   int                     len, x, running;
   char                    *cmd, *arg;
   FAR struct nxrecorder_s *pRecorder;
@@ -431,55 +431,58 @@ int nxrecorder_main(int argc, char *argv[])
       buffer[len] = '\0';
       if (len > 0)
         {
-          if (buffer[len-1] == '\n')
+          if (strncmp(buffer, "!", 1) != 0)
             {
-              buffer[len-1] = '\0';
-            }
+              /* nxrecorder command */
 
-          /* Parse the command from the argument */
-
-          cmd = strtok_r(buffer, " \n", &arg);
-          if (cmd == NULL)
-            {
-              continue;
-            }
-
-          /* Remove leading spaces from arg */
-
-          while (*arg == ' ')
-            {
-              arg++;
-            }
-
-          /* Find the command in our cmd array */
-
-          for (x = 0; x < g_nxrecorder_cmd_count; x++)
-            {
-              if (strcmp(cmd, g_nxrecorder_cmds[x].cmd) == 0)
+              if (buffer[len-1] == '\n')
                 {
-                  /* Command found.  Call it's handler if not NULL */
+                  buffer[len-1] = '\0';
+                }
 
-                  if (g_nxrecorder_cmds[x].pFunc != NULL)
+              /* Parse the command from the argument */
+
+              cmd = strtok_r(buffer, " \n", &arg);
+              if (cmd == NULL)
+                {
+                  continue;
+                }
+
+              /* Remove leading spaces from arg */
+
+              while (*arg == ' ')
+                {
+                  arg++;
+                }
+
+              /* Find the command in our cmd array */
+
+              for (x = 0; x < g_nxrecorder_cmd_count; x++)
+                {
+                  if (strcmp(cmd, g_nxrecorder_cmds[x].cmd) == 0)
                     {
-                      g_nxrecorder_cmds[x].pFunc(pRecorder, arg);
+                      /* Command found.  Call it's handler if not NULL */
+
+                      if (g_nxrecorder_cmds[x].pFunc != NULL)
+                        {
+                          g_nxrecorder_cmds[x].pFunc(pRecorder, arg);
+                        }
+
+                      /* Test if it is a quit command */
+
+                      if (g_nxrecorder_cmds[x].pFunc == nxrecorder_cmd_quit)
+                        {
+                          running = FALSE;
+                        }
+                      break;
                     }
-
-                  /* Test if it is a quit command */
-
-                  if (g_nxrecorder_cmds[x].pFunc == nxrecorder_cmd_quit)
-                    {
-                     running = FALSE;
-                    }
-
-                  break;
                 }
             }
-
-          /* Test for Unknown command */
-
-          if (x == g_nxrecorder_cmd_count)
+          else
             {
-              printf("%s:  unknown nxrecorder command\n", buffer);
+              /* Transfer nuttx shell */
+
+              system(buffer + 1);
             }
         }
     }

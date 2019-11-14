@@ -819,7 +819,7 @@ int main(int argc, FAR char *argv[])
 int nxplayer_main(int argc, char *argv[])
 #endif
 {
-  char                    buffer[64];
+  char                    buffer[CONFIG_NSH_LINELEN];
   int                     len, x, running;
   char                    *cmd, *arg;
   FAR struct nxplayer_s   *pPlayer;
@@ -853,43 +853,49 @@ int nxplayer_main(int argc, char *argv[])
       buffer[len] = '\0';
       if (len > 0)
         {
-          if (buffer[len-1] == '\n')
-            buffer[len-1] = '\0';
-
-          /* Parse the command from the argument */
-
-          cmd = strtok_r(buffer, " \n", &arg);
-          if (cmd == NULL)
-            continue;
-
-          /* Remove leading spaces from arg */
-
-          while (*arg == ' ')
-            arg++;
-
-          /* Find the command in our cmd array */
-
-          for (x = 0; x < g_nxplayer_cmd_count; x++)
+          if(strncmp(buffer, "!", 1) != 0)
             {
-              if (strcmp(cmd, g_nxplayer_cmds[x].cmd) == 0)
-              {
-                /* Command found.  Call it's handler if not NULL */
+              /* nxplayer command */
 
-                if (g_nxplayer_cmds[x].pFunc != NULL)
-                  g_nxplayer_cmds[x].pFunc(pPlayer, arg);
+              if (buffer[len-1] == '\n')
+                buffer[len-1] = '\0';
 
-                /* Test if it is a quit command */
+              /* Parse the command from the argument */
 
-                if (g_nxplayer_cmds[x].pFunc == nxplayer_cmd_quit)
-                  running = FALSE;
-                break;
-              }
+              cmd = strtok_r(buffer, " \n", &arg);
+              if (cmd == NULL)
+                continue;
+
+              /* Remove leading spaces from arg */
+
+              while (*arg == ' ')
+                arg++;
+
+              /* Find the command in our cmd array */
+
+              for (x = 0; x < g_nxplayer_cmd_count; x++)
+                {
+                  if (strcmp(cmd, g_nxplayer_cmds[x].cmd) == 0)
+                  {
+                    /* Command found.  Call it's handler if not NULL */
+
+                    if (g_nxplayer_cmds[x].pFunc != NULL)
+                      g_nxplayer_cmds[x].pFunc(pPlayer, arg);
+
+                    /* Test if it is a quit command */
+
+                    if (g_nxplayer_cmds[x].pFunc == nxplayer_cmd_quit)
+                      running = FALSE;
+                    break;
+                  }
+                }
             }
+          else
+            {
+              /* Transfer nuttx shell */
 
-          /* Test for Unknown command */
-
-          if (x == g_nxplayer_cmd_count)
-            printf("%s:  unknown nxplayer command\n", buffer);
+              system(buffer + 1);
+            }
         }
     }
 
