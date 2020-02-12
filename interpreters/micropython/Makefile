@@ -34,7 +34,7 @@
 #
 ###########################################################################
 
-
+ifeq ($(CONFIG_INTERPRETERS_MICROPYTHON),y)
 MICROPY_PORT_DIR = micropython/ports/nuttx
 
 CREATEDIR = $(MICROPY_PORT_DIR)
@@ -49,3 +49,6 @@ $(MAKECMDGOALS): sub-make
 
 sub-make:
 	$(Q)$(MAKE) -C $(MICROPY_PORT_DIR) -f $(SRCDIR)/$(MICROPY_PORT_DIR)/Makefile -I $(SRCDIR)/$(MICROPY_PORT_DIR) TOPDIR=$(TOPDIR) APPDIR=$(APPDIR) OUTDIR=$(OUTDIR) $(MAKECMDGOALS)
+else
+include $(APPDIR)/Application.mk
+endif
