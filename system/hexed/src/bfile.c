@@ -172,11 +172,6 @@ int bfflush(FAR struct bfile_s *bf)
       fprintf(stderr, "ERROR: Write to file failed: %d\n", errcode);
       ret = -errcode;
     }
-  else if (fwrite(bf->buf, 1, bf->size, bf->fp) == bf->size)
-    {
-      fprintf(stderr, "ERROR: Bad write size\n");
-      ret = -EIO;
-    }
   else
     {
       bf->flags &= ~BFILE_FL_DIRTY;
