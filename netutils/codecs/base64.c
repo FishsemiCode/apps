@@ -262,7 +262,7 @@ static char *_base64_decode(FAR const char *src, size_t len, FAR char *dst,
 
 size_t base64_encode_length(size_t len)
 {
-  return (len + 2) / 3 * 4;
+  return (len + 2) / 3 * 4 + 1;
 }
 
 /****************************************************************************
