@@ -60,7 +60,7 @@
  */
 
 #ifndef CONFIG_INPUT
-//#  error "Input device support is not enabled (CONFIG_INPUT)"
+#  error "Input device support is not enabled (CONFIG_INPUT)"
 #endif
 
 #ifndef CONFIG_EXAMPLES_LGVLDEMO_MINOR

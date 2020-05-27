@@ -47,47 +47,8 @@ STACKSIZE = $(CONFIG_EXAMPLES_LVGLDEMO_STACKSIZE)
 # LittleVGL demo Example
 
 ASRCS =
-
-LVGL_EXAMPLE_DIR = $(APPDIR)/examples/lvgldemo
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_apps/demo/demo.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_group/lv_test_group.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_theme/lv_test_theme.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_obj/lv_test_obj.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_stress/lv_test_stress.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_theme/lv_test_theme.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_group/lv_test_group.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_arc/lv_test_arc.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_bar/lv_test_bar.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_btn/lv_test_btn.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_btnm/lv_test_btnm.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_cb/lv_test_cb.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_chart/lv_test_chart.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_canvas/lv_test_canvas.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_cont/lv_test_cont.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_ddlist/lv_test_ddlist.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_gauge/lv_test_gauge.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_img/lv_test_img.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_imgbtn/lv_test_imgbtn.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_kb/lv_test_kb.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_label/lv_test_label.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_led/lv_test_led.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_line/lv_test_line.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_list/lv_test_list.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_lmeter/lv_test_lmeter.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_mbox/lv_test_mbox.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_page/lv_test_page.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_preload/lv_test_preload.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_roller/lv_test_roller.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_slider/lv_test_slider.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_sw/lv_test_sw.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_ta/lv_test_ta.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_tabview/lv_test_tabview.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_table/lv_test_table.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_tileview/lv_test_tileview.mk
-include $(LVGL_EXAMPLE_DIR)/lv_examples/lv_tests/lv_test_objx/lv_test_win/lv_test_win.mk
-CSRCS += fbdev.c
+CSRCS += fbdev.c demo.c img_bubble_pattern.c tp.c tp_cal.c
 MAINSRC = lvgldemo.c
-
 
 CONFIG_EXAMPLES_LVGLDEMO_PROGNAME ?= lvgldemo$(EXEEXT)
 PROGNAME = $(CONFIG_EXAMPLES_LVGLDEMO_PROGNAME)
@@ -95,8 +56,6 @@ PROGNAME = $(CONFIG_EXAMPLES_LVGLDEMO_PROGNAME)
 LVGLDIR=$(APPDIR)/graphics/littlevgl/lvgl
 CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(LVGLDIR)"}
 CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(LVGLDIR)"}
-CFLAGS   += -DLV_CONF_INCLUDE_SIMPLE_EXAMPLE
-CFLAGS   += -I$(LVGL_EXAMPLE_DIR)
 
 MODULE = CONFIG_EXAMPLES_LVGLDEMO
 
