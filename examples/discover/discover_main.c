@@ -84,17 +84,13 @@
  * discover_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int discover_main(int argc, char *argv[])
-#endif
 {
   /* If this task is excecutated as an NSH built-in function, then the
    * network has already been configured by NSH's start-up logic.
    */
 
-#ifndef CONFIG_NSH_BUILTIN_APPS
+#ifndef CONFIG_NSH_NETINIT
   struct in_addr addr;
 #if defined(CONFIG_EXAMPLES_DISCOVER_DHCPC) || defined(CONFIG_EXAMPLES_DISCOVER_NOMAC)
   uint8_t mac[IFHWADDRLEN];
@@ -120,18 +116,18 @@ int discover_main(int argc, char *argv[])
 #ifdef CONFIG_EXAMPLES_DISCOVER_DHCPC
   addr.s_addr = 0;
 #else
-  addr.s_addr = HTONL(CONFIG_EXAMPLES_DISCOVER_IPADDR);
+  addr.s_addr = htonl(CONFIG_EXAMPLES_DISCOVER_IPADDR);
 #endif
   netlib_set_ipv4addr("eth0", &addr);
 
   /* Set up the default router address */
 
-  addr.s_addr = HTONL(CONFIG_EXAMPLES_DISCOVER_DRIPADDR);
+  addr.s_addr = htonl(CONFIG_EXAMPLES_DISCOVER_DRIPADDR);
   netlib_set_dripv4addr("eth0", &addr);
 
   /* Setup the subnet mask */
 
-  addr.s_addr = HTONL(CONFIG_EXAMPLES_DISCOVER_NETMASK);
+  addr.s_addr = htonl(CONFIG_EXAMPLES_DISCOVER_NETMASK);
   netlib_set_ipv4netmask("eth0", &addr);
 
   /* New versions of netlib_set_ipvXaddr will not bring the network up,
@@ -157,7 +153,7 @@ int discover_main(int argc, char *argv[])
   if (handle)
     {
       struct dhcpc_state ds;
-      (void)dhcpc_request(handle, &ds);
+      dhcpc_request(handle, &ds);
       netlib_set_ipv4addr("eth0", &ds.ipaddr);
 
       if (ds.netmask.s_addr != 0)
@@ -180,7 +176,7 @@ int discover_main(int argc, char *argv[])
     }
 
 #endif /* CONFIG_EXAMPLES_DISCOVER_DHCPC */
-#endif /* CONFIG_NSH_BUILTIN_APPS */
+#endif /* CONFIG_NSH_NETINIT */
 
   if (discover_start(NULL) < 0)
     {
@@ -190,4 +186,3 @@ int discover_main(int argc, char *argv[])
 
   return OK;
 }
-

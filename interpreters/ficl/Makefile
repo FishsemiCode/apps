@@ -33,7 +33,7 @@
 #
 ############################################################################
 
-BUILDDIR := ${shell pwd | sed -e 's/ /\\ /g'}
+BUILDDIR := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
 
 -include $(TOPDIR)/Make.defs
 
@@ -45,8 +45,6 @@ CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(BUILDDIR)/$(FICL_SUBDIR) $(BU
 
 # Source Files
 
-ASRCS =
-CXXSRCS =
 CSRCS = nuttx.c
 
 -include Make.srcs

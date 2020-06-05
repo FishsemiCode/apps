@@ -88,14 +88,15 @@
  *   EINVAL - NULL block driver string
  *   ENOENT - 'pathname' does not refer to anything in the filesystem.
  *   ENOTBLK - 'pathname' does not refer to a block driver
- *   EFTYPE - the block driver hasn't been formated yet
+ *   EFTYPE - the block driver hasn't been formatted yet
  *
  ****************************************************************************/
 
 int issmartfs(FAR const char *pathname)
 {
   struct smart_format_s fmt;
-  int ret, fd;
+  int fd;
+  int ret;
 
   /* Find the inode of the block driver identified by 'source' */
 
@@ -121,6 +122,7 @@ int issmartfs(FAR const char *pathname)
     }
 
 out:
+
   /* Close the driver */
 
   close(fd);
@@ -157,22 +159,25 @@ out:
  ****************************************************************************/
 
 #ifdef CONFIG_SMARTFS_MULTI_ROOT_DIRS
-int mksmartfs(FAR const char *pathname, uint16_t sectorsize, uint8_t nrootdirs)
+int mksmartfs(FAR const char *pathname, uint16_t sectorsize,
+              uint8_t nrootdirs)
 #else
 int mksmartfs(FAR const char *pathname, uint16_t sectorsize)
 #endif
 {
   struct smart_format_s fmt;
-  int ret, fd;
-  int x;
-  uint8_t type;
   struct smart_read_write_s request;
+  uint8_t type;
+  int fd;
+  int x;
+  int ret;
 
-  /* Find the inode of the block driver indentified by 'source' */
+  /* Find the inode of the block driver identified by 'source' */
 
   fd = open(pathname, O_RDWR);
   if (fd < 0)
     {
+      ret = -ENOENT;
       goto errout;
     }
 
@@ -193,7 +198,7 @@ int mksmartfs(FAR const char *pathname, uint16_t sectorsize)
   ret = ioctl(fd, BIOC_GETFORMAT, (unsigned long) &fmt);
 
   /* Now Write the filesystem to media.  Loop for each root dir entry and
-   * allocate the reserved Root Dir Enty, then write a blank root dir for it.
+   * allocate the reserved Root Dir Entry, then write a blank root dir for it.
    */
 
   type = SMARTFS_SECTOR_TYPE_DIR;
@@ -227,11 +232,13 @@ int mksmartfs(FAR const char *pathname, uint16_t sectorsize)
     }
 
 errout_with_driver:
+
   /* Close the driver */
 
-  (void)close(fd);
+  close(fd);
 
 errout:
+
   /* Release all allocated memory */
 
   /* Return any reported errors */
@@ -244,4 +251,3 @@ errout:
 
   return OK;
 }
-

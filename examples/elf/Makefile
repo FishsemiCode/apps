@@ -39,12 +39,13 @@ CREATEDIR := tests
 
 # ELF Example
 
-ASRCS =
 CSRCS = symtab.c
 MAINSRC = elf_main.c
 
-CONFIG_XYZ_PROGNAME ?= elf$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
+PROGNAME = elf
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_ELF)
 
 ROOTDEPPATH := --dep-path tests
 
@@ -52,10 +53,14 @@ ROOTDEPPATH := --dep-path tests
 
 VPATH += :tests
 
-tests/symtab.c:
-	@$(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+elf_main.c: build
+tests/symtab.c: build
+
+.PHONY: build
+build:
+	+$(Q) $(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 clean::
-	@$(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	+$(Q) $(MAKE) -C tests -f $(SRCDIR)/tests/Makefile -I $(SRCDIR)/tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 include $(APPDIR)/Application.mk

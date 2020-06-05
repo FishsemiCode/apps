@@ -46,7 +46,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include <nuttx/pca9635pw.h>
+#include <nuttx/leds/pca9635pw.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -66,11 +66,7 @@
  * pca9635_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int pca9635_main(int argc, char *argv[])
-#endif
 {
   struct pca9635pw_setled_brightness_arg_s ledbright;
   int led;
@@ -108,3 +104,4 @@ int pca9635_main(int argc, char *argv[])
 
   close(fd);
   return 0;
+}

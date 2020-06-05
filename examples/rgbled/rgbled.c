@@ -59,11 +59,7 @@
  * rgbled_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int rgbled_main(int argc, char *argv[])
-#endif
 {
   int red = 255;
   int green = 0;
@@ -110,7 +106,7 @@ int rgbled_main(int argc, char *argv[])
       }
 
     sprintf(buffer, "#%02X%02X%02X", red, green, blue);
-    (void)write(fd, buffer, 8);
+    write(fd, buffer, 8);
     usleep(5000);
   }
 

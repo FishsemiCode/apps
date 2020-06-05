@@ -37,9 +37,7 @@
 
 # LVGL graphic library
 
-ASRCS =
-CSRCS =
-VPATH =
+LVGL_DIR = .
 
 # LVGL Libraries
 
@@ -55,16 +53,19 @@ CURR_DIR = $(APPDIR)/graphics/littlevgl
 
 # Set up build configuration and environment
 
-WD := ${shell pwd | sed -e 's/ /\\ /g'}
+WD := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
 
-CONFIG_GRAPH_LVGL_URL ?= "https://littlevgl.com/download/"
+CONFIG_GRAPH_LVGL_URL ?= "https://github.com/littlevgl/lvgl/archive"
 
-LVGL_VERSION ?= v5_1_1
-LVGL_TARBALL = lvgl_$(LVGL_VERSION).tar.gz
+LVGL_VERSION ?= 6.1.2
+LVGL_TARBALL = v$(LVGL_VERSION).zip
 WGET ?= wget
 
 LVGL_UNPACKNAME = lvgl
-UNPACK ?= tar -zxf
+UNPACK ?= unzip -o
+
+PATCH_FILES = lv_fix_warning.patch
+PATCH ?= patch -p0
 
 LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
 
@@ -77,9 +78,16 @@ $(LVGL_TARBALL):
 $(LVGL_UNPACKNAME): $(LVGL_TARBALL)
 	@echo "Unpacking: $(LVGL_TARBALL) -> $(LVGL_UNPACKNAME)"
 	$(Q) $(UNPACK) $(LVGL_TARBALL)
+	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
 	$(Q) touch $(LVGL_UNPACKNAME)
 
-$(APPDIR)/include/graphics/lvgl.h: $(LVGL_UNPACKNAME) lvgl/lvgl.h
+$(LVGL_UNPACKNAME)/.patched: $(LVGL_UNPACKNAME) $(PATCH_FILES)
+	$(Q) cat $(PATCH_FILES) | $(PATCH)
+	$(Q) touch $(LVGL_UNPACKNAME)/.patched
+
+lvgl/lvgl.h: $(LVGL_UNPACKNAME)
+
+$(APPDIR)/include/graphics/lvgl.h: lvgl/lvgl.h $(LVGL_UNPACKNAME)/.patched
 	@echo "CP: lvgl/lvgl.h"
 	$(Q) cp lvgl/lvgl.h $(APPDIR)/include/graphics/lvgl.h
 

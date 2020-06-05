@@ -52,11 +52,7 @@
  * Name: popen_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int popen_main(int argc, char *argv[])
-#endif
 {
   struct itimerspec value;
   struct sigevent ev;
@@ -92,7 +88,7 @@ int popen_main(int argc, char *argv[])
   if (stream == NULL)
     {
       fprintf(stderr, "ERROR: popen() failed: %d\n", errno);
-      (void)timer_delete(timerid);
+      timer_delete(timerid);
       return EXIT_FAILURE;
     }
 
@@ -194,6 +190,6 @@ int popen_main(int argc, char *argv[])
         }
     }
 
-  (void)timer_delete(timerid);
+  timer_delete(timerid);
   return exitcode;
 }

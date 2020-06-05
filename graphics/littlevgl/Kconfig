@@ -7,7 +7,7 @@ menuconfig GRAPHICS_LVGL
 	bool "Littlev Graphic Library (LVGL)"
 	default n
 	---help---
-		Enable support for the LVGL GUI libray.
+		Enable support for the LVGL GUI library.
 
 if GRAPHICS_LVGL
 
@@ -59,7 +59,7 @@ config LV_VDB_DOUBLE
 	---help---
 		Enable to use one buffer for rendering an other to flush the
 		ready content to the frame buffer.
-		The flushing should be done by a hardware modul (e.g. DMA) to
+		The flushing should be done by a hardware module (e.g. DMA) to
 		make rendering and flushing parallel
 
 if LV_VDB_DOUBLE
@@ -69,6 +69,11 @@ config LV_VDB2_ADR
 	default 0
 	---help---
 		Similarly to LV_VDB_ADR. the second VDB address can be specified as well.
+
+config LV_VDB_TRUE_DOUBLE_BUFFERED
+	bool "Use true double buffering"
+	default 0
+
 endif   # LV_VDB_DOUBLE
 
 config LV_ANTIALIAS
@@ -77,8 +82,8 @@ config LV_ANTIALIAS
 
 endif # LV_VDB_SIZE != 0
 
-config LV_REFR_PERIOD
-	int "Refresh period in milliseconds"
+config LV_DISP_DEF_REFR_PERIOD
+	int "Default refresh period in milliseconds"
 	default 50
 	---help---
 		The graphics library will check for invalid areas an refresh
@@ -95,28 +100,28 @@ endmenu
 
 menu "Input device settings"
 
-config LV_INDEV_READ_PERIOD
-	int "Input device read period in milliseconds"
+config LV_INDEV_DEF_READ_PERIOD
+	int "Input device default read period in milliseconds"
 	default 50
 
 config LV_INDEV_POINT_MARKER
 	int "Mark the pressed points on the screen"
 	default 0
 
-config LV_INDEV_DRAG_LIMIT
-	int "Drag limit in pixels"
+config LV_INDEV_DEF_DRAG_LIMIT
+	int "Default drag limit in pixels"
 	default 10
 
-config LV_INDEV_DRAG_THROW
-	int "Slow down ration when throwing on object by drag [%]"
+config LV_INDEV_DEF_DRAG_THROW
+	int "Default slow down ration when throwing on object by drag [%]"
 	default 20
 
-config LV_INDEV_LONG_PRESS_TIME
-	int "Long press time [ms]"
+config LV_INDEV_DEF_LONG_PRESS_TIME
+	int "Default long press time [ms]"
 	default 400
 
-config LV_INDEV_LONG_PRESS_REP_TIME
-	int "Repeated trigger period in long press [ms]"
+config LV_INDEV_DEF_LONG_PRESS_REP_TIME
+	int "Default repeated trigger period in long press [ms]"
 	default 100
 
 endmenu
@@ -124,8 +129,17 @@ endmenu
 menu "Color settings"
 
 config LV_COLOR_DEPTH
-	int "Color depth (8/16/24)"
+	int "Color depth (8/16/32)"
 	default 16
+
+config LV_COLOR_16_SWAP
+	bool "Swap the 2 bytes of RGB565 color"
+	depends on LV_COLOR_DEPTH = 16
+	default 0
+
+config LV_COLOR_SCREEN_TRANSP
+	bool "Enable screen transparency.(If disabled, 32-bit color depth fall to 24-bit)"
+	default 0
 
 config LV_COLOR_TRANSP
 	hex "Chroma key color (pixels with this color will be transparent on images)"
@@ -163,7 +177,7 @@ config USE_LV_GPU
 	default n
 
 config USE_LV_REAL_DRAW
-	bool "Enable function which draw directly to the frame buffer instead of VDB"
+	bool "Enable function which draws directly to the frame buffer instead of VDB"
 	default y
 
 config USE_LV_FILESYSTEM
@@ -173,23 +187,27 @@ endmenu
 
 menu "Theme usage"
 
-config USE_LV_THEME_TEMPL
+config LV_THEME_LIVE_UPDATE
+	bool "Allow theme switching at run time. Uses 8..10 kB of RAM"
+	default n
+
+config LV_USE_THEME_TEMPL
 	bool "Use Template theme: just for test"
 	default y
 
-config USE_LV_THEME_DEFAULT
+config LV_USE_THEME_DEFAULT
 	bool "Use Default theme: uses the built-in style"
 	default y
 
-config USE_LV_THEME_ALIEN
+config LV_USE_THEME_ALIEN
 	bool "Use Alien theme: dark futuristic theme"
 	default y
 
-config USE_LV_THEME_NIGHT
+config LV_USE_THEME_NIGHT
 	bool "Use Night theme: dark elegant theme"
 	default y
 
-config USE_LV_THEME_MONO
+config LV_USE_THEME_MONO
 	bool "Use Mono theme: mono color theme"
 	default y
 	
@@ -209,179 +227,58 @@ endmenu
 
 menu "Font usage"
 
-# 10 PX FONTS
+config USE_LV_FONT_ROBOTO_12
+	bool "Roboto 12 px"
+	default n
 
-config USE_LV_FONT_DEJAVU_10
-	int "Dejavu 10 px"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config USE_LV_FONT_ROBOTO_16
+	bool "Roboto 16 px"
+	default y
 
-config USE_LV_FONT_DEJAVU_10_LATIN_SUP
-	int "Dejavu 10 px - latin supplement"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config USE_LV_FONT_ROBOTO_22
+	bool "Roboto 22 px"
+	default n
 
-config USE_LV_FONT_DEJAVU_10_CYRILLIC
-	int "Dejavu 10 px - cyrillic"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config USE_LV_FONT_ROBOTO_28
+	bool "Roboto 28 px"
+	default n
 
-config USE_LV_FONT_SYMBOL_10
-	int "Symbol 10 px"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config USE_LV_FONT_UNSCII_8
+	bool "Monospace 8 px"
+	default n
 
-#20 PX FONTS
+choice
+	prompt "Default Font"
+	default LV_FONT_DEFAULT_ROBOTO_16
 
-config USE_LV_FONT_DEJAVU_20
-	int "Dejavu 20 px"
-	default 4
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config LV_FONT_DEFAULT_ROBOTO_12
+	bool "Roboto 12 px"
+	depends on USE_LV_FONT_ROBOTO_12 != 0
 
-config USE_LV_FONT_DEJAVU_20_LATIN_SUP
-	int "Dejavu 20 px - latin supplement"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config LV_FONT_DEFAULT_ROBOTO_16
+	bool "Roboto 16 px"
+	depends on USE_LV_FONT_ROBOTO_16 != 0
 
-config USE_LV_FONT_DEJAVU_20_CYRILLIC
-	int "Dejavu 20 px - cyrillic"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config LV_FONT_DEFAULT_ROBOTO_22
+	bool "Roboto 22 px"
+	depends on USE_LV_FONT_ROBOTO_22 != 0
 
-config USE_LV_FONT_SYMBOL_20
-	int "Symbol 20 px"
-	default 4
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+config LV_FONT_DEFAULT_ROBOTO_28
+	bool "Roboto 28 px"
+	depends on USE_LV_FONT_ROBOTO_28 != 0
 
-#30 PX FONTS
+config LV_FONT_DEFAULT_UNSCII_8
+	bool "Monospace 8 px"
+	depends on USE_LV_FONT_UNSCII_8 != 0
 
-config USE_LV_FONT_DEJAVU_30
-	int "Dejavu 30 px"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
+endchoice
 
-config USE_LV_FONT_DEJAVU_30_LATIN_SUP
-	int "Dejavu 30 px - latin supplement"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
-
-config USE_LV_FONT_DEJAVU_30_CYRILLIC
-	int "Dejavu 30 px - cyrillic"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
-
-config USE_LV_FONT_SYMBOL_30
-	int "Symbol 30 px"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
-
-#40 PX FONTS
-
-config USE_LV_FONT_DEJAVU_40
-	int "Dejavu 40 px"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
-
-config USE_LV_FONT_DEJAVU_40_LATIN_SUP
-	int "Dejavu 40 px - latin supplement"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
-
-config USE_LV_FONT_DEJAVU_40_CYRILLIC
-	int "Dejavu 40 px - cyrillic"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
-
-config USE_LV_FONT_SYMBOL_40
-	int "Symbol 40 px"
-	default 0
-	---help---
-		0: disable
-		1: 1 bit-per-pixel
-		2: 2 bit-per-pixel
-		4: 4 bit-per-pixel
-		8: 8 bit-per-pixel
 endmenu
 
 menu "Base object settings"
 
-config LV_OBJ_FREE_PTR
-	bool "Free pointer enable/disable"
+config LV_OBJ_REALIGN
+	bool "Enable `lv_obj_realaign()` based on `lv_obj_align()` parameters"
 	default y
 
 endmenu
@@ -392,12 +289,31 @@ config USE_LV_LABEL
 	bool "Label usage"
 	default y
 
+config LV_LABEL_SCROLL_SPEED
+	int "Hor, or ver. scroll speed [px/sec] in 'LV_LABEL_LONG_SCROLL/ROLL' mode"
+	depends on USE_LV_LABEL
+	default 25
+
 config USE_LV_IMG
 	bool "Image usage"
 	default y
 
+config LV_IMG_CF_INDEXED
+	bool "Enable indexed (palette) images"
+	depends on USE_LV_IMG
+	default y
+
+config LV_IMG_CF_ALPHA
+	bool "Enable alpha indexed images"
+	depends on USE_LV_IMG
+	default y
+
 config USE_LV_LINE
 	bool "Line usage"
+	default y
+
+config USE_LV_ARC
+	bool "Arc usage"
 	default y
 
 config USE_LV_CONT
@@ -405,28 +321,67 @@ config USE_LV_CONT
 	default y
 
 config USE_LV_PAGE
+	depends on USE_LV_CONT
 	bool "Page usage"
 	default y
 
 config USE_LV_WIN
+	depends on USE_LV_PAGE && USE_LV_LABEL && USE_LV_IMG && USE_LV_BTN
 	bool "Window usage"
 	default y
 
 config USE_LV_TABVIEW
+	depends on USE_LV_PAGE && USE_LV_BTNM
 	bool "Tabview usage"
 	default y
+
+config LV_TABVIEW_ANIM_TIME
+	int "Time of slide animation [ms] (0: no animation)"
+	depends on USE_LV_TABVIEW
+	default 300
+
+config USE_LV_TILEVIEW
+	depends on USE_LV_CONT && USE_LV_PAGE
+	bool "Tileview usage"
+	default y
+
+config LV_TILEVIEW_ANIM_TIME
+	int "Time of slide animation [ms] (0: no animation)"
+	depends on USE_LV_TILEVIEW
+	default 300
 
 config USE_LV_BAR
 	bool "Bar usage"
 	default y
 
 config USE_LV_LMETER
+	depends on USE_LV_BAR
 	bool "Line meter usage"
+	default y
+
+config USE_LV_GAUGE
+	depends on USE_LV_BAR && USE_LV_LMETER
+	bool "Gauge usage"
 	default y
 
 config USE_LV_CHART
 	bool "Chart usage"
 	default y
+
+config LV_CHART_AXIS_TICK_LABEL_MAX_LEN
+	depends on USE_LV_CHART
+	int "Chart axis tick label max length"
+	default 20
+
+config USE_LV_TABLE
+	bool "Table usage"
+	depends on USE_LV_LABEL
+	default y
+
+config LV_TABLE_COL_MAX
+	int "Maximum number of table columns"
+	depends on USE_LV_TABLE
+	default 12
 
 config USE_LV_LED
 	bool "LED usage"
@@ -434,15 +389,77 @@ config USE_LV_LED
 
 config USE_LV_MBOX
 	bool "Messagebox usage"
+	depends on USE_LV_BTNM && USE_LV_LABEL
 	default y
 
 config USE_LV_TA
 	bool "Text area usage"
+	depends on USE_LV_LABEL && USE_LV_PAGE
 	default y
+
+config USE_LV_SPINBOX
+	bool "Spinbox usage"
+	depends on USE_LV_TA
+	default y
+
+config USE_LV_CALENDAR
+	bool "Calendar usage"
+	default y
+
+config USE_LV_PRELOAD
+	bool "Preload usage"
+	depends on USE_LV_ARC
+	default y
+
+config LV_PRELOAD_DEF_ARC_LENGTH
+	int "Degrees of arc length (default)"
+	range 0 360
+	depends on USE_LV_PRELOAD
+	default 60
+
+config LV_PRELOAD_DEF_SPIN_TIME
+	int "Time (ms) preload spins (default)"
+	depends on USE_LV_PRELOAD
+	default 1000
+
+choice
+	prompt "Default preload animation"
+	depends on USE_LV_PRELOAD
+	default LV_PRELOAD_DEF_ANIM_SPINNING_ARC
+
+config LV_PRELOAD_DEF_ANIM_SPINNING_ARC
+	bool "Spinning Arc"
+
+config LV_PRELOAD_DEF_ANIM_FILLSPIN_ARC
+	bool "Fillspin Arc"
+
+endchoice
+
+config USE_LV_CANVAS
+	bool "Canvas usage"
+	depends on USE_LV_IMG
+	default n
 
 config USE_LV_BTN
 	bool "Button usage"
+	depends on USE_LV_CONT
 	default y
+
+config LV_BTN_INK_EFFECT
+	bool "Enable button-state animations"
+	depends on USE_LV_BTN && USE_LV_ANIMATION
+	default y
+
+config USE_LV_IMGBTN
+	depends on USE_LV_BTN
+	bool "Image button usage"
+	default y
+
+config LV_IMGBTN_TILED
+	bool "Tiled image button"
+	depends on USE_LV_IMGBTN
+	---help---
+	The imgbtn requires left, mid and right parts and the width can be set freely
 
 config USE_LV_BTNM
 	bool "Button matrix usage"
@@ -450,30 +467,37 @@ config USE_LV_BTNM
 
 config USE_LV_KB
 	bool "Keyboard"
+	depends on USE_LV_BTNM
 	default y
 
 config USE_LV_CB
 	bool "Chekbox usage"
+	depends on USE_LV_BTN
 	default y
 
 config USE_LV_SW
 	bool "Switch usage"
+	depends on USE_LV_BTN
 	default y
 
 config USE_LV_LIST
 	bool "List usage"
+	depends on USE_LV_BTN && USE_LV_PAGE
 	default y
 
 config USE_LV_DDLIST
 	bool "Drop down list usage"
+	depends on USE_LV_PAGE && USE_LV_LABEL
 	default y
 
 config USE_LV_ROLLER
 	bool "Roller usage"
+	depends on USE_LV_DDLIST
 	default y
 
 config USE_LV_SLIDER
 	bool "Slider usage"
+	depends on USE_LV_BAR
 	default y
 
 endmenu

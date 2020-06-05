@@ -37,19 +37,14 @@
 
 # NuttX NX Graphics Example.
 
-ASRCS =
 CSRCS = nx_events.c nx_kbdin.c
 MAINSRC = nx_main.c
 
-CONFIG_XYZ_PROGNAME ?= nx$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
 # NX built-in application info
 
-APPNAME = nx
+PROGNAME = nx
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
-
-MODULE = CONFIG_EXAMPLES_NX
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_NX)
 
 include $(APPDIR)/Application.mk

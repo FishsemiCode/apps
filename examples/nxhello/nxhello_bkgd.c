@@ -124,8 +124,9 @@ const struct nx_callback_s g_nxhellocb =
   , nxhello_mousein /* mousein */
 #endif
 #ifdef CONFIG_NX_KBD
-  , nxhello_kbdin   /* my kbdin */
+  , nxhello_kbdin   /* kbdin */
 #endif
+  , NULL            /* event */
 };
 
 /****************************************************************************
@@ -401,8 +402,8 @@ void nxhello_hello(NXWINDOW hwnd)
 #if CONFIG_NX_NPLANES > 1
 # warning "More logic is needed for the case where CONFIG_NX_PLANES > 1"
 #endif
-          (void)RENDERER((FAR nxgl_mxpixel_t*)glyph, fheight, fwidth,
-                         fstride, fbm, CONFIG_EXAMPLES_NXHELLO_FONTCOLOR);
+          RENDERER((FAR nxgl_mxpixel_t*)glyph, fheight, fwidth,
+                   fstride, fbm, CONFIG_EXAMPLES_NXHELLO_FONTCOLOR);
 
           /* Describe the destination of the font with a rectangle */
 

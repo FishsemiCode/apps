@@ -15,9 +15,8 @@ if EXAMPLES_BUTTONS
 config EXAMPLES_BUTTONS_PROGNAME
 	string "Program name"
 	default "buttons"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_BUTTONS_PRIORITY
@@ -26,7 +25,7 @@ config EXAMPLES_BUTTONS_PRIORITY
 
 config EXAMPLES_BUTTONS_STACKSIZE
 	int "Button stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_BUTTONS_DEVPATH
 	string "Button device path"
@@ -37,6 +36,18 @@ config EXAMPLES_BUTTONS_NAMES
 	default n
 	---help---
 		Enable to show the button's name in the application.
+
+choice
+	prompt "Notification mechanism"
+	default EXAMPLES_BUTTONS_SIGNAL
+
+config EXAMPLES_BUTTONS_SIGNAL
+	bool "Notify using signals"
+
+config EXAMPLES_BUTTONS_POLL
+	bool "Notify using poll()"
+
+endchoice
 
 if EXAMPLES_BUTTONS_NAMES
 

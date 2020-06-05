@@ -38,7 +38,7 @@
 # TFTP Client Library
 
 ifeq ($(CONFIG_NET_UDP),y)
-CSRCS		+= tftpc_get.c tftpc_put.c tftpc_packets.c
+CSRCS = tftpc_get.c tftpc_put.c tftpc_packets.c
 endif
 
 include $(APPDIR)/Application.mk

@@ -34,6 +34,6 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_EXAMPLES_MODBUSMASTER),y)
-CONFIGURED_APPS += examples/modbusmaster
+ifneq ($(CONFIG_EXAMPLES_MODBUSMASTER),)
+CONFIGURED_APPS += $(APPDIR)/examples/modbusmaster
 endif

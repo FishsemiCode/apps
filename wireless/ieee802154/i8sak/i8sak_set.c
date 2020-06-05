@@ -83,11 +83,11 @@ void i8sak_set_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
   argind = 1;
   while ((option = getopt(argc, argv, ":h")) != ERROR)
     {
+      argind++;
       switch (option)
         {
-          argind++;
           case 'h':
-            fprintf(stderr, "Gets various parameters and attributes\n"
+            fprintf(stderr, "Sets various parameters and attributes\n"
                     "Usage: %s [-h] parameter\n"
                     "    -h = this help menu\n"
                     " \n"
@@ -103,6 +103,8 @@ void i8sak_set_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
                     "    ep_port 1-65535 = port to send to\n"
                     "    rxonidle = Receiver on when idle\n"
                     "    txpwr = Transmit Power\n"
+                    "    maxretries = macMaxFrameRetries\n"
+                    "    promisc = Promiscuous Mode\n"
                     , argv[0]);
             /* Must manually reset optind if we are going to exit early */
 
@@ -147,6 +149,10 @@ void i8sak_set_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
           fprintf(stderr, "ERROR: invalid mode. Options: s|e\n");
           i8sak_cmd_error(i8sak);
         }
+    }
+  else if (strcmp(argv[argind], "ep_panid") == 0)
+    {
+      i8sak_str2panid(argv[argind + 1], i8sak->ep_addr.panid);
     }
   else if (strcmp(argv[argind], "ep_saddr") == 0)
     {
@@ -197,7 +203,7 @@ void i8sak_set_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
     }
 #endif
 
-  /* Check for paramters that are attributes requiring file access */
+  /* Check for parameters that are attributes requiring file access */
 
   else
     {
@@ -239,6 +245,14 @@ void i8sak_set_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
           else if (strcmp(argv[argind], "txpwr") == 0)
             {
               ieee802154_settxpwr(fd, i8sak_str2long(argv[argind + 1]));
+            }
+          else if (strcmp(argv[argind], "maxretries") == 0)
+            {
+              ieee802154_setmaxretries(fd, i8sak_str2luint8(argv[argind + 1]));
+            }
+          else if (strcmp(argv[argind], "promisc") == 0)
+            {
+              ieee802154_setpromisc(fd, i8sak_str2bool(argv[argind + 1]));
             }
           else
             {
@@ -283,6 +297,14 @@ void i8sak_set_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
           else if (strcmp(argv[argind], "txpwr") == 0)
             {
               sixlowpan_settxpwr(fd, i8sak->ifname, i8sak_str2long(argv[argind + 1]));
+            }
+          else if (strcmp(argv[argind], "maxretries") == 0)
+            {
+              sixlowpan_setmaxretries(fd, i8sak->ifname, i8sak_str2luint8(argv[argind + 1]));
+            }
+          else if (strcmp(argv[argind], "promisc") == 0)
+            {
+              sixlowpan_setpromisc(fd, i8sak->ifname, i8sak_str2bool(argv[argind + 1]));
             }
           else
             {

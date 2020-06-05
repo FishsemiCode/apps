@@ -37,20 +37,13 @@
 
 # CXX test program
 
-ASRCS =
-CSRCS =
-CXXSRCS =
 MAINSRC = cxxtest_main.cxx
-
-CONFIG_XYZ_PROGNAME ?= cxxtest$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
 # cxxtest built-in application info
 
-APPNAME = cxxtest
+PROGNAME = cxxtest
 PRIORITY = SCHED_PRIORITY_DEFAULT
 STACKSIZE = 4096
-
-MODULE = CONFIG_TESTINGCXXTEST
+MODULE = $(CONFIG_TESTING_CXXTEST)
 
 include $(APPDIR)/Application.mk

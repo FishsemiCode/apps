@@ -43,25 +43,25 @@ include $(APPDIR)/Make.defs
 # has the value "m"
 
 ifneq ($(MAINSRC),)
-  ifeq ($($(MODULE)),m)
+  ifeq ($(MODULE),m)
+    BUILD_MODULE = y
+  endif
+
+  ifeq ($(CONFIG_BUILD_KERNEL),y)
     BUILD_MODULE = y
   endif
 endif
 
-ifeq ($(CONFIG_BUILD_KERNEL),y)
-  BUILD_MODULE = y
+# The GNU make CURDIR will always be a POSIX-like path with forward slashes
+# as path segment separators.  If we know that this is a native build, then
+# we need to fix up the path so the DELIM will match the actual delimiter.
+
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+CWD = $(strip ${shell echo %CD% | cut -d: -f2})
+else
+CWD = $(CURDIR)
 endif
 
-# Pass the definition to the C/C++ code via the CFLAGS/CXXFLAGS
-
-ifeq ($(BUILD_MODULE),y)
-  CFLAGS += ${shell $(DEFINE) "$(CC)" BUILD_MODULE}
-  CXXFLAGS += ${shell $(DEFINE) "$(CC)" BUILD_MODULE}
-endif
-
-# File extensions
-
-CXXEXT ?= .cxx
 
 # Object files
 
@@ -93,6 +93,8 @@ else
 endif
 
 ROOTDEPPATH += --dep-path .
+ROOTDEPPATH += --obj-path .
+ROOTDEPPATH += --obj-suffix $(SUFFIX)$(OBJEXT)
 
 VPATH := $(patsubst :%,:$(SRCDIR)$(DELIM)%,$(VPATH))
 VPATH += :$(SRCDIR)
@@ -103,111 +105,103 @@ all:: .built
 .PHONY: clean preconfig depend distclean
 .PRECIOUS: $(APPDIR)/libapps$(LIBEXT)
 
-ifneq ($(CONFIG_BUILD_LOADABLE),y)
-
-$(AOBJS): %$(OBJEXT): %.S
-	$(call ASSEMBLE, $<, $@)
-
-$(COBJS): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-
-$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
-	$(call COMPILEXX, $<, $@)
-
-ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
-$(MAINOBJ): %$(OBJEXT): %$(CXXEXT)
-	$(call COMPILEXX, $<, $@)
-else
-$(MAINOBJ): %$(OBJEXT): %.c
-	$(call COMPILE, $<, $@)
-endif
-
-else
-
 define ELFASSEMBLE
 	@echo "AS: $1"
 	$(call MKDIR, $(dir $2))
-	$(Q) $(CC) -c $(AELFFLAGS) $1 -o $2
+	$(Q) $(CC) -c $(AELFFLAGS) $($(strip $1)_AELFFLAGS) $1 -o $2
 endef
 
 define ELFCOMPILE
 	@echo "CC: $1"
 	$(call MKDIR, $(dir $2))
-	$(Q) $(CC) -c $(CELFFLAGS) $1 -o $2
+	$(Q) $(CC) -c $(CELFFLAGS) $($(strip $1)_CELFFLAGS) $1 -o $2
 endef
 
 define ELFCOMPILEXX
 	@echo "CXX: $1"
 	$(call MKDIR, $(dir $2))
-	$(Q) $(CXX) -c $(CXXELFFLAGS) $1 -o $2
+	$(Q) $(CXX) -c $(CXXELFFLAGS) $($(strip $1)_CXXELFFLAGS) $1 -o $2
 endef
 
-$(AOBJS): %$(OBJEXT): %.S
-	$(if $(AELFFLAGS), \
-			$(call ELFASSEMBLE, $<, $@), \
-			$(call ASSEMBLE, $<, $@) \
-	)
+define ELFLD
+	@echo "LD: $2"
+	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $1 $(LDLIBS) -o $2
+endef
 
-$(COBJS): %$(OBJEXT): %.c
-	$(if $(CELFFLAGS), \
-			$(call ELFCOMPILE, $<, $@), \
-			$(call COMPILE, $<, $@) \
-	)
+$(AOBJS): %$(SUFFIX)$(OBJEXT): %.S
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(AELFFLAGS)), \
+		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
 
-$(CXXOBJS): %$(OBJEXT): %$(CXXEXT)
-	$(if $(CXXELFFLAGS), \
-			$(call ELFCOMPILEXX, $<, $@), \
-			$(call COMPILEXX, $<, $@) \
-	)
+$(COBJS): %$(SUFFIX)$(OBJEXT): %.c
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
+		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
-$(MAINOBJ): %$(OBJEXT): %$(CXXEXT)
-	$(if $(CXXELFFLAGS), \
-			$(call ELFCOMPILEXX, $<, $@), \
-			$(call COMPILEXX, $<, $@) \
-	)
-else
-$(MAINOBJ): %$(OBJEXT): %.c
-	$(if $(CELFFLAGS), \
-			$(call ELFCOMPILE, $<, $@), \
-			$(call COMPILE, $<, $@) \
-	)
-endif
-
-endif
+$(CXXOBJS): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
+		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
 .built: $(OBJS)
+ifeq ($(WINTOOL),y)
+	$(call ARCHIVE, "${shell cygpath -w $(BIN)}", $(OBJS))
+else
 	$(call ARCHIVE, $(BIN), $(OBJS))
+endif
 	$(Q) touch $@
 
-ifeq ($(BUILD_MODULE), y)
+ifeq ($(BUILD_MODULE),y)
 
-ifeq ($(WINTOOL), y)
-  PROGPRFX = ${cygpath -u $(BINSYM_DIR)$(DELIM)}
-  STRIPPRFX = ${cygpath -u $(BINIST_DIR)$(DELIM)}
+ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
+$(MAINOBJ): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
+		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 else
-  PROGPRFX = $(BINSYM_DIR)$(DELIM)
-  STRIPPRFX = $(BINIST_DIR)$(DELIM)
+$(MAINOBJ): %$(SUFFIX)$(OBJEXT): %.c
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
+		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 endif
 
-PROGLIST := $(addprefix $(PROGPRFX),$(PROGNAME))
-STRIPLIST := $(addprefix $(STRIPPRFX),$(PROGNAME))
+PROGLIST := $(wordlist 1,$(words $(MAINOBJ)),$(PROGNAME))
+PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGLIST))
 PROGOBJ := $(MAINOBJ)
 
-$(PROGLIST): $(MAINOBJ) $(OBJS)
-ifneq ($(PROGOBJ),)
-	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $(firstword $(PROGOBJ)) $(LDLIBS) -o $(strip $(firstword $(PROGLIST)))
-	$(Q) $(NM) -u $(strip $(firstword $(PROGLIST)))
-	$(Q) install -m 0755 -D $(strip $(firstword $(PROGLIST))) $(firstword $(STRIPLIST))
-	$(Q) $(if $(STRIP),$(STRIP) $(firstword $(STRIPLIST)))
+$(PROGLIST): $(MAINOBJ)
+	$(Q) mkdir -p $(BINDIR)
+ifeq ($(WINTOOL),y)
+	$(call ELFLD,$(firstword $(PROGOBJ)),"${shell cygpath -w $(firstword $(PROGLIST))}")
+else
+	$(call ELFLD,$(firstword $(PROGOBJ)),$(firstword $(PROGLIST)))
+endif
+ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
+	$(Q) $(STRIP) $(firstword $(PROGLIST))
+endif
 	$(eval PROGLIST=$(filter-out $(firstword $(PROGLIST)),$(PROGLIST)))
 	$(eval STRIPLIST=$(filter-out $(firstword $(STRIPLIST)),$(STRIPLIST)))
 	$(eval PROGOBJ=$(filter-out $(firstword $(PROGOBJ)),$(PROGOBJ)))
-endif
 
 install:: $(PROGLIST)
 
 else
+
+MAINNAME := $(addsuffix _main,$(PROGNAME))
+
+ifeq ($(suffix $(MAINSRC)),$(CXXEXT))
+$(MAINOBJ): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
+	$(eval $<_CXXFLAGS += ${shell $(DEFINE) "$(CXX)" main=$(firstword $(MAINNAME))})
+	$(eval $<_CXXELFFLAGS += ${shell $(DEFINE) "$(CXX)" main=$(firstword $(MAINNAME))})
+	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
+		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
+else
+$(MAINOBJ): %$(SUFFIX)$(OBJEXT): %.c
+ifneq ($(PROGNAME),)
+	$(eval $<_CFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
+	$(eval $<_CELFFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
+	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
+endif
+	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
+		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
+endif
+
 install::
 
 endif # BUILD_MODULE
@@ -215,12 +209,13 @@ endif # BUILD_MODULE
 preconfig::
 
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
-REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(APPNAME)_main.bdat)
-APPLIST := $(APPNAME)
-
-ifneq ($(APPNAME),)
+ifneq ($(PROGNAME),)
 ifneq ($(PRIORITY),)
 ifneq ($(STACKSIZE),)
+
+REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
+APPLIST := $(PROGNAME)
+
 $(REGLIST): $(DEPCONFIG) Makefile
 	$(call REGISTER,$(firstword $(APPLIST)),$(firstword $(PRIORITY)),$(firstword $(STACKSIZE)),$(if $(BUILD_MODULE),,$(firstword $(APPLIST))_main))
 	$(eval APPLIST=$(filter-out $(firstword $(APPLIST)),$(APPLIST)))

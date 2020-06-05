@@ -47,7 +47,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_LOADABLE
+#ifdef CONFIG_FS_NAMED_SEMAPHORES
 /* In the kernel build mode, we need to use a named semaphore so that all
  * processes will share the same, named semaphore instance.
  */
@@ -59,9 +59,9 @@
  * Private Data
  ****************************************************************************/
 
-#ifndef CONFIG_BUILD_LOADABLE
+#ifndef CONFIG_FS_NAMED_SEMAPHORES
 /* In the FLAT and PROTECTED build modes, we do not need to bother with a
- * named semaphore.  We use a single global semaphore in theses cases.
+ * named semaphore.  We use a single global semaphore in these cases.
  */
 
 static sem_t g_passwd_sem =  SEM_INITIALIZER(1);
@@ -71,7 +71,7 @@ static sem_t g_passwd_sem =  SEM_INITIALIZER(1);
  * Public Functions
  ****************************************************************************/
 /****************************************************************************
- * Name: passwd_lock and passwd_unlock
+ * Name: passwd_lock
  *
  * Description:
  *   Lock the /etc/passwd file.  This is not a real lock at the level of the
@@ -92,7 +92,7 @@ int passwd_lock(FAR sem_t **semp)
 {
   FAR sem_t *sem;
 
-#ifdef CONFIG_BUILD_LOADABLE
+#ifdef CONFIG_FS_NAMED_SEMAPHORES
   /* Open the shared, named semaphore */
 
   sem = sem_open(PASSWD_SEMNAME, O_CREAT, 0644, 1);
@@ -121,17 +121,29 @@ int passwd_lock(FAR sem_t **semp)
   return OK;
 }
 
-int passwd_unlock(FAR sem_t *sem)
+/****************************************************************************
+ * Name: passwd_unlock
+ *
+ * Description:
+ *   Undo the work done by passwd_lock.
+ *
+ * Input Parameters:
+ *   sem  Pointer to the semaphore
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+void passwd_unlock(FAR sem_t *sem)
 {
   /* Release our count on the semaphore */
 
   sem_post(sem);
 
-#ifdef CONFIG_BUILD_LOADABLE
+#ifdef CONFIG_FS_NAMED_SEMAPHORES
   /* Close the named semaphore */
 
-  (void)sem_close(sem);
+  sem_close(sem);
 #endif
-
-  return OK;
 }

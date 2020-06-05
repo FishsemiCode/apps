@@ -35,5 +35,5 @@
 ############################################################################
 
 ifneq ($(CONFIG_EXAMPLES_ILI9486_LCD),)
-CONFIGURED_APPS += examples/ili9486_lcd
+CONFIGURED_APPS += $(APPDIR)/examples/ili9486_lcd
 endif

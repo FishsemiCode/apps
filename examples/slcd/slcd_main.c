@@ -61,6 +61,7 @@
 /****************************************************************************
  * Private Typs
  ****************************************************************************/
+
 /* All state information for this test is kept within the following structure
  * in order create a namespace and to minimize the possibility of name
  * collisions.
@@ -101,7 +102,8 @@ static const char g_slcdhello[] = "Hello";
  *
  ****************************************************************************/
 
-void slcd_dumpbuffer(FAR const char *msg, FAR const uint8_t *buffer, unsigned int buflen)
+void slcd_dumpbuffer(FAR const char *msg, FAR const uint8_t *buffer,
+                     unsigned int buflen)
 {
   int i;
   int j;
@@ -154,7 +156,7 @@ void slcd_dumpbuffer(FAR const char *msg, FAR const uint8_t *buffer, unsigned in
         }
 
       printf("\n");
-   }
+    }
 }
 
 /****************************************************************************
@@ -221,7 +223,7 @@ static void slcd_putc(FAR struct lib_outstream_s *stream, int ch)
 
   if (stream->nput >= CONFIG_EXAMPLES_SLCD_BUFSIZE)
     {
-      (void)slcd_flush(stream);
+      slcd_flush(stream);
     }
 }
 
@@ -246,11 +248,7 @@ static void slcd_puts(FAR struct lib_outstream_s *outstream,
  * slcd_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int slcd_main(int argc, char *argv[])
-#endif
 {
   FAR struct slcd_test_s *priv = &g_slcdtest;
   FAR const char *str = g_slcdhello;
@@ -261,19 +259,17 @@ int slcd_main(int argc, char *argv[])
    * is supported.
    */
 
-#if defined(CONFIG_NSH_BUILTIN_APPS)
   if (argc > 1)
     {
       str = argv[1];
     }
-#endif
 
   /* Open the SLCD device */
 
   printf("Opening %s for read/write access\n", CONFIG_EXAMPLES_SLCD_DEVNAME);
 
   fd = open(CONFIG_EXAMPLES_SLCD_DEVNAME, O_RDWR);
-  if (priv->fd < 0)
+  if (fd < 0)
     {
       printf("Failed to open %s: %d\n", CONFIG_EXAMPLES_SLCD_DEVNAME, errno);
       goto errout;
@@ -292,6 +288,7 @@ int slcd_main(int argc, char *argv[])
 #ifdef CONFIG_STDIO_LINEBUFFER
       priv->stream.flush = slcd_flush;
 #endif
+      priv->fd = fd;
 
       /* Get the attributes of the SCLD device */
 
@@ -364,8 +361,9 @@ int slcd_main(int argc, char *argv[])
   return 0;
 
 errout_with_fd:
-   close(priv->fd);
+  close(priv->fd);
+
 errout:
-   priv->initialized = false;
-   exit(EXIT_FAILURE);
+  priv->initialized = false;
+  exit(EXIT_FAILURE);
 }

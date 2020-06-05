@@ -53,7 +53,7 @@
  * Preprocessor Definitions
  ****************************************************************************/
 
-/* Configuation Checks ******************************************************/
+/* Configuration Checks ******************************************************/
 /* BEWARE:
  * There are other configuration settings needed in netutitls/wget/wgetc.s,
  * but there are default values for those so we cannot check them here.
@@ -95,7 +95,7 @@ static char g_iobuffer[512];
 static void callback(FAR char **buffer, int offset, int datend,
                      FAR int *buflen, FAR void *arg)
 {
-  (void)write(1, &((*buffer)[offset]), datend - offset);
+  write(1, &((*buffer)[offset]), datend - offset);
 }
 
 /****************************************************************************
@@ -106,11 +106,7 @@ static void callback(FAR char **buffer, int offset, int datend,
  * Name: wget_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int wget_main(int argc, char *argv[])
-#endif
 {
   struct in_addr addr;
 #if defined(CONFIG_EXAMPLES_WGET_NOMAC)

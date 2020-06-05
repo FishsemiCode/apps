@@ -49,6 +49,7 @@
 
 #include <stdint.h>
 #include <debug.h>
+#include <syslog.h>
 
 #include <nuttx/compiler.h>
 #include <nuttx/ascii.h>
@@ -184,7 +185,7 @@
 #define ZME_COMMAND   ZCOMMAND       /* Command, from sending program */
 #define ZME_STDERR    ZSTDERR        /* Output this message to stderr */
 
-#define ZME_CANCEL    251            /* Received the cancelation sequence */
+#define ZME_CANCEL    251            /* Received the cancellation sequence */
 #define ZME_OO        252            /* Received OO, terminating the receiver */
 #define ZME_DATARCVD  253            /* Data received */
 #define ZME_TIMEOUT   254            /* Timeout */
@@ -317,7 +318,7 @@ struct zm_state_s
 
   /* evtable[] is the state transition table that controls the state for this
    * current action.  Different state transitions tables are used for Zmodem
-   * vs. XY modem and for receive and for tansmit.
+   * vs. XY modem and for receive and for transmit.
    */
 
   FAR const struct zm_transition_s * const * evtable;
@@ -357,6 +358,9 @@ struct zm_state_s
   uint8_t  rcvbuf[CONFIG_SYSTEM_ZMODEM_RCVBUFSIZE];
   uint8_t  pktbuf[ZM_PKTBUFSIZE];
   uint8_t  scratch[CONFIG_SYSTEM_ZMODEM_SNDBUFSIZE];
+#ifdef CONFIG_SYSTEM_ZMODEM_SNDFILEBUF
+  uint8_t  filebuf[CONFIG_SYSTEM_ZMODEM_SNDBUFSIZE];
+#endif
 };
 
 /* Receive state information */
@@ -559,7 +563,7 @@ ssize_t zm_remwrite(int fd, FAR const uint8_t *buffer, size_t buflen);
  *   necessary.
  *
  * NOTE:  Not re-entrant.  CR-LF sequences that span buffer boundaries are
- * not guaranteed to to be handled correctly.
+ * not guaranteed to be handled correctly.
  *
  ****************************************************************************/
 

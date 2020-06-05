@@ -45,12 +45,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <debug.h>
 
-#include <nuttx/binfmt/symtab.h>
+#include <nuttx/symtab.h>
 
 #ifdef CONFIG_EXAMPLES_SOTEST_BUILTINFS
 #  include <nuttx/drivers/ramdisk.h>
@@ -110,11 +111,7 @@ extern const int g_sot_nexports;
  * Name: sotest_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int sotest_main(int argc, char *argv[])
-#endif
 {
 #if CONFIG_MODLIB_MAXDEPEND > 0
   FAR void *handle1;
@@ -160,11 +157,12 @@ int sotest_main(int argc, char *argv[])
   printf("main: Mounting ROMFS filesystem at target=%s with source=%s\n",
          BINDIR, CONFIG_EXAMPLES_SOTEST_DEVPATH);
 
-  ret = mount(CONFIG_EXAMPLES_SOTEST_DEVPATH, BINDIR, "romfs", MS_RDONLY, NULL);
+  ret = mount(CONFIG_EXAMPLES_SOTEST_DEVPATH, BINDIR, "romfs", MS_RDONLY,
+              NULL);
   if (ret < 0)
     {
       fprintf(stderr, "ERROR: mount(%s,%s,romfs) failed: %s\n",
-              CONFIG_EXAMPLES_SOTEST_DEVPATH, BINDIR, errno);
+              CONFIG_EXAMPLES_SOTEST_DEVPATH, BINDIR, strerror(errno));
       exit(EXIT_FAILURE);
     }
 #endif /* CONFIG_EXAMPLES_SOTEST_BUILTINFS */
@@ -260,7 +258,8 @@ int sotest_main(int argc, char *argv[])
   ret = dlclose(handle1);
   if (ret == 0)
     {
-      fprintf(stderr, "ERROR: dlclose(handle1) succeeded with a dependency\n");
+      fprintf(stderr,
+              "ERROR: dlclose(handle1) succeeded with a dependency\n");
       exit(EXIT_FAILURE);
     }
 #endif

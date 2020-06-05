@@ -37,16 +37,12 @@
 
 # I2C tool
 CSRCS   = i2c_bus.c i2c_common.c i2c_dev.c i2c_get.c i2c_set.c i2c_verf.c
-CSRCS  += i2c_devif.c
+CSRCS  += i2c_devif.c i2c_dump.c i2c_hexdump.c
 MAINSRC = i2c_main.c
 
-CONFIG_XYZ_PROGNAME ?= i2c$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
-APPNAME = i2c
+PROGNAME = i2c
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
-
-MODULE = CONFIG_SYSTEM_I2CTOOL
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_SYSTEM_I2CTOOL)
 
 include $(APPDIR)/Application.mk

@@ -131,7 +131,7 @@ static void el_print_options(void)
   el_ooption(&g_el, EL_TS_FRACT, EL_TS_FRACT_NS);
 
   el_ooption(&g_el, EL_FINFO, 1);
-  el_oprint(OELF, "log location is very usefull for debuging");
+  el_oprint(OELF, "log location is very useful for debugging");
 
   el_ooption(&g_el, EL_TS, EL_TS_LONG);
   el_ooption(&g_el, EL_TS_TM, EL_TS_TM_REALTIME);
@@ -196,10 +196,12 @@ static void el_print_memory(void)
   el_oprint(OELI, "print whole ASCII table");
   el_opmemory(OELI, ascii, sizeof(ascii));
 
-  el_oprint(OELI, "print memory region that contains string with NULL chars");
+  el_oprint(OELI, "print memory region that contains string with NULL "
+                  "chars");
   el_opmemory(OELI, s, sizeof(s));
 
-  el_oprint(OELI, "print the same region but this time with nice ascii table");
+  el_oprint(OELI, "print the same region but this time with nice ascii "
+                  "table");
   el_opmemory_table(OELI, s, sizeof(s));
 }
 
@@ -261,7 +263,7 @@ static void el_print_file(const char *workdir)
    * performance greatly. And there are situations when you are willing to
    * loose some info or debug data (up to configured sync every value), but
    * when critical error shows up, you want data to be synced immediately to
-   * minimize chance of loosing information about critical error. For that
+   * minimize chance of losing information about critical error. For that
    * you can define which log level will be synced *every* time regardless
    * of sync every value. Here we will instruct embedlog to log prints that
    * have severity higher or equal to critical (so critial, alert and fatal)
@@ -286,9 +288,9 @@ static void el_print_file(const char *workdir)
            * any other error it actually a warning, telling user that file
            * could not have been opened now, but every el_print function with
            * output to file enabled, will try to reopen file. This of course
-           * apply to situation when problem is temporary - like directory does
-           * not exist but will be created after warning, or file has no write
-           * permission but it gets fixed later.
+           * apply to situation when problem is temporary - like directory
+           * does not exist but will be created after warning, or file has
+           * no write permission but it gets fixed later.
            */
 
             fprintf(stderr, "log file name too long");
@@ -317,11 +319,7 @@ static void el_print_file(const char *workdir)
  * embedlog_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
 int main(int argc, FAR char *argv[])
-#else
-int embedlog_main(int argc, FAR char *argv[])
-#endif
 {
   if (argc > 2 || (argc == 2 && strcmp(argv[1], "-h") == 0))
     {

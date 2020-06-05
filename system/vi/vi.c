@@ -344,7 +344,7 @@ struct vi_s
   off_t textsize;           /* The size of the text buffer */
   off_t winpos;             /* Offset corresponding to the start of the display */
   off_t prevpos;            /* Previous display position */
-  off_t vscroll;            /* Vertical dislay offset in rows */
+  off_t vscroll;            /* Vertical display offset in rows */
   uint16_t hscroll;         /* Horizontal display offset */
   uint16_t value;           /* Numeric value entered prior to a command */
   uint16_t reqcolumn;       /* Requested column when moving up/down */
@@ -884,7 +884,7 @@ static void vi_scrollup(FAR struct vi_s *vi, uint16_t nlines)
       vi_write(vi, g_index, sizeof(g_index));
     }
 
-  /* Ensure bottom line is clared */
+  /* Ensure bottom line is cleared */
 
   vi_setcursor(vi, vi->display.row-1, 0);
   vi_clrtoeol(vi);
@@ -1338,7 +1338,7 @@ static bool vi_insertfile(FAR struct vi_s *vi, off_t pos,
     }
 
   vi->fullredraw = true;
-  (void)fclose(stream);
+  fclose(stream);
   return ret;
 }
 
@@ -1379,11 +1379,11 @@ static bool vi_savetext(FAR struct vi_s *vi, FAR const char *filename,
       /* Report the error (or partial write).  EINTR is not handled. */
 
       vi_error(vi, g_fmtcmdfail, "fwrite", errno);
-      (void)fclose(stream);
+      fclose(stream);
       return false;
     }
 
-  (void)fclose(stream);
+  fclose(stream);
 
   len = sprintf(vi->scratch, "%dC written", nwritten);
   vi_write(vi, vi->scratch, len);
@@ -2292,7 +2292,7 @@ static void vi_delforward(FAR struct vi_s *vi)
       return;
     }
 
-  /* Test for empy line deletion and simply return */
+  /* Test for empty line deletion and simply return */
 
   if (vi->cursor.column == 0)
     {
@@ -3351,7 +3351,7 @@ static void vi_bottom_line_debug(FAR struct vi_s *vi)
 
   vi_putch(vi, '"');
 }
-#endif  /* ENABLE_BOTTOM_LINE_DEBUG */
+#endif /* ENABLE_BOTTOM_LINE_DEBUG */
 
 /****************************************************************************
  * Name: vi_findnext
@@ -3439,7 +3439,7 @@ static void vi_saverepeat(FAR struct vi_s *vi, uint16_t ch)
       vi->repeatvalue = vi->value;
     }
 }
-#endif  /* CONFIG_SYSTEM_VI_INCLUDE_COMMAND_REPEAT */
+#endif /* CONFIG_SYSTEM_VI_INCLUDE_COMMAND_REPEAT */
 
 /****************************************************************************
  * Name: vi_appendrepeat
@@ -3466,7 +3466,7 @@ static void vi_appendrepeat(FAR struct vi_s *vi, uint16_t ch)
       vi->cmdbuf[vi->cmdcount++] = ch;
     }
 }
-#endif  /* CONFIG_SYSTEM_VI_INCLUDE_COMMAND_REPEAT */
+#endif /* CONFIG_SYSTEM_VI_INCLUDE_COMMAND_REPEAT */
 
 /****************************************************************************
  * Name: vi_cmd_mode
@@ -3703,7 +3703,7 @@ static void vi_cmd_mode(FAR struct vi_s *vi)
 
         case KEY_CMDMODE_BOTTOM:  /* Move to bottom of screen */
           {
-            (void)vi_gotoscreenbottom(vi, 0);
+            vi_gotoscreenbottom(vi, 0);
           }
           break;
 
@@ -4098,7 +4098,7 @@ static void vi_cmd_mode(FAR struct vi_s *vi)
                 vi->cmdlen = 2;
                 vi_parsecolon(vi);
 
-                /* If save quit succeds, we won't return */
+                /* If save quit succeeds, we won't return */
               }
             else
               {
@@ -4677,7 +4677,7 @@ static void vi_cmd_submode(FAR struct vi_s *vi)
                 {
                   vi_exitsubmode(vi, MODE_COMMAND);
 
-                  /* Ensure bottom line is clared */
+                  /* Ensure bottom line is cleared */
 
                   vi_clearbottomline(vi);
                 }
@@ -4927,11 +4927,11 @@ static void vi_parsefind(FAR struct vi_s *vi, bool revfind)
   vi->revfind = revfind;
   if (revfind)
     {
-      (void)vi_revfindstring(vi);
+      vi_revfindstring(vi);
     }
   else
     {
-      (void)vi_findstring(vi);
+      vi_findstring(vi);
     }
 
   /* Exit the sub-mode and revert to command mode */
@@ -4979,7 +4979,7 @@ static void vi_find_submode(FAR struct vi_s *vi, bool revfind)
                 {
                   vi_exitsubmode(vi, MODE_COMMAND);
 
-                  /* Ensure bottom line is clared */
+                  /* Ensure bottom line is cleared */
 
                   vi_clearbottomline(vi);
                 }
@@ -5758,11 +5758,7 @@ static void vi_showusage(FAR struct vi_s *vi, FAR const char *progname,
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int vi_main(int argc, char **argv)
-#endif
 {
   FAR struct vi_s *vi;
   int option;
@@ -5843,7 +5839,7 @@ int vi_main(int argc, char **argv)
         }
     }
 
-  /* Initialze termcurses */
+  /* Initialize termcurses */
 
   ret = termcurses_initterm(NULL, 0, 1, &vi->tcurs);
   if (ret == OK)
@@ -5883,7 +5879,7 @@ int vi_main(int argc, char **argv)
 
       /* Load the file into memory */
 
-      (void)vi_insertfile(vi, 0, vi->filename);
+      vi_insertfile(vi, 0, vi->filename);
       vi->modified = false;
 
       /* Skip over the filename argument.  There should nothing after this */

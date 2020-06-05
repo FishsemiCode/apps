@@ -255,7 +255,7 @@ namespace NxWM
 
     /**
      * Redraw the entire window.  The application has been maximized or
-     * otherwise moved to the top of the hiearchy.  This method is call from
+     * otherwise moved to the top of the hierarchy.  This method is call from
      * CTaskbar when the application window must be displayed
      */
 
@@ -284,18 +284,6 @@ namespace NxWM
      */
 
     bool addApplication(IApplicationFactory *app);
-
-    /**
-     * Simulate a mouse click or release on the icon at index.  This method
-     * is only available during automated testing of NxWM.
-     *
-     * @param index.  Selects the icon in the start window
-     * @param click.  True to click and false to release
-     */
-
-#if defined(CONFIG_NXWM_UNITTEST) && !defined(CONFIG_NXWM_TOUCHSCREEN)
-    void clickIcon(int index, bool click);
-#endif
   };
 }
 

@@ -252,11 +252,7 @@ static void serial_out(struct term_pair_s *tp)
  * Name: pty_test_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int pty_test_main(int argc, char *argv[])
-#endif
 {
   struct term_pair_s termpair;
   struct termios tio;
@@ -353,9 +349,9 @@ int pty_test_main(int argc, char *argv[])
 
   /* Use this pts file as stdin, stdout, and stderr */
 
-  (void)dup2(fd_pts, 0);
-  (void)dup2(fd_pts, 1);
-  (void)dup2(fd_pts, 2);
+  dup2(fd_pts, 0);
+  dup2(fd_pts, 1);
+  dup2(fd_pts, 2);
 
   /* Create a new console using this /dev/pts/N */
 

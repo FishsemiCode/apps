@@ -40,25 +40,24 @@ include $(APPDIR)/Make.defs
 
 all:
 .PHONY: context depend clean distclean
-.PRECIOUS: ../../libapps$(LIBEXT)
 
 .updated: $(DEPCONFIG)
-	$(call DELFILE, *.bdat)
-	$(call DELFILE, *.pdat)
 	$(Q) touch .updated
 
 # This must run before any other context target
 
 install:
 
-context: .updated
+context:
 
 depend:
 
 clean:
 	$(call CLEAN)
 
-distclean: clean
+clean_context:
 	$(call DELFILE, *.bdat)
 	$(call DELFILE, *.pdat)
+
+distclean: clean
 	$(call DELFILE, .updated)

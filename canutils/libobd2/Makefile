@@ -37,9 +37,6 @@
 
 # CAN utility library
 
-ASRCS  =
-CSRCS  = obd2.c obd_sendrequest.c obd_waitresponse.c obd_decodepid.c
-
-APPNAME = libobd2
+CSRCS = obd2.c obd_sendrequest.c obd_waitresponse.c obd_decodepid.c
 
 include $(APPDIR)/Application.mk

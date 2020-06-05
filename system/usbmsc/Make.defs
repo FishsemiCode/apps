@@ -35,6 +35,5 @@
 ############################################################################
 
 ifneq ($(CONFIG_SYSTEM_USBMSC),)
-CONFIGURED_APPS += system/usbmsc
+CONFIGURED_APPS += $(APPDIR)/system/usbmsc
 endif
-

@@ -122,7 +122,7 @@ Using NuttX ZModem with a Linux Host
     binary data stream.
 
     If you don't have the rz command on your Linux box, the package to
-    install rzsz (or possibily lrzsz).
+    install rzsz (or possibly lrzsz).
 
     Then on the target (using /dev/ttyS1 as an example).
 
@@ -178,7 +178,7 @@ Using NuttX ZModem with a Linux Host
     sz command.
 
     If you don't have the sz command on your Linux box, the package to
-    install rzsz (or possibily lrzsz).
+    install rzsz (or possibly lrzsz).
 
 Building the ZModem Tools to Run Under Linux
 ============================================
@@ -210,16 +210,16 @@ Status
 ======
     2013-7-15: Testing against the Linux rz/sz commands.
 
-      I have tested with the configs/olimex-lpc1766stk configuration.  I
-      have been able to send large and small files with the target sz
-      command. I have been able to receive small files, but there are
-      problems receiving large files using the Linux sz command:  The
-      Linux sz does not obey the buffering limits and continues to send
-      data while rz is writing the previously received data to the file
-      and the serial driver's RX buffer is overrun by a few bytes while
-      the write is in progress. As a result, when it reads the next
-      buffer of data, a few bytes may be missing.  The symptom of this
-      missing data is a CRC check failure.
+      I have tested with the boards/arm/lpc17xx_40xx/olimex-lpc1766stk
+      configuration.  I have been able to send large and small files with
+      the target sz command. I have been able to receive small files, but
+      there are problems receiving large files using the Linux sz command:
+      The Linux sz does not obey the buffering limits and continues to send
+      data while rz is writing the previously received data to the file and
+      the serial driver's RX buffer is overrun by a few bytes while the
+      write is in progress. As a result, when it reads the next buffer of
+      data, a few bytes may be missing.  The symptom of this missing data is
+      a CRC check failure.
 
       Either (1) we need a more courteous host application, or (2) we
       need to greatly improve the target side buffering capability!
@@ -238,7 +238,7 @@ Status
       works better with hardware flow control disabled on the LPC17xx.
 
       At this lower BAUD, RX buffer sizes could probably be reduced; Or
-      perhaps the BAUD coud be increased.  My thought, however, is that
+      perhaps the BAUD could be increased.  My thought, however, is that
       tuning in such an unhealthy situation is not the approach:  The
       best thing to do would be to use the matching NuttX sz on the Linux
       host side.

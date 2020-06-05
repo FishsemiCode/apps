@@ -104,7 +104,6 @@ struct i8shark_state_s
 
   /* User exposed settings */
 
-  uint8_t chan;
   FAR char devpath[I8SHARK_MAX_DEVPATH];
 };
 
@@ -130,93 +129,6 @@ static struct i8shark_state_s g_i8shark;
  ****************************************************************************/
 
 /****************************************************************************
- * Name: i8shark_help
- ****************************************************************************/
-
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static void i8shark_help(void)
-{
-  printf("Usage: i8shark ![interface] [OPTIONS]\n");
-  printf("\nArguments are \"sticky\".\n");
-  printf("\nInterface only needs to be specified the first time\n");
-  printf("OPTIONS include:\n");
-  printf("  [-h] shows this message and exits\n");
-}
-#endif
-
-/****************************************************************************
- * Name: arg_string
- ****************************************************************************/
-
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static int arg_string(FAR char **arg, FAR char **value)
-{
-  FAR char *ptr = *arg;
-
-  if (ptr[2] == '\0')
-    {
-      *value = arg[1];
-      return 2;
-    }
-  else
-    {
-      *value = &ptr[2];
-      return 1;
-    }
-}
-#endif
-
-/****************************************************************************
- * Name: arg_decimal
- ****************************************************************************/
-
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static int arg_decimal(FAR char **arg, FAR long *value)
-{
-  FAR char *string;
-  int ret;
-
-  ret = arg_string(arg, &string);
-  *value = strtol(string, NULL, 10);
-  return ret;
-}
-#endif
-
-/****************************************************************************
- * Name: parse_args
- ****************************************************************************/
-
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static void parse_args(FAR struct i8shark_state_s *i8shark, int argc, FAR char **argv)
-{
-  FAR char *ptr;
-  int index;
-
-  for (index = 1; index < argc; )
-    {
-      ptr = argv[index];
-      if (ptr[0] != '-')
-        {
-          printf("Invalid options format: %s\n", ptr);
-          exit(0);
-        }
-
-      switch (ptr[1])
-        {
-          case 'h':
-            i8shark_help();
-            exit(0);
-
-          default:
-            printf("Unsupported option: %s\n", ptr);
-            i8shark_help();
-            exit(1);
-        }
-    }
-}
-#endif
-
-/****************************************************************************
  * Name: i8shark_init
  ****************************************************************************/
 
@@ -229,7 +141,6 @@ static int i8shark_init(FAR struct i8shark_state_s *i8shark)
 
   /* Set the default settings using config options */
 
-  i8shark->chan = CONFIG_IEEE802154_I8SHARK_CHANNEL;
   strcpy(i8shark->devpath, CONFIG_IEEE802154_I8SHARK_DEVPATH);
 
   /* Flags for synchronzing with daemon state */
@@ -323,7 +234,7 @@ static int i8shark_daemon(int argc, FAR char *argv[])
       enum ieee802154_frametype_e ftype;
       uint8_t zepframe[I8SHARK_MAX_ZEPFRAME];
       clock_t systime;
-      int ind = 0;
+      int i = 0;
       int nbytes;
 
       /* Get an incoming frame from the MAC character driver */
@@ -336,12 +247,12 @@ static int i8shark_daemon(int argc, FAR char *argv[])
 
       /* First 2 bytes of packet represent preamble. For ZEP, "EX" */
 
-      zepframe[ind++] = 'E';
-      zepframe[ind++] = 'X';
+      zepframe[i++] = 'E';
+      zepframe[i++] = 'X';
 
       /* The next byte is the version. We are using V2 */
 
-      zepframe[ind++] = 2;
+      zepframe[i++] = 2;
 
       /* Next byte is type. ZEP only differentiates between ACK and Data. My
        * assumption is that Data also includes MAC command frames and beacon
@@ -353,27 +264,27 @@ static int i8shark_daemon(int argc, FAR char *argv[])
 
       if (ftype == IEEE802154_FRAME_ACK)
         {
-          zepframe[ind++] = 2;
+          zepframe[i++] = 2;
 
           /* Not sure why, but the ZEP header allows for a 4-byte sequence no.
            * despite 802.15.4 sequence number only being 1-byte
            */
 
-          zepframe[ind] = frame.meta.dsn;
-          ind += 4;
+          zepframe[i] = frame.meta.dsn;
+          i += 4;
         }
       else
         {
-          zepframe[ind++] = 1;
+          zepframe[i++] = 1;
 
           /* Next bytes is the Channel ID */
 
-          ieee802154_getchan(fd, &zepframe[ind++]);
+          ieee802154_getchan(fd, &zepframe[i++]);
 
           /* For now, just hard code the device ID to an arbitrary value */
 
-          zepframe[ind++] = 0xFA;
-          zepframe[ind++] = 0xDE;
+          zepframe[i++] = 0xFA;
+          zepframe[i++] = 0xDE;
 
           /* Not completely sure what LQI mode is. My best guess as of now based
            * on a few comments in the Wireshark code is that it determines whether
@@ -383,46 +294,46 @@ static int i8shark_daemon(int argc, FAR char *argv[])
            * may be a bad assumption for certain radios.
            */
 
-          zepframe[ind++] = 1;
+          zepframe[i++] = 1;
 
           /* Next byte is the LQI value */
 
-          zepframe[ind++] = frame.meta.lqi;
+          zepframe[i++] = frame.meta.lqi;
 
           /* Need to use NTP to get time, but for now, include the system time */
 
           systime = clock();
-          memcpy(&zepframe[ind], &systime, 8);
-          ind += 8;
+          memcpy(&zepframe[i], &systime, 8);
+          i += 8;
 
           /* Not sure why, but the ZEP header allows for a 4-byte sequence no.
            * despite 802.15.4 sequence number only being 1-byte
            */
 
-          zepframe[ind]   = frame.meta.dsn;
-          zepframe[ind+1] = 0;
-          zepframe[ind+2] = 0;
-          zepframe[ind+3] = 0;
-          ind += 4;
+          zepframe[i]   = frame.meta.dsn;
+          zepframe[i+1] = 0;
+          zepframe[i+2] = 0;
+          zepframe[i+3] = 0;
+          i += 4;
 
           /* Skip 10-bytes for reserved fields */
 
-          ind += 10;
+          i += 10;
 
           /* Last byte is the length */
 
 #ifdef CONFIG_IEEE802154_I8SHARK_XBEE_APPHDR
-          zepframe[ind++] = frame.length - 2;
+          zepframe[i++] = frame.length - 2;
 #else
-          zepframe[ind++] = frame.length;
+          zepframe[i++] = frame.length;
 #endif
         }
 
       /* The ZEP header is filled, now copy the frame in */
 
 #ifdef CONFIG_IEEE802154_I8SHARK_XBEE_APPHDR
-      memcpy(&zepframe[ind], frame.payload, frame.offset);
-      ind += frame.offset;
+      memcpy(&zepframe[i], frame.payload, frame.offset);
+      i += frame.offset;
 
       /* XBee radios use a 2 byte "application header" to support duplicate packet
        * detection.  Wireshark doesn't know how to handle this data, so we provide
@@ -436,18 +347,30 @@ static int i8shark_daemon(int argc, FAR char *argv[])
        * will not fail.
        */
 
-      memcpy(&zepframe[ind], (frame.payload + frame.offset + 2),
+      memcpy(&zepframe[i], (frame.payload + frame.offset + 2),
              (frame.length - frame.offset - 2));
-      ind += frame.length - frame.offset - 4;
+      i += frame.length - frame.offset - 4;
 #else
-      memcpy(&zepframe[ind], frame.payload, frame.length);
-      ind += frame.length;
+      /* If FCS suppression is enabled, subtract the FCS length to reduce the
+       * piece of the frame copied.
+       */
+
+#ifdef CONFIG_IEEE802154_I8SHARK_SUPPRESS_FCS
+      {
+        uint8_t fcslen;
+        ieee802154_getfcslen(fd, &fcslen);
+        frame.length -= fcslen;
+      }
+#endif
+
+      memcpy(&zepframe[i], frame.payload, frame.length);
+      i += frame.length;
 #endif
 
       /* Send the encapsulated frame to Wireshark over UDP */
 
-      nbytes = sendto(sockfd, zepframe, ind, 0, (struct sockaddr*)&raddr, addrlen);
-      if (nbytes < ind)
+      nbytes = sendto(sockfd, zepframe, i, 0, (struct sockaddr*)&raddr, addrlen);
+      if (nbytes < i)
         {
           fprintf(stderr, "ERROR: sendto() did not send all bytes. %d\n", errno);
         }
@@ -467,11 +390,7 @@ static int i8shark_daemon(int argc, FAR char *argv[])
  * Name: i8shark_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int i8shark_main(int argc, char *argv[])
-#endif
 {
   int argind = 1;
 

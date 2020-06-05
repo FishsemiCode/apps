@@ -97,8 +97,9 @@ static const struct nx_callback_s g_pucb =
   , nxpu_mousein /* mousein */
 #endif
 #ifdef CONFIG_NX_KBD
-  , nxpu_kbdin   /* my kbdin */
+  , nxpu_kbdin   /* kbdin */
 #endif
+  , NULL         /* event */
 };
 
 /* Pop-up state information */
@@ -385,7 +386,7 @@ NXWINDOW nxpu_open(void)
   return hwnd;
 
 errout_with_hwnd:
-  (void)nx_closewindow(hwnd);
+  nx_closewindow(hwnd);
 
 errout_with_state:
   return NULL;

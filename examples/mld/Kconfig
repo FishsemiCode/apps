@@ -15,18 +15,9 @@ if EXAMPLES_MLD
 config EXAMPLES_MLD_PROGNAME
 	string "Program name"
 	default "mld"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
-
-config EXAMPLES_MLD_APPNAME
-	string "NSH builtin name"
-	default "mld"
-	depends on CONFIG_NSH_BUILTIN_APPS
-	---help---
-		This is the name of the application that will be use when running
-		from the NSH command line
 
 config EXAMPLES_MLD_PRIORITY
 	int "MLD example task priority"
@@ -34,13 +25,12 @@ config EXAMPLES_MLD_PRIORITY
 
 config EXAMPLES_MLD_STACKSIZE
 	int "MLD example stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_MLD_INIT
 	bool "Initialize network"
-	default n if NSH_BUILTIN_APPS
-	default y if !NSH_BUILTIN_APPS
-	depends on !BUILD_LOADABLE
+	default n if NSH_NETINIT
+	default y if !NSH_NETINIT
 	---help---
 		Include logic to initialize the network.  This should not be done if
 		the network is already initialized when nettest runs.  This is

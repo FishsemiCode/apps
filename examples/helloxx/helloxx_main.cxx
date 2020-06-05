@@ -127,11 +127,7 @@ static CHelloWorld g_HelloWorld;
 
 extern "C"
 {
-#if defined (BUILD_MODULE)
   int main(int argc, FAR char *argv[])
-#else
-  int helloxx_main(int argc, char *argv[])
-#endif
  {
     // If C++ initialization for static constructors is supported, then do
     // that first
@@ -140,7 +136,7 @@ extern "C"
     up_cxxinitialize();
 #endif
 
-    // Exercise an explictly instantiated C++ object
+    // Exercise an explicitly instantiated C++ object
 
     CHelloWorld *pHelloWorld = new CHelloWorld;
     printf("helloxx_main: Saying hello from the dynamically constructed instance\n");

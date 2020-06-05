@@ -37,26 +37,29 @@
 
 # LittleVGL demo built-in application info
 
-CONFIG_EXAMPLES_LVGLDEMO_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_EXAMPLES_LVGLDEMO_STACKSIZE ?= 32768
-
-APPNAME = lvgldemo
+PROGNAME = lvgldemo
 PRIORITY = $(CONFIG_EXAMPLES_LVGLDEMO_PRIORITY)
 STACKSIZE = $(CONFIG_EXAMPLES_LVGLDEMO_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_LVGLDEMO)
 
 # LittleVGL demo Example
 
-ASRCS =
-CSRCS += fbdev.c demo.c img_bubble_pattern.c tp.c tp_cal.c
-MAINSRC = lvgldemo.c
+CSRCS += fbdev.c tp.c tp_cal.c
+ifeq ($(CONFIG_EXAMPLES_LVGLDEMO_SIMPLE),y)
+  CSRCS += demo.c
+  ifeq ($(CONFIG_EXAMPLES_LVGLDEMO_WALLPAPER),y)
+    CSRCS += img_bubble_pattern.c
+  endif
+else ifeq ($(CONFIG_EXAMPLES_LVGLDEMO_THEME_1),y)
+  CSRCS += lv_test_theme_1.c
+else ifeq ($(CONFIG_EXAMPLES_LVGLDEMO_THEME_2),y)
+  CSRCS += lv_test_theme_2.c
+endif
 
-CONFIG_EXAMPLES_LVGLDEMO_PROGNAME ?= lvgldemo$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_LVGLDEMO_PROGNAME)
+MAINSRC = lvgldemo.c
 
 LVGLDIR=$(APPDIR)/graphics/littlevgl/lvgl
 CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(LVGLDIR)"}
 CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(LVGLDIR)"}
-
-MODULE = CONFIG_EXAMPLES_LVGLDEMO
 
 include $(APPDIR)/Application.mk

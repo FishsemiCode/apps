@@ -17,20 +17,26 @@ config EXAMPLES_TCPBLASTER_SENDSIZE
 	int "Payload size"
 	default 4096
 	---help---
-		This setting determines size of each test packet sent to the server.
+		This setting determines size of each TCP send that is sent to the server.
+
+config EXAMPLES_TCPBLASTER_GROUPSIZE
+	int "Group size"
+	default 50
+	---help---
+		This setting determines how many TCP sends are sent to the server before printing statistics
+		and starting again.
 
 config EXAMPLES_TCPBLASTER_PROGNAME1
 	string "Target1 program name"
-	default "tcpserver" if !EXAMPLES_TCPBLASTER_SERVER
-	default "tcpclient" if EXAMPLES_TCPBLASTER_SERVER
-	depends on BUILD_KERNEL
+	default "tcpserver" if EXAMPLES_TCPBLASTER_SERVER
+	default "tcpclient" if !EXAMPLES_TCPBLASTER_SERVER
 	---help---
-		This is the name of the program that will be use when the TcpBlaster
+		This is the name of the program that will be used when the TcpBlaster
 		program is installed for target1.
 
 config EXAMPLES_TCPBLASTER_STACKSIZE1
 	int "Target1 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_TCPBLASTER_PRIORITY1
 	int "Target1 priority"
@@ -39,7 +45,6 @@ config EXAMPLES_TCPBLASTER_PRIORITY1
 config EXAMPLES_TCPBLASTER_POLLOUT
 	bool "Use poll() to pace output"
 	default n
-	depends on !DISABLE_POLL
 	---help---
 		Client will use poll() to verify that send() will not block.  This
 		does not improve performance (in fact, it will degrade perform
@@ -49,7 +54,6 @@ config EXAMPLES_TCPBLASTER_POLLOUT
 config EXAMPLES_TCPBLASTER_POLLIN
 	bool "Use poll() to pace input"
 	default n
-	depends on !DISABLE_POLL
 	---help---
 		Client will use poll() to verify that recv() will not block.  This
 		does not improve performance (in fact, it will degrade perform
@@ -92,9 +96,8 @@ config EXAMPLES_TCPBLASTER_PROGNAME2
 	string "Target2 program name"
 	default "tcpserver" if !EXAMPLES_TCPBLASTER_SERVER
 	default "tcpclient" if EXAMPLES_TCPBLASTER_SERVER
-	depends on BUILD_KERNEL
 	---help---
-		This is the name of the Target2 program that will be use when the
+		This is the name of the Target2 program that will be used when the
 		NSH ELF program is installed.
 
 config EXAMPLES_TCPBLASTER_PRIORITY2
@@ -103,7 +106,7 @@ config EXAMPLES_TCPBLASTER_PRIORITY2
 
 config EXAMPLES_TCPBLASTER_STACKSIZE2
 	int "Target2 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif # EXAMPLES_TCPBLASTER_TARGET2
 endif # !EXAMPLES_TCPBLASTER_LOOPBACK
@@ -111,7 +114,7 @@ endif # !EXAMPLES_TCPBLASTER_LOOPBACK
 if EXAMPLES_TCPBLASTER_LOOPBACK
 config EXAMPLES_TCPBLASTER_DAEMON_STACKSIZE
 	int "Server daemon stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_TCPBLASTER_DAEMON_PRIORITY
 	int "Server daemon priority"
@@ -143,9 +146,9 @@ endchoice # IP Domain
 
 config EXAMPLES_TCPBLASTER_INIT
 	bool "Initialize network"
-	default n if NSH_BUILTIN_APPS
-	default y if !NSH_BUILTIN_APPS
-	depends on !BUILD_LOADABLE && !EXAMPLES_TCPBLASTER_LOOPBACK
+	default n if NSH_NETINIT
+	default y if !NSH_NETINIT
+	depends on !EXAMPLES_TCPBLASTER_LOOPBACK
 	---help---
 		Include logic to initialize the network.  This should not be done if
 		the network is already initialized when tcpblaster runs.  This is
@@ -463,7 +466,7 @@ config EXAMPLES_TCPBLASTER_SERVERIPv6ADDR_1
 	---help---
 		IP address of the server.  If the target is the server, then
 		EXAMPLES_TCPBLASTER_SERVERIP should be the same as
-		EXAMPLES_TCPBLASTER_IPADDR (default).  If the target is the cleint,
+		EXAMPLES_TCPBLASTER_IPADDR (default).  If the target is the client,
 		then the default value of EXAMPLES_TCPBLASTER_SERVERIP is set to the
 		host PC IP address (possibly the gateway address,
 		EXAMPLES_TCPBLASTER_DRIPADDR?).

@@ -34,7 +34,6 @@
 ############################################################################
 
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
 
 OBJEXT ?= .o
 DELIM ?= /
@@ -65,8 +64,8 @@ LDLIBPATH +=  -L $(NUTTXLIB)
 endif
 
 ifeq ($(CONFIG_EXAMPLES_MODULE_LIBC),y)
-ifeq ($(CONFIG_BUILD_PROTECTED),y)
-LDLIBS += -luc
+ifneq ($(CONFIG_BUILD_FLAT),y)
+LDLIBS += -lkc
 else
 LDLIBS += -lc
 endif
@@ -78,21 +77,25 @@ SRCS = $(BIN).c
 OBJS = $(SRCS:.c=$(OBJEXT))
 
 all: $(BIN)
-.PHONY: clean install
-.PRECIOUS: ../../../../libapps$(LIBEXT)
+.PHONY: all clean install
 
 $(OBJS): %$(OBJEXT): %.c
-	@echo "CC: $<"
-	$(Q) $(CC) -c $(CMODULEFLAGS) $< -o $@
+	@echo "MODULECC: $<"
+	$(Q) $(MODULECC) -c $(CMODULEFLAGS) $< -o $@
 
 $(BIN): $(OBJS)
-	@echo "LD: $<"
-	$(Q) $(LD) $(LDMODULEFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
+	@echo "MODULELD: $<"
+	$(Q) $(MODULELD) $(LDMODULEFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
+
+$(FSROOT_DIR)/$(BIN): $(BIN)
+	$(Q) mkdir -p $(FSROOT_DIR)
+	$(Q) install $(BIN) $(FSROOT_DIR)/$(BIN)
+ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
+	$(Q) $(STRIP) $(FSROOT_DIR)/$(BIN)
+endif
+
+install: $(FSROOT_DIR)/$(BIN)
 
 clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
-
-install:
-	$(Q) mkdir -p $(FSROOT_DIR)
-	$(Q) install $(BIN) $(FSROOT_DIR)/$(BIN)

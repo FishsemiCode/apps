@@ -3,13 +3,10 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-comment "ini dumper example needs FSUTILS_INIH"
-	depends on !FSUTILS_INIH
-
 if FSUTILS_INIH
 
 config EXAMPLES_INI_DUMPER
-	bool "ini dumper example"
+	tristate "ini dumper example"
 	default n
 	---help---
 		Enable ini dumper example program which uses inih
@@ -19,9 +16,8 @@ if EXAMPLES_INI_DUMPER
 config EXAMPLES_INI_DUMPER_PROGNAME
 	string "Program name"
 	default "ini_dumper"
-	depends on BUILD_KERNEL
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_INI_DUMPER_PRIORITY
@@ -30,7 +26,7 @@ config EXAMPLES_INI_DUMPER_PRIORITY
 
 config EXAMPLES_INI_DUMPER_STACKSIZE
 	int "ini dumper example stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif #EXAMPLES_INI_DUMPER
 endif #SYSTEM_INI_DUMPER

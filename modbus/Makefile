@@ -37,9 +37,6 @@
 
 # FreeModBus Library
 
-ASRCS =
-CSRCS =
-
 ifeq ($(CONFIG_MODBUS),y)
 
   ifeq ($(CONFIG_MODBUS_SLAVE),y)

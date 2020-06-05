@@ -135,11 +135,7 @@ static void timer_status(int fd)
  * timer_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int timer_main(int argc, char *argv[])
-#endif
 {
   struct timer_notify_s notify;
   struct sigaction act;
@@ -191,8 +187,8 @@ int timer_main(int argc, char *argv[])
   act.sa_sigaction = timer_sighandler;
   act.sa_flags     = SA_SIGINFO;
 
-  (void)sigfillset(&act.sa_mask);
-  (void)sigdelset(&act.sa_mask, CONFIG_EXAMPLES_TIMER_SIGNO);
+  sigfillset(&act.sa_mask);
+  sigdelset(&act.sa_mask, CONFIG_EXAMPLES_TIMER_SIGNO);
 
   ret = sigaction(CONFIG_EXAMPLES_TIMER_SIGNO, &act, NULL);
   if (ret != OK)
@@ -262,7 +258,7 @@ int timer_main(int argc, char *argv[])
   /* Detach the signal handler */
 
   act.sa_handler = SIG_DFL;
-  (void)sigaction(CONFIG_EXAMPLES_TIMER_SIGNO, &act, NULL);
+  sigaction(CONFIG_EXAMPLES_TIMER_SIGNO, &act, NULL);
 
   /* Show the timer status before starting */
 

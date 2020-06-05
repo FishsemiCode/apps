@@ -33,8 +33,7 @@
 #
 ############################################################################
 
-include $(TOPDIR)/.config
-include $(TOPDIR)/build/Make.defs
+include $(TOPDIR)/scripts/Make.defs
 
 # Control build verbosity
 #
@@ -66,22 +65,22 @@ LIBEXT ?= .a
 
 define PREPROCESS
 	@echo "CPP: $1->$2"
-	$(Q) $(CPP) $(CPPFLAGS) $1 -o $2
+	$(Q) $(CPP) $(CPPFLAGS) $($(strip $1)_CPPFLAGS) $1 -o $2
 endef
 
 define COMPILE
 	@echo "CC: $1"
-	$(Q) $(CC) -c $(CFLAGS) $1 -o $2
+	$(Q) $(CC) -c $(CFLAGS) $($(strip $1)_CFLAGS) $1 -o $2
 endef
 
 define COMPILEXX
 	@echo "CXX: $1"
-	$(Q) $(CXX) -c $(CXXFLAGS) $1 -o $2
+	$(Q) $(CXX) -c $(CXXFLAGS) $($(strip $1)_CXXFLAGS) $1 -o $2
 endef
 
 define ASSEMBLE
 	@echo "AS: $1"
-	$(Q) $(CC) -c $(AFLAGS) $1 -o $2
+	$(Q) $(CC) -c $(AFLAGS) $($(strip $1)_AFLAGS) $1 -o $2
 endef
 
 # Environment-specific definitions
@@ -98,8 +97,7 @@ ifeq ($(CONFIG_WINDOWS_NATIVE),y)
 DELIM = $(strip \)
 
 define ARCHIVE
-	@echo AR: $2
-	$(Q) $(AR) $1 $(2)
+	$(AR) $1 $(2)
 endef
 
 define DELFILE
@@ -126,8 +124,7 @@ else
 DELIM = $(strip /)
 
 define ARCHIVE
-	@echo "AR: $2"
-	$(Q) $(AR) $1 $(2) || { echo "$(AR) $1 FAILED!" ; exit 1 ; }
+	$(AR) $1 $(2)
 endef
 
 define DELFILE

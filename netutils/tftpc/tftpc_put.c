@@ -126,7 +126,7 @@ int tftp_mkdatapacket(off_t offset, FAR uint8_t *packet, uint16_t blockno,
  *
  * Input Parameters:
  *   sd      - Socket descriptor to use in in the transfer
- *   packet   - buffer to use for the tranfers
+ *   packet   - buffer to use for the transfers
  *   server  - The address of the server
  *   port    - The port number of the server (0 if not yet known)
  *   blockno - Location to return block number in the received ACK
@@ -206,7 +206,7 @@ static int tftp_rcvack(int sd, FAR uint8_t *packet,
                   ninfo("Invalid port in DATA\n");
                   packetlen = tftp_mkerrpacket(packet, TFTP_ERR_UNKID,
                                                TFTP_ERRST_UNKID);
-                  (void)tftp_sendto(sd, packet, packetlen, server);
+                  tftp_sendto(sd, packet, packetlen, server);
                   continue;
                 }
 
@@ -226,7 +226,7 @@ static int tftp_rcvack(int sd, FAR uint8_t *packet,
 #ifdef CONFIG_DEBUG_NET_WARN
                   if (opcode == TFTP_ERR)
                     {
-                      (void)tftp_parseerrpacket(packet);
+                      tftp_parseerrpacket(packet);
                     }
                   else
 #endif
@@ -234,7 +234,7 @@ static int tftp_rcvack(int sd, FAR uint8_t *packet,
                     {
                       packetlen = tftp_mkerrpacket(packet, TFTP_ERR_ILLEGALOP,
                                                    TFTP_ERRST_ILLEGALOP);
-                      (void)tftp_sendto(sd, packet, packetlen, server);
+                      tftp_sendto(sd, packet, packetlen, server);
                     }
 
                   /* Break out an bump up the retry count */
@@ -299,7 +299,7 @@ int tftpput_cb(FAR const char *remote, in_addr_t addr, bool binary,
       goto errout;
     }
 
-  /* Initialize a UDP socket and setup the server addresss */
+  /* Initialize a UDP socket and setup the server address */
 
   sd = tftp_sockinit(&server, addr);
   if (sd < 0)
@@ -431,7 +431,7 @@ errout:
 static ssize_t tftp_read(FAR void *ctx, uint32_t offset, FAR uint8_t *buf,
                          size_t buflen)
 {
-  int fd = (int)ctx;
+  int fd = (intptr_t)ctx;
   off_t tmp;
   ssize_t nbytesread;
   ssize_t totalread = 0;
@@ -512,7 +512,8 @@ int tftpput(FAR const char *local, FAR const char *remote, in_addr_t addr,
       goto errout;
     }
 
-  result = tftpput_cb(remote, addr, binary, tftp_read, (FAR void *)fd);
+  result = tftpput_cb(remote, addr, binary, tftp_read,
+                      (FAR void *)(intptr_t)fd);
 
   close(fd);
 

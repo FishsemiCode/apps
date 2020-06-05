@@ -15,9 +15,8 @@ if EXAMPLES_ALARM
 config EXAMPLES_ALARM_PROGNAME
 	string "Program name"
 	default "alarm"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_ALARM_PRIORITY
@@ -26,7 +25,7 @@ config EXAMPLES_ALARM_PRIORITY
 
 config EXAMPLES_ALARM_STACKSIZE
 	int "Alarm stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_ALARM_DEVPATH
 	string "RTC device path"

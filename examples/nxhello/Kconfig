@@ -16,9 +16,8 @@ if EXAMPLES_NXHELLO
 config EXAMPLES_NXHELLO_PROGNAME
 	string "NX Hello Program name"
 	default "nxhello"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_NXHELLO_PRIORITY
@@ -27,7 +26,7 @@ config EXAMPLES_NXHELLO_PRIORITY
 
 config EXAMPLES_NXHELLO_STACKSIZE
 	int "NX Hello stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_NXHELLO_BPP
 	int "Bits-Per-Pixel"
@@ -81,7 +80,7 @@ comment "NX Server Options"
 
 config EXAMPLES_NXHELLO_LISTENER_STACKSIZE
 	int "NX Server/Listener Stack Size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 	---help---
 		The stacksize to use when creating the NX server.  Default 2048
 

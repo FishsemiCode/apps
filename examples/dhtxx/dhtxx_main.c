@@ -52,11 +52,7 @@
  * dhtxx_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int dhtxx_main(int argc, char *argv[])
-#endif
 {
   struct dhtxx_sensor_data_s data;
   int fd;
@@ -78,7 +74,7 @@ int dhtxx_main(int argc, char *argv[])
       else
         {
           printf("Read successful.\n");
-          printf("Humidity = %2.2f %%, temperature = %2.2f C\n", 
+          printf("Humidity = %2.2f %%, temperature = %2.2f C\n",
                   data.hum, data.temp);
         }
 

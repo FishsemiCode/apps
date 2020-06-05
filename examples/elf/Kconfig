@@ -4,7 +4,7 @@
 #
 
 config EXAMPLES_ELF
-	bool "ELF Loader Example"
+	tristate "ELF Loader Example"
 	default n
 	select LIBC_EXECFUNCS
 	depends on ELF
@@ -29,7 +29,7 @@ config EXAMPLES_ELF_ROMFS
 config EXAMPLES_ELF_CROMFS
 	bool "CROMFS"
 	depends on FS_CROMFS && BUILD_FLAT
-        ---help---
+	---help---
 		Automatically generates and mounts an internal CROMFS file
 		system
 
@@ -94,17 +94,6 @@ config EXAMPLES_ELF_DEVPATH
 		file system containing the ELF executables to be tested.  Default:
 		"/dev/ram0" for ROMFS, "/dev/mmcsd0" for the external file system.
 
-config EXAMPLES_ELF_NOSTRIP
-	bool "Do not strip debug symbols"
-	default n
-	depends on DEBUG_SYMBOLS
-	---help---
-		By default, if debug symbols are enabled (via CONFIG_DEBUG_SYMBOLS), then the
-		ELF executables will also retain debug symbols in the resulting ELF binaries.
-		Select this option if you do not want that behavior, this option will permit
-		debug symbols in the base code but will strip debug symbols out of the ELF
-		binaries for a smaller ROM file system image.
-
 config EXAMPLES_ELF_SYSCALL
 	bool "Link with SYSCALL library"
 	default n
@@ -151,4 +140,3 @@ config EXAMPLES_ELF_UCLIBCXX
 		example will compile the demos using it.
 
 endif
-

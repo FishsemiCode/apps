@@ -738,7 +738,7 @@ static int zmr_filedata(FAR struct zm_state_s *pzm)
 
           /* Send the cancel string */
 
-          (void)zm_remwrite(pzm->remfd, g_canistr, CANISTR_SIZE);
+          zm_remwrite(pzm->remfd, g_canistr, CANISTR_SIZE);
 
           /* Enter PSTATE_DATA */
 
@@ -782,7 +782,7 @@ static int zmr_filedata(FAR struct zm_state_s *pzm)
       pzm->state     = ZMR_FINISH;
       pzm->pstate    = PSTATE_IDLE;
       pzm->psubstate = PIDLE_ZPAD;
-      (void)zmr_fileerror(pzmr, ZFERR, (uint32_t)errorcode);
+      zmr_fileerror(pzmr, ZFERR, (uint32_t)errorcode);
       return -errorcode;
     }
 
@@ -1135,7 +1135,7 @@ static int zmr_parsefilename(FAR struct zmr_state_s *pzmr,
 
   DEBUGASSERT(pzmr && !pzmr->filename);
 
-  /* Don't allow absolute pathes */
+  /* Don't allow absolute paths */
 
   if (*namptr == '/')
     {
@@ -1697,9 +1697,9 @@ int zmr_release(ZMRHANDLE handle)
 
   /* Release the timer resources */
 
-  (void)zm_timerrelease(&pzmr->cmn);
+  zm_timerrelease(&pzmr->cmn);
 
-  /* Clean up any resouces that may be held from the last file transfer */
+  /* Clean up any resources that may be held from the last file transfer */
 
   zmr_filecleanup(pzmr);
 

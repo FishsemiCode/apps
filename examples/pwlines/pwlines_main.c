@@ -57,10 +57,6 @@
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
 
-#ifdef CONFIG_VNCSERVER
-#  include <nuttx/video/vnc.h>
-#endif
-
 #include <nuttx/nx/nx.h>
 #include <nuttx/nx/nxtk.h>
 #include <nuttx/nx/nxbe.h>
@@ -111,15 +107,21 @@ static bool pwlines_server_initialize(FAR struct pwlines_state_s *st)
 #ifdef CONFIG_VNCSERVER
       /* Setup the VNC server to support keyboard/mouse inputs */
 
-      ret = vnc_default_fbinitialize(0, st->hnx);
-      if (ret < 0)
-        {
-          printf("pwlines_server_initialize: ERROR: "
-                 "vnc_default_fbinitialize failed: %d\n",
-                 ret);
-          nx_disconnect(st->hnx);
-          return false;
-        }
+       struct boardioc_vncstart_s vnc =
+       {
+         0, st->hnx
+       };
+
+       ret = boardctl(BOARDIOC_VNC_START, (uintptr_t)&vnc);
+       if (ret < 0)
+         {
+           printf("pwlines_server_initialize: ERROR: "
+                  "boardctl(BOARDIOC_VNC_START) failed: %d\n",
+                  ret);
+
+           nx_disconnect(st->hnx);
+           return false;
+         }
 #endif
     }
   else
@@ -149,10 +151,10 @@ static bool pwlines_listener_initialize(FAR struct pwlines_state_s *st)
    * smoothly.
    */
 
-  (void)pthread_attr_init(&attr);
+  pthread_attr_init(&attr);
   param.sched_priority = CONFIG_EXAMPLES_PWLINES_LISTENER_PRIO;
-  (void)pthread_attr_setschedparam(&attr, &param);
-  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_PWLINES_LISTENER_STACKSIZE);
+  pthread_attr_setschedparam(&attr, &param);
+  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_PWLINES_LISTENER_STACKSIZE);
 
   ret = pthread_create(&thread, &attr, pwlines_listener, st);
   if (ret != 0)
@@ -171,7 +173,7 @@ static bool pwlines_listener_initialize(FAR struct pwlines_state_s *st)
        * are connected.
        */
 
-      (void)sem_wait(&st->semevent);
+      sem_wait(&st->semevent);
     }
 
   return true;
@@ -254,6 +256,7 @@ static bool pwlines_configure_window(FAR struct pwlines_state_s *st, int wndx,
    * a command is sent to server which responds with an event.  So we need
    * to be synchronized at this point or the following fill will fail because
    * it depends on current knowlede of the size and position.
+   * REVISIT: Use nx_synch()!
    */
 
   rect.pt1.x = 0;
@@ -305,11 +308,7 @@ errout_with_hwnd:
  * Name: pwlines_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int pwlines_main(int argc, char *argv[])
-#endif
 {
   struct pwlines_state_s wstate;
   struct nxgl_size_s size;
@@ -385,7 +384,7 @@ int pwlines_main(int argc, char *argv[])
 
   while (!wstate.haveres)
     {
-      (void)sem_wait(&wstate.semevent);
+      sem_wait(&wstate.semevent);
     }
 
   printf("pwlines_main: Screen resolution (%d,%d)\n",

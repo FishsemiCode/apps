@@ -129,11 +129,7 @@ static void netpkt_usage(void)
  * Name: netpkt_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int netpkt_main(int argc, char **argv)
-#endif
 {
   int sd;
   int i;
@@ -212,7 +208,7 @@ int netpkt_main(int argc, char **argv)
             {
               if (verbose)
                 {
-                  printf("transmited %d octets\n", txc);
+                  printf("transmitted %d octets\n", txc);
                   print_buf(buf, txc);
                 }
             }

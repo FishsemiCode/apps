@@ -37,17 +37,13 @@
 
 # FreeModBus demo built-in application info
 
-APPNAME = modbus
+PROGNAME = modbus
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_MODBUS)
 
 # FreeModBus demo
 
-ASRCS =
-CSRCS =
 MAINSRC = modbus_main.c
-
-CONFIG_XYZ_PROGNAME ?= modbus$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
 include $(APPDIR)/Application.mk

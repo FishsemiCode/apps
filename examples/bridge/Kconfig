@@ -41,7 +41,7 @@ config EXAMPLES_BRIDGE_NET1_IOBUFIZE
 	---help---
 		Size of the UDP send/receive I/O buffer
 
-if !NSH_BUILTIN_APPS
+if !NSH_NETINIT
 
 config EXAMPLES_BRIDGE_NET1_DHCPC
 	bool "DHCP Client"
@@ -79,7 +79,7 @@ config EXAMPLES_BRIDGE_NET1_NETMASK
 	hex "Network Mask"
 	default 0xffffff00
 
-endif # !NSH_BUILTIN_APPS
+endif # !NSH_NETINIT
 
 config EXAMPLES_BRIDGE_NET1_IPHOST
 	hex "Host IP address"
@@ -95,7 +95,7 @@ config EXAMPLES_BRIDGE_NET1_HOSTPORT
 
 config EXAMPLES_BRIDGE_NET1_STACKSIZE
 	int "Network 1 daemon stacksize"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_BRIDGE_NET1_PRIORITY
 	int "Network 1 daemon task priority"
@@ -123,7 +123,7 @@ config EXAMPLES_BRIDGE_NET2_IOBUFIZE
 	---help---
 		Size of the UDP send/receive I/O buffer
 
-if !NSH_BUILTIN_APPS
+if !NSH_NETINIT
 
 config EXAMPLES_BRIDGE_NET2_DHCPC
 	bool "DHCP Client"
@@ -161,7 +161,7 @@ config EXAMPLES_BRIDGE_NET2_NETMASK
 	hex "Network Mask"
 	default 0xffffff00
 
-endif # !NSH_BUILTIN_APPS
+endif # !NSH_NETINIT
 
 config EXAMPLES_BRIDGE_NET2_IPHOST
 	hex "Host IP address"
@@ -177,7 +177,7 @@ config EXAMPLES_BRIDGE_NET2_HOSTPORT
 
 config EXAMPLES_BRIDGE_NET2_STACKSIZE
 	int "Network 2 daemon stacksize"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_BRIDGE_NET2_PRIORITY
 	int "Network 2 daemon task priority"

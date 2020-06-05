@@ -124,11 +124,7 @@ static void get_blocksize(int fd, FAR struct media_info_s *info)
  * media_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int media_main(int argc, FAR char *argv[])
-#endif
 {
   FAR uint8_t *txbuffer;
   FAR uint8_t *rxbuffer;
@@ -328,7 +324,7 @@ int media_main(int argc, FAR char *argv[])
       info.nblocks = blockno;
     }
 
-  /* Seek to the beginnin of the file */
+  /* Seek to the beginning of the file */
 
   seekpos = lseek(fd, 0, SEEK_SET);
   if (seekpos == (off_t)-1)

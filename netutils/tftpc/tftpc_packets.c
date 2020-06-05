@@ -208,7 +208,7 @@ int tftp_parseerrpacket(const uint8_t *buffer)
 
   if (opcode == TFTP_ERR)
     {
-      ninfo("ERR message: %s (%d)\n", errmsg, errcode);
+      nwarn("WARNING: ERR message: %s (%d)\n", errmsg, errcode);
       return OK;
     }
 
@@ -321,4 +321,3 @@ ssize_t tftp_sendto(int sd, const void *buf, size_t len, struct sockaddr_in *to)
 }
 
 #endif /* CONFIG_NET && CONFIG_NET_UDP */
-

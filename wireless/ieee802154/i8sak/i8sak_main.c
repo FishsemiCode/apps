@@ -722,7 +722,7 @@ static int i8sak_setup(FAR struct i8sak_s *i8sak, FAR const char *ifname)
  * Name : i8sak_daemon
  *
  * Description :
- *   Runs command in seperate task
+ *   Runs command in separate task
  ****************************************************************************/
 
 static int i8sak_daemon(int argc, FAR char *argv[])
@@ -835,11 +835,7 @@ static int i8sak_showusage(FAR const char *progname, int exitcode)
  * i8_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int i8sak_main(int argc, char *argv[])
-#endif
 {
   FAR const struct i8sak_command_s *i8sakcmd;
   int argind;
@@ -894,6 +890,14 @@ int i8sak_main(int argc, char *argv[])
   if (!g_activei8sak_set)
     {
       fprintf(stderr, "ERROR: Must include ifname the first time you run\n");
+      i8sak_showusage(argv[0], EXIT_FAILURE);
+    }
+
+  /* Check to make sure the user supplied a command */
+
+  if (argc <= argind)
+    {
+      fprintf(stderr, "ERROR: Must include a command\n");
       i8sak_showusage(argv[0], EXIT_FAILURE);
     }
 

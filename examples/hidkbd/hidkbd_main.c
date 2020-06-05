@@ -196,11 +196,7 @@ static void hidkbd_decode(FAR char *buffer, ssize_t nbytes)
  * Name: hidkbd_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int hidkbd_main(int argc, char *argv[])
-#endif
 {
   char buffer[256];
   ssize_t nbytes;
@@ -246,7 +242,7 @@ int hidkbd_main(int argc, char *argv[])
 #ifdef CONFIG_EXAMPLES_HIDKBD_ENCODED
               hidkbd_decode(buffer, nbytes);
 #else
-              (void)write(1, buffer, nbytes);
+              write(1, buffer, nbytes);
 #endif
             }
         }

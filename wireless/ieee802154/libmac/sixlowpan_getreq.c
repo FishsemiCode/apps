@@ -188,6 +188,19 @@ int sixlowpan_getdevmode(int sock, FAR const char *ifname,
   return ret;
 }
 
+int sixlowpan_getpromisc(int sock, FAR const char *ifname, FAR bool *promisc)
+{
+  struct ieee802154_get_req_s req;
+  int ret;
+
+  req.attr = IEEE802154_ATTR_MAC_PROMISCUOUS_MODE;
+  ret = sixlowpan_get_req(sock, ifname, &req);
+
+  *promisc = req.attrval.mac.promisc_mode;
+
+  return ret;
+}
+
 int sixlowpan_gettxpwr(int sock, FAR const char *ifname, FAR int32_t *txpwr)
 {
   struct ieee802154_get_req_s req;
@@ -197,6 +210,32 @@ int sixlowpan_gettxpwr(int sock, FAR const char *ifname, FAR int32_t *txpwr)
   ret = sixlowpan_get_req(sock, ifname, &req);
 
   *txpwr = req.attrval.phy.txpwr;
+
+  return ret;
+}
+
+int sixlowpan_getmaxretries(int sock, FAR const char *ifname, FAR uint8_t *retries)
+{
+  struct ieee802154_get_req_s req;
+  int ret;
+
+  req.attr = IEEE802154_ATTR_MAC_MAX_FRAME_RETRIES;
+  ret = sixlowpan_get_req(sock, ifname, &req);
+
+  *retries = req.attrval.mac.max_retries;
+
+  return ret;
+}
+
+int sixlowpan_getfcslen(int sock, FAR const char *ifname, FAR uint8_t *fcslen)
+{
+  struct ieee802154_get_req_s req;
+  int ret;
+
+  req.attr = IEEE802154_ATTR_PHY_FCS_LEN;
+  ret = sixlowpan_get_req(sock, ifname, &req);
+
+  *fcslen = req.attrval.phy.fcslen;
 
   return ret;
 }

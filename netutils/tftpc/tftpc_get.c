@@ -87,7 +87,7 @@ static inline int tftp_parsedatapacket(FAR const uint8_t *packet,
 #ifdef CONFIG_DEBUG_NET_WARN
   else if (*opcode == TFTP_ERR)
     {
-      (void)tftp_parseerrpacket(packet);
+      tftp_parseerrpacket(packet);
     }
 #endif
 
@@ -138,7 +138,7 @@ int tftpget_cb(FAR const char *remote, in_addr_t addr, bool binary,
       return result;
     }
 
-  /* Initialize a UDP socket and setup the server addresss */
+  /* Initialize a UDP socket and setup the server address */
 
   sd = tftp_sockinit(&server, addr);
   if (sd < 0)
@@ -304,7 +304,7 @@ errout:
 static ssize_t tftp_write(FAR void *ctx, uint32_t offset, FAR uint8_t *buf,
                           size_t len)
 {
-  int fd = (int)ctx;
+  int fd = (intptr_t)ctx;
   size_t left = len;
   ssize_t nbyteswritten;
 
@@ -365,7 +365,8 @@ int tftpget(FAR const char *remote, FAR const char *local, in_addr_t addr,
       goto errout;
     }
 
-  result = tftpget_cb(remote, addr, binary, tftp_write, (void*)fd);
+  result = tftpget_cb(remote, addr, binary, tftp_write,
+                      (FAR void *)(intptr_t)fd);
 
   close(fd);
 

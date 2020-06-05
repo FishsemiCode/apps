@@ -16,9 +16,8 @@ if EXAMPLES_PTYTEST
 config EXAMPLES_PTYTEST_PROGNAME
 	string "Program name"
 	default "pts"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_PTYTEST_POLL
@@ -35,14 +34,10 @@ config EXAMPLES_PTYTEST_PRIORITY
 
 config EXAMPLES_PTYTEST_STACKSIZE
 	int "PTYTest stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_PTYTEST_DAEMONPRIO
 	int "PTY_Test daemon task priority"
 	default 100
-
-config EXAMPLES_PTYTEST_STACKSIZE
-	int "PTY_Test daemon stack size"
-	default 2048
 
 endif

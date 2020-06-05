@@ -69,13 +69,7 @@ static int server_child(int argc, char *argv[])
  * nettest_main
  ****************************************************************************/
 
-#if defined(BUILD_MODULE)
 int main(int argc, FAR char *argv[])
-#elif defined(CONFIG_EXAMPLES_NETTEST_TARGET2)
-int nettest1_main(int argc, char *argv[])
-#else
-int nettest_main(int argc, char *argv[])
-#endif
 {
 #ifdef CONFIG_EXAMPLES_NETTEST_LOOPBACK
   pid_t child;
@@ -123,7 +117,7 @@ int nettest_main(int argc, char *argv[])
 
 #if defined(CONFIG_EXAMPLES_NETTEST_LOOPBACK) && defined(CONFIG_SCHED_WAITPID)
   printf("main: Waiting for the server to exit\n");
-  (void)waitpid(child, &statloc, 0);
+  waitpid(child, &statloc, 0);
 #endif
 
   return EXIT_SUCCESS;

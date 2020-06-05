@@ -31,7 +31,7 @@ config EXAMPLES_SOTEST_BUILTINFS
 		card, for testing on the target.
 
 		NOTE: This option can only be used in the FLAT build mode because
-		it makes an illegal OS call to ramdisk_register().
+		it makes an illegal OS call to romdisk_register().
 
 if EXAMPLES_SOTEST_BUILTINFS
 
@@ -59,7 +59,7 @@ config EXAMPLES_SOTEST_BINDIR
 	string "Path to Test Shared Libraries"
 	default "/mnt/sdcard"
 	---help---
-		The path to the directoy on the mounted volume where the test shared
+		The path to the directory on the mounted volume where the test shared
 		libraries can found at runtime.
 
 endif # !EXAMPLES_SOTEST_BUILTINFS
@@ -67,7 +67,7 @@ endif # !EXAMPLES_SOTEST_BUILTINFS
 config EXAMPLES_SOTEST_LIBC
 	bool "Link with LIBC"
 	default n
-	depends on !BUILD_LOADABLE && EXPERIMENTAL
+	depends on EXPERIMENTAL
 	---help---
 		Link with the C library (and also math library if it was built).
 		By default, all undefined symbols must be provided via a symbol
@@ -86,6 +86,6 @@ config EXAMPLES_SOTEST_LIBC
 config EXAMPLES_SOTEST_LIBGCC
 	bool "Link with LIBGCC"
 	default n
-	depends on !BUILD_LOADABLE && EXPERIMENTAL
+	depends on EXPERIMENTAL
 
 endif

@@ -33,25 +33,15 @@
 #
 ############################################################################
 
--include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
 
 # NuttShell (NSH) Example
 
-ASRCS =
-CSRCS =
 MAINSRC = nsh_main.c
 
-CONFIG_SYSTEM_NSH_PROGNAME ?= nsh$(EXEEXT)
 PROGNAME = $(CONFIG_SYSTEM_NSH_PROGNAME)
-
-ifeq ($(CONFIG_SYSTEM_NSH),m)
-APPNAME = $(CONFIG_SYSTEM_NSH_PROGNAME)
 PRIORITY = $(CONFIG_SYSTEM_NSH_PRIORITY)
 STACKSIZE = $(CONFIG_SYSTEM_NSH_STACKSIZE)
-endif
-
-MODULE = CONFIG_SYSTEM_NSH
+MODULE = $(CONFIG_SYSTEM_NSH)
 
 include $(APPDIR)/Application.mk

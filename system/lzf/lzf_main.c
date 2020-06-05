@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/exmaples/lzf/lzf_main.c
+ * apps/examples/lzf/lzf_main.c
  *
  *   Copyright (c) 2006 Stefan Traby <stefan@hello-penguin.com>
  *
@@ -58,7 +58,7 @@
  * Private Data
  ****************************************************************************/
 
-#ifndef CONFIG_BUILD_LOADABLE
+#if CONFIG_SYSTEM_LZF != CONFIG_m
 static sem_t g_exclsem = SEM_INITIALIZER(1);
 #endif
 
@@ -78,11 +78,11 @@ static uint8_t g_buf2[MAX_BLOCKSIZE + LZF_MAX_HDR_SIZE + 16];
  * Private Functions
  ****************************************************************************/
 
-#ifndef CONFIG_BUILD_LOADABLE
+#if CONFIG_SYSTEM_LZF != 2
 static void lzf_exit(int exitcode) noreturn_function;
 static void lzf_exit(int exitcode)
 {
-  (void)sem_post(&g_exclsem);
+  sem_post(&g_exclsem);
   exit(exitcode);
 }
 #else
@@ -433,17 +433,13 @@ static int run_file(FAR const char *fname)
  * lzf_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int lzf_main(int argc, FAR char *argv[])
-#endif
 {
   FAR char *p = argv[0];
   int optc;
   int ret = 0;
 
-#ifndef CONFIG_BUILD_LOADABLE
+#if CONFIG_SYSTEM_LZF != CONFIG_m
   /* Get exclusive access to the global variables.  Global variables are
    * used because the hash table and buffers are too large to allocate on
    * the embedded stack.  But the use of global variables has the downside

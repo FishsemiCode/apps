@@ -69,7 +69,6 @@ $(TOPDIR)$(DELIM).config:
 
 $(PLATFORMDIR): $(TOPDIR)$(DELIM).config
 	@echo "LN: platform$(DELIM)board to $(LINKDIR)"
-	$(Q) $(DIRUNLINK) $(PLATFORMDIR)
 	$(Q) $(DIRLINK) $(LINKDIR) $(PLATFORMDIR)
 
 dirlinks: $(PLATFORMDIR)

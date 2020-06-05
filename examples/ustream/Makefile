@@ -39,12 +39,9 @@
 
 MAINSRC = ustream_client.c ustream_server.c
 
-PROGNAME = client$(EXEEXT) server$(EXEEXT)
-APPNAME = client server
-
+PROGNAME = client server
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
-
-MODULE = CONFIG_EXAMPLES_USTREAM
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_USTREAM)
 
 include $(APPDIR)/Application.mk

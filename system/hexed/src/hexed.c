@@ -335,7 +335,7 @@ int runargs(void)
 
   if (quit != CMD_QUIT)
     {
-      /* All other commands require a filename arguement */
+      /* All other commands require a filename argument */
 
       if (g_hexfile == NULL)
         {
@@ -371,11 +371,7 @@ int runargs(void)
 
 /* hexed - Hexadecimal File Editor */
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int hexed_main(int argc, char *argv[])
-#endif
 {
   struct cmdargs_s args;
 

@@ -15,10 +15,9 @@ if EXAMPLES_NXLINES
 
 config EXAMPLES_NXLINES_PROGNAME
 	string "NX lines program name"
-	default "nxhello"
-	depends on BUILD_LOADABLE
+	default "nxlines"
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_NXLINES_PRIORITY
@@ -27,7 +26,7 @@ config EXAMPLES_NXLINES_PRIORITY
 
 config EXAMPLES_NXLINES_STACKSIZE
 	int "NX lines stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_NXLINES_DEFAULT_COLORS
 	bool "Use default colors"
@@ -90,7 +89,7 @@ comment "NX Server Options"
 
 config EXAMPLES_NXLINES_LISTENER_STACKSIZE
 	int "NX Server/Listener Stack Size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 	---help---
 		The stacksize to use when creating the NX server.  Default 2048
 

@@ -39,7 +39,7 @@
 
 # Set up build configuration and environment
 
-WD := ${shell pwd | sed -e 's/ /\\ /g'}
+WD := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
 
 CONFIG_TESTING_UNITY_URL ?= "https://github.com/ThrowTheSwitch/Unity/archive"
 CONFIG_TESTING_UNITY_VERSION ?= "2.4.3"
@@ -52,7 +52,7 @@ UNITY_UNPACKNAME = Unity-$(UNITY_VERSION)
 UNPACK ?= tar -zxf
 
 UNITY_UNPACKDIR =  $(WD)/$(UNITY_UNPACKNAME)
-UNITY_SRCDIR = $(UNITY_UNPACKDIR)$(DELIM)src
+UNITY_SRCDIR = $(UNITY_UNPACKNAME)$(DELIM)src
 
 APPS_INCDIR = $(APPDIR)$(DELIM)include$(DELIM)testing
 

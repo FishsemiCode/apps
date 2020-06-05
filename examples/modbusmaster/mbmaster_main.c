@@ -169,11 +169,11 @@ static inline void mbmaster_deinitialize(void)
 {
   /* Disable modbus stack */
 
-  (void)eMBMasterDisable();
+  eMBMasterDisable();
 
   /* Release hardware resources */
 
-  (void)eMBMasterClose();
+  eMBMasterClose();
 }
 
 /****************************************************************************
@@ -261,11 +261,7 @@ eMBErrorCode eMBMasterRegHoldingCB(FAR uint8_t *buffer,
  * Name: main/mbmaster_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
 int main(int argc, FAR char *argv[])
-#else
-int mbmaster_main(int argc, FAR char *argv[])
-#endif
 {
   eMBMasterReqErrCode mberr;
   int reqcounter = 0;

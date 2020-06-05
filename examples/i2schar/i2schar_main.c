@@ -99,7 +99,6 @@ static void i2schar_devpath(FAR struct i2schar_state_s *i2schar,
  * Name: i2schar_help
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static void i2schar_help(FAR struct i2schar_state_s *i2schar)
 {
   printf("Usage: i2schar [OPTIONS]\n");
@@ -121,13 +120,11 @@ static void i2schar_help(FAR struct i2schar_state_s *i2schar)
 #endif
   printf("  [-h] shows this message and exits\n");
 }
-#endif
 
 /****************************************************************************
  * Name: arg_string
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static int arg_string(FAR char **arg, FAR char **value)
 {
   FAR char *ptr = *arg;
@@ -143,13 +140,11 @@ static int arg_string(FAR char **arg, FAR char **value)
       return 1;
     }
 }
-#endif
 
 /****************************************************************************
  * Name: arg_decimal
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static int arg_decimal(FAR char **arg, FAR long *value)
 {
   FAR char *string;
@@ -159,13 +154,11 @@ static int arg_decimal(FAR char **arg, FAR long *value)
   *value = strtol(string, NULL, 10);
   return ret;
 }
-#endif
 
 /****************************************************************************
  * Name: parse_args
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static void parse_args(FAR struct i2schar_state_s *i2schar, int argc, FAR char **argv)
 {
   FAR char *ptr;
@@ -236,11 +229,7 @@ static void parse_args(FAR struct i2schar_state_s *i2schar, int argc, FAR char *
  * Name: i2schar_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int i2schar_main(int argc, char *argv[])
-#endif
 {
   pthread_attr_t attr;
   pthread_addr_t result;
@@ -288,9 +277,7 @@ int i2schar_main(int argc, char *argv[])
 
   /* Parse the command line */
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
   parse_args(&g_i2schar, argc, argv);
-#endif
 
   sched_lock();
 #ifdef CONFIG_EXAMPLES_I2SCHAR_RX
@@ -306,14 +293,14 @@ int i2schar_main(int argc, char *argv[])
    * is in place for each transmission.
     */
 
-  (void)pthread_attr_getschedparam(&attr, &param);
+  pthread_attr_getschedparam(&attr, &param);
   param.sched_priority++;
-  (void)pthread_attr_setschedparam(&attr, &param);
+  pthread_attr_setschedparam(&attr, &param);
 #endif
 
   /* Set the receiver stack size */
 
-  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_RXSTACKSIZE);
+  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_RXSTACKSIZE);
 
   /* Start the receiver */
 
@@ -336,7 +323,7 @@ int i2schar_main(int argc, char *argv[])
 
   /* Set the transmitter stack size */
 
-  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_TXSTACKSIZE);
+  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_TXSTACKSIZE);
 
   /* Start the transmitter */
 
@@ -347,7 +334,7 @@ int i2schar_main(int argc, char *argv[])
       printf("i2schar_main: ERROR: failed to Start transmitter thread: %d\n", ret);
 #ifdef CONFIG_EXAMPLES_I2SCHAR_RX
       printf("i2schar_main: Waiting for the receiver thread\n");
-      (void)pthread_join(receiver, &result);
+      pthread_join(receiver, &result);
 #endif
       return EXIT_FAILURE;
     }

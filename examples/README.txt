@@ -5,8 +5,9 @@ examples
 
     The examples directory contains several sample applications that
     can be linked with NuttX.  The specific example is selected in the
-    configs/<board-name>/defconfig file via the CONFIG_EXAMPLES_xyz
-    setting where xyz is the name of the example. For example,
+    boards/<arch-name>/<chip-name>/<board-name>/configs/<config>/defconfig
+    file via the CONFIG_EXAMPLES_xyz setting where xyz is the name of the
+    example.  For example,
 
       CONFIG_EXAMPLES_HELLO=y
 
@@ -40,9 +41,7 @@ examples/adc
   Specific configuration options for this example include:
 
     CONFIG_EXAMPLES_ADC_DEVPATH - The default path to the ADC device. Default: /dev/adc0
-    CONFIG_EXAMPLES_ADC_NSAMPLES - If CONFIG_NSH_BUILTIN_APPS
-      is defined, then the number of samples is provided on the command line
-      and this value is ignored.  Otherwise, this number of samples is
+    CONFIG_EXAMPLES_ADC_NSAMPLES - This number of samples is
       collected and the program terminates.  Default:  Samples are collected
       indefinitely.
     CONFIG_EXAMPLES_ADC_GROUPSIZE - The number of samples to read at once.
@@ -56,7 +55,6 @@ examples/ajoystick
 
   Configuration Pre-requisites:
 
-    CONFIG_DISABLE_SIGNALS - Must *NOT* be selected
     CONFIG_AJOYSTICK - The analog joystick driver
 
   Example Configuration:
@@ -79,8 +77,8 @@ examples/alarm
   Configuration:
 
     CONFIG_EXAMPLES_ALARM - Enable the RTC driver alarm test
-    CONFIG_EXAMPLES_ALARM_PROGNAME - If CONFIG_BUILD_LOADABLE=y, then this is
-      the name of the program that will be use when the NSH ELF program is
+    CONFIG_EXAMPLES_ALARM_PROGNAME - this isthe name of the
+      program that will be used when the NSH ELF program is
       installed.
     CONFIG_EXAMPLES_ALARM_PRIORITY - Alarm daemon priority
     CONFIG_EXAMPLES_ALARM_STACKSIZE - Alarm daemon stack size
@@ -174,11 +172,8 @@ examples/can
   Specific configuration options for this example include:
 
     CONFIG_EXAMPLES_CAN_DEVPATH - The path to the CAN device. Default: /dev/can0
-    CONFIG_EXAMPLES_CAN_NMSGS - If CONFIG_NSH_BUILTIN_APPS
-      is defined, then the number of loops is provided on the command line
-      and this value is ignored.  Otherwise, this number of CAN message is
-      collected and the program terminates.  Default:  If built as an NSH
-      built-in, the default is 32.  Otherwise messages are sent and received
+    CONFIG_EXAMPLES_CAN_NMSGS - This number of CAN message is collected
+      and the program terminates.  Default: messages are sent and received
       indefinitely.
 
   The default behavior assumes loopback mode.  Messages are sent, then read
@@ -236,7 +231,7 @@ examples/dac
 examples/dhcpd
 ^^^^^^^^^^^^^^
 
-  This examples builds a tiny DCHP server for the target system.
+  This examples builds a tiny DHCP server for the target system.
 
   NOTE: For test purposes, this example can be built as a
   host-based DHCPD server.  This can be built as follows:
@@ -255,7 +250,7 @@ examples/dhcpd
 
     CONFIG_EXAMPLES_DHCPD_NOMAC     - (May be defined to use software assigned MAC)
     CONFIG_EXAMPLES_DHCPD_IPADDR    - Target IP address
-    CONFIG_EXAMPLES_DHCPD_DRIPADDR  - Default router IP addess
+    CONFIG_EXAMPLES_DHCPD_DRIPADDR  - Default router IP address
     CONFIG_EXAMPLES_DHCPD_NETMASK   - Network mask
 
   See also CONFIG_NETUTILS_DHCPD_* settings described elsewhere
@@ -292,7 +287,6 @@ examples/djoystick
 
   Configuration Pre-requisites:
 
-    CONFIG_DISABLE_SIGNALS - Must *NOT* be selected
     CONFIG_DJOYSTICK - The discrete joystick driver
 
   Example Configuration:
@@ -306,7 +300,7 @@ examples/djoystick
 examples/dsptest
 ^^^^^^^^^^^^^^^^^^
 
-  This is a Unit Test for the Nuttx DSP library. It use Unity testing framwork.
+  This is a Unit Test for the Nuttx DSP library. It use Unity testing framework.
 
   Dependencies:
 
@@ -346,7 +340,7 @@ examples/elf
 
      Similarly for C++ flags which must be provided in CXXELFFLAGS.
 
-  2. Your top-level nuttx/Make.defs file must also include an approproate definition,
+  2. Your top-level nuttx/Make.defs file must also include an appropriate definition,
      LDELFFLAGS, to generate a relocatable ELF object.  With GNU LD, this should
      include '-r' and '-e main' (or _main on some platforms).
 
@@ -397,9 +391,7 @@ examples/flash_test
   Dependencies:
 
     * CONFIG_MTD_SMART=y - SMART block driver support
-    * CONFIG_NSH_BUILTIN_APPS=y - This example can only be built as an NSH
-      command
-    * CONFIG_BUILD_PROTECTED=n and CONFIG_BUILD_LOADABLE=n- This test uses
+    * CONFIG_BUILD_PROTECTED=n and CONFIG_BUILD_KERNEL=n - This test uses
       internal OS interfaces and so is not available in the NUTTX kernel
       builds
 
@@ -413,18 +405,16 @@ examples/ft80x
 
   This examples has ports of several FTDI demos for the FTDI/BridgeTek FT80x
   GUI chip.  As an example configuration, see
-  nuttx/configs/viewtool-stm32f107/ft80x/defconfig.
+  nuttx/boards/arm/stm32/viewtool-stm32f107/configs/ft80x/defconfig.
 
 examples/ftpc
 ^^^^^^^^^^^^^
 
   This is a simple FTP client shell used to exercise the capabilities
-  of the FTPC library (apps/netutils/ftpc).  This example is configured
-  to that it will only work as a "built-in" program that can be run from
-  NSH when CONFIG_NSH_BUILTIN_APPS is defined.
+  of the FTPC library (apps/netutils/ftpc).
 
   From NSH, the startup command sequence is as follows.  This is only
-  an example, your configration could have different mass storage devices,
+  an example, your configuration could have different mass storage devices,
   mount paths, and FTP directories:
 
     nsh> mount -t vfat /dev/mmcsd0 /tmp # Mount the SD card at /tmp
@@ -452,7 +442,7 @@ examples/ftpc
   behaviors are desire-able if Telnet is used.
 
   You may also want to define the following in your configuration file.
-  Otherwise, you will have not feeback about what is going on:
+  Otherwise, you will have not feedback about what is going on:
 
     CONFIG_DEBUG_FEATURES=y
     CONFIG_DEBUG_INFO=y
@@ -475,7 +465,7 @@ examples/ftpd
      configuration if the network is configuration prior to running the
      example.
 
-  NSH always initializes the network so if CONFIG_NSH_BUILTIN_APPS is
+  NSH always initializes the network so if CONFIG_NSH_NETINIT is
   defined, so is CONFIG_EXAMPLES_FTPD_NONETINIT (se it does not explicitly
   need to be defined in that case):
 
@@ -497,9 +487,8 @@ examples/ftpd
   is required.  But here are a couple that are less obvious:
 
     CONFIG_DISABLE_PTHREAD - pthread support is required
-    CONFIG_DISABLE_POLL - poll() support is required
 
-  Other FTPD configuration options thay may be of interest:
+  Other FTPD configuration options they may be of interest:
 
     CONFIG_FTPD_VENDORID - The vendor name to use in FTP communications.
       Default: "NuttX"
@@ -569,7 +558,7 @@ examples/helloxx
   And you may have to tinker with the following to get libxx to compile
   properly:
 
-    CONFIG_CXX_NEWLONG=y or =n
+    CCONFIG_ARCH_SIZET_LONG=y or =n
 
   The argument of the 'new' operators should take a type of size_t.  But size_t
   has an unknown underlying.  In the nuttx sys/types.h header file, size_t
@@ -702,6 +691,21 @@ examples/lis2csh_reader
   A simple reader example for the LIS3DSH acceleration sensor as found on
   STM32F4Discovery rev. C
 
+examples/hts221_reader
+^^^^^^^^^^^^^^^^^^^^^^^
+
+  A simple reader example for the HTS221 humidity sensor.
+
+examples/lsm303_reader
+^^^^^^^^^^^^^^^^^^^^^^^
+
+  A simple reader example for the LSM303 acc-mag sensor.
+
+examples/lsm6dsl_reader
+^^^^^^^^^^^^^^^^^^^^^^^
+
+  A simple reader example for the LSM6DSL acc-gyro sensor.
+
 examples/media
 ^^^^^^^^^^^^^^
 
@@ -725,11 +729,6 @@ examples/media
     int ret = ftl_initialize(<N>, mtd);
     ret = bchdev_register(/dev/mtdblock<N>, <path-to-character-driver>,
                           false);
-
-examples/mm
-^^^^^^^^^^^
-
-  This is a simple test of the memory manager.
 
 examples/module
 ^^^^^^^^^^^^^^
@@ -759,7 +758,7 @@ examples/module
 
      Similarly for C++ flags which must be provided in CXXMODULEFLAGS.
 
-  2. Your top-level nuttx/Make.defs file must also include an approproate definition,
+  2. Your top-level nuttx/Make.defs file must also include an appropriate definition,
      LDMODULEFLAGS, to generate a relocatable ELF object.  With GNU LD, this should
      include '-r' and '-e <entry point>'.
 
@@ -859,7 +858,7 @@ examples/mtdpart
   * CONFIG_EXAMPLES_MTDPART_ERASESIZE - This value gives the size of one
     erase block in the MTD RAM device. This must exactly match the default
     configuration in drivers/mtd/rammtd.c!
-  * CONFIG_EXAMPLES_MTDPART_NEBLOCKS - This value gives the nubmer of erase
+  * CONFIG_EXAMPLES_MTDPART_NEBLOCKS - This value gives the number of erase
     blocks in MTD RAM device.
 
 examples/mtdrwb
@@ -883,7 +882,7 @@ examples/mtdrwb
   * CONFIG_EXAMPLES_MTDRWB_ERASESIZE - This value gives the size of one
     erase block in the MTD RAM device. This must exactly match the default
     configuration in drivers/mtd/rammtd.c!
-  * CONFIG_EXAMPLES_MTDRWB_NEBLOCKS - This value gives the nubmer of erase
+  * CONFIG_EXAMPLES_MTDRWB_NEBLOCKS - This value gives the number of erase
     blocks in MTD RAM device.
 
 examples/netpkt
@@ -903,11 +902,9 @@ examples/netloop
 
   Dependencies:
 
-    CONFIG_NSH_BUILTIN_APPS=n     - Does NOT work as an NSH built-in command
-    CONFIG_NET_LOOPBACK           - Requires local loopback supprt
+    CONFIG_NET_LOOPBACK           - Requires local loopback support
     CONFIG_NET_TCP                - Requires TCP support with the following:
     CONFIG_NET_TCPBACKLOG
-    CONFIG_NET_TCP_READAHEAD
     CONFIG_NET_TCP_WRITE_BUFFERS
     CONFIG_NET_IPv4               - Currently supports only IPv4
 
@@ -979,7 +976,6 @@ examples/nx
   if they are not as expected:
 
     CONFIG_DISABLE_MQUEUE=n
-    CONFIG_DISABLE_SIGNALS=n
     CONFIG_DISABLE_PTHREAD=n
     CONFIG_NX_BLOCKING=y
     CONFIG_LIB_BOARDCTL=y
@@ -996,7 +992,6 @@ examples/nxterm
     CONFIG_NX=y              -- NX graphics must be enabled
     CONFIG_NXTERM=y          -- The NX console driver must be built
     CONFIG_DISABLE_MQUEUE=n  -- Message queue support must be available.
-    CONFIG_DISABLE_SIGNALS=n -- Signals are needed
     CONFIG_DISABLE_PTHREAD=n -- pthreads are needed
     CONFIG_NX_BLOCKING=y     -- pthread APIs must be blocking
     CONFIG_NSH_CONSOLE=y     -- NSH must be configured to use a console.
@@ -1020,7 +1015,7 @@ examples/nxterm
       a medium grey.
     CONFIG_EXAMPLES_NXTERM_MINOR -- The NX console device minor number.
       Default is 0 corresponding to /dev/nxterm0
-    CONFIG_EXAMPLES_NXTERM_DEVNAME -- The quoated, full path to the
+    CONFIG_EXAMPLES_NXTERM_DEVNAME -- The quoted, full path to the
       NX console device corresponding to CONFIG_EXAMPLES_NXTERM_MINOR.
       Default: "/dev/nxterm0"
     CONFIG_EXAMPLES_NXTERM_PRIO - Priority of the NxTerm task.
@@ -1095,7 +1090,7 @@ examples/nximage
     How was that run-length encoded image produced?
 
     a. I used GIMP output the image as a .c file.
-    b. I added som C logic to palette-ize the RGB image in the GIMP .c file
+    b. I added some C logic to palette-ize the RGB image in the GIMP .c file
     c. Then I add some simple run-length encoding to palette-ized image.
 
     But now there is a tool that can be found in the NxWidgets package at
@@ -1146,7 +1141,7 @@ examples/nxtext
 
   This directory contains another simple test of a subset of the NX APIs
   defined in include/nuttx/nx/nx.h.  This text focuses on text displays on
-  the dispaly background combined with pop-up displays over the text.
+  the display background combined with pop-up displays over the text.
   The text display will continue to update while the pop-up is visible.
 
   NOTE:  This example will *only* work with FB drivers and with LCD
@@ -1179,7 +1174,7 @@ examples/nxtext
       reading from the display.
     CONFIG_EXAMPLES_NXTEXT_BMCACHE - The maximum number of characters that
       can be put in the background window.  Default is 128.
-    CONFIG_EXAMPLES_NXTEXT_GLCACHE - The maximum nuber of pre-rendered
+    CONFIG_EXAMPLES_NXTEXT_GLCACHE - The maximum number of pre-rendered
       fonts that can be retained for the background window.
     CONFIG_EXAMPLES_NXTEXT_STACKSIZE -- The stacksize to use when creating
       the NX server.  Default 2048
@@ -1194,7 +1189,6 @@ examples/nxtext
   error if they are not as expected:
 
     CONFIG_DISABLE_MQUEUE=n
-    CONFIG_DISABLE_SIGNALS=n
     CONFIG_DISABLE_PTHREAD=n
     CONFIG_NX_BLOCKING=y
 
@@ -1213,17 +1207,6 @@ examples/oneshot
 ^^^^^^^^^^^^^^^^
 
   Simple test of a oneshot driver.
-
-examples/pashello
-^^^^^^^^^^^^^^^^^
-
-  This is "Hello, World" implemented via the Pascal P-Code interpreter. In
-  order to use this example, you must first download and install the
-  NuttX pascal module.  After unpacking the pascal module, you can find
-  installation instructions in pascal/nuttx/README.txt.
-
-  The correct install location for the NuttX examples and build files is
-  apps/interpreters.
 
 examples/pca9635
 ^^^^^^^^^^^^^^^^
@@ -1249,22 +1232,17 @@ examples/poll
 ^^^^^^^^^^^^^
 
   A test of the poll() and select() APIs using FIFOs and, if available,
-  stdin, and a TCP/IP socket.  In order to build this test, you must the
-  following selected in your NuttX configuration file:
-
-  CONFIG_DISABLE_POLL               - NOT defined
-
-  In order to use the TCP/IP select test, you have also the following
-  additional things selected in your NuttX configuration file:
+  stdin, and a TCP/IP socket.  In order to use the TCP/IP select
+  test, you must have the following things selected in your NuttX
+  configuration file:
 
   CONFIG_NET                        - Defined for general network support
   CONFIG_NET_TCP                    - Defined for TCP/IP support
-  CONFIG_NET_TCP_READAHEAD          - Defined
   CONFIG_NET_NTCP_READAHEAD_BUFFERS - Defined to be greater than zero
 
   CONFIG_EXAMPLES_POLL_NOMAC         - (May be defined to use software assigned MAC)
   CONFIG_EXAMPLES_POLL_IPADDR        - Target IP address
-  CONFIG_EXAMPLES_POLL_DRIPADDR      - Default router IP addess
+  CONFIG_EXAMPLES_POLL_DRIPADDR      - Default router IP address
   CONFIG_EXAMPLES_POLL_NETMASK       - Network mask
 
   In order to for select to work with incoming connections, you
@@ -1343,7 +1321,7 @@ examples/posix_spawn
 
      Similarly for C++ flags which must be provided in CXXELFFLAGS.
 
-  2. Your top-level nuttx/Make.defs file must also include an approproate
+  2. Your top-level nuttx/Make.defs file must also include an appropriate
      definition, LDELFFLAGS, to generate a relocatable ELF object.  With GNU
      LD, this should include '-r' and '-e main' (or _main on some platforms).
 
@@ -1404,7 +1382,7 @@ examples/pwfb
   position.  The windows are being updated from the per-winidow
   framebuffers automatically.
 
-  This example is reminescent of Pong:  Each window travels in straight
+  This example is reminiscent of Pong:  Each window travels in straight
   line until it hits an edge, then it bounces off.  The window is also
   raised when it hits the edge (gets "focus").  This tests all
   combinations of overap.
@@ -1427,8 +1405,6 @@ examples/pwm
     CONFIG_PWM_PULSECOUNT - Enables PWM pulse count support (if the hardware
       supports it).
     CONFIG_NSH_BUILTIN_APPS - Build the PWM test as an NSH built-in function.
-      Default: Not built!  The example can only be used as an NSH built-in
-      application
 
   Specific configuration options for this example include:
 
@@ -1463,15 +1439,11 @@ examples/qencoder
 
     CONFIG_EXAMPLES_QENCODER_DEVPATH - The path to the QE device. Default:
       /dev/qe0
-    CONFIG_EXAMPLES_QENCODER_NSAMPLES - If CONFIG_NSH_BUILTIN_APPS
-      is defined, then the number of samples is provided on the command line
-      and this value is ignored.  Otherwise, this number of samples is
+    CONFIG_EXAMPLES_QENCODER_NSAMPLES - This number of samples is
       collected and the program terminates.  Default:  Samples are collected
       indefinitely.
     CONFIG_EXAMPLES_QENCODER_DELAY - This value provides the delay (in
-      milliseonds) between each sample.  If CONFIG_NSH_BUILTIN_APPS
-      is defined, then this value is the default delay if no other delay is
-      provided on the command line.  Default:  100 milliseconds
+      milliseconds) between each sample. Default:  100 milliseconds
 
 examples/random
 ^^^^^^^^^^^^^^^
@@ -1505,7 +1477,7 @@ examples/relays
   relies on internal OS interfaces that are not normally available to a
   user-space program.  As a result, this example cannot be used if a
   NuttX is built as a protected, supervisor kernel (CONFIG_BUILD_PROTECTED
-  or CONFIG_BUILD_LOADABLE).
+  or CONFIG_BUILD_KERNEL).
 
 examples/rfid_readuid
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1532,7 +1504,7 @@ examples/romfs
       The ROM disk sector size to use.  Default is 64.
 
   * CONFIG_EXAMPLES_ROMFS_MOUNTPOINT
-      The location to mount the ROM disk.  Deafault: "/usr/local/share"
+      The location to mount the ROM disk.  Default: "/usr/local/share"
 
 examples/sendmail
 ^^^^^^^^^^^^^^^^^
@@ -1548,7 +1520,7 @@ examples/sendmail
 
     CONFIG_EXAMPLES_SENDMAIL_NOMAC     - May be defined to use software assigned MAC (optional)
     CONFIG_EXAMPLES_SENDMAIL_IPADDR    - Target IP address (required)
-    CONFIG_EXAMPLES_SENDMAIL_DRIPADDR  - Default router IP addess (required)
+    CONFIG_EXAMPLES_SENDMAIL_DRIPADDR  - Default router IP address (required)
     CONFIG_EXAMPLES_SENDMAILT_NETMASK  - Network mask (required)
     CONFIG_EXAMPLES_SENDMAIL_RECIPIENT - The recipient of the email (required)
     CONFIG_EXAMPLES_SENDMAIL_SENDER    - Optional. Default: "nuttx-testing@example.com"
@@ -1564,7 +1536,7 @@ examples/sendmail
   unprotected recipients can be used.  Most will protect themselves
   from this test email because it looks like SPAM.
 
-  Applications using this example will need to enble the following
+  Applications using this example will need to enable the following
   netutils libraries in their defconfig file:
 
     CONFIG_NETUTILS_NETLIB=y
@@ -1633,7 +1605,7 @@ examples/sotest
 
      Similarly for C++ flags which must be provided in CXXMODULEFLAGS.
 
-  2. Your top-level nuttx/Make.defs file must also include an approproate definition,
+  2. Your top-level nuttx/Make.defs file must also include an appropriate definition,
      LDMODULEFLAGS, to generate a relocatable ELF object.  With GNU LD, this should
      include '-r' and '-e <entry point>'.
 
@@ -1716,7 +1688,7 @@ examples/telnetd
 ^^^^^^^^^^^^^^^^
 
   This directory contains a functional port of the tiny uIP shell.  In
-  the NuttX environment, the NuttShell (at apps/nshlib) supercedes this
+  the NuttX environment, the NuttShell (at apps/nshlib) supersedes this
   tiny shell and also supports telnetd.
 
     CONFIG_EXAMPLES_TELNETD - Enable the Telnetd example
@@ -1748,11 +1720,11 @@ examples/thttpd
 ^^^^^^^^^^^^^^^
 
   An example that builds netutils/thttpd with some simple NXFLAT
-  CGI programs.  see configs/README.txt for most THTTPD settings.
+  CGI programs.  see boards/README.txt for most THTTPD settings.
   In addition to those, this example accepts:
 
     CONFIG_EXAMPLES_THTTPD_NOMAC    - (May be defined to use software assigned MAC)
-    CONFIG_EXAMPLES_THTTPD_DRIPADDR - Default router IP addess
+    CONFIG_EXAMPLES_THTTPD_DRIPADDR - Default router IP address
     CONFIG_EXAMPLES_THTTPD_NETMASK  - Network mask
 
   Applications using this example will need to enable the following
@@ -1766,13 +1738,9 @@ examples/tiff
 
   This is a simple unit test for the TIFF creation library at apps/graphic/tiff.
   It is configured to work in the Linux user-mode simulation and has not been
-  tested in any other environment.  Since the example also depends on some
-  other logic to mount a file system, currently it will only work as an NSH
-  built-on, i.e., if the following is defined:
+  tested in any other environment.
 
-    CONFIG_NSH_BUILTIN_APPS=y
-
-  At a miniumum, to run in an embedded environment, you will probably have to
+  At a minimum, to run in an embedded environment, you will probably have to
   change the configured paths to the TIFF files defined in the example.
 
     CONFIG_EXAMPLES_TIFF_OUTFILE - Name of the resulting TIFF file.  Default is
@@ -1802,14 +1770,12 @@ examples/timer
       microseconds.  Default: 1000000
     CONFIG_EXAMPLES_TIMER_DELAY - This is the delay between timer samples in
       microseconds.  Default: 10000
-    CONFIG_EXAMPLES_TIMER_APPNAME - This is the name of the built-in
-      application:  Default:  "timer"
     CONFIG_EXAMPLES_TIMER_STACKSIZE - This is the stack size allocated when
       the timer task runs.  Default: 2048
     CONFIG_EXAMPLES_TIMER_PRIORITY - This is the priority of the timer task:
       Default: 100
     CONFIG_EXAMPLES_TIMER_PROGNAME - This is the name of the program that
-      will be use when the NSH ELF program is installed.  Default: "timer"
+      will be used when the NSH ELF program is installed.  Default: "timer"
 
 examples/touchscreen
 ^^^^^^^^^^^^^^^^^^^^
@@ -1827,9 +1793,7 @@ examples/touchscreen
     CONFIG_EXAMPLES_TOUCHSCREEN_DEVPATH - The path to the touchscreen
       device.  This must be consistent with CONFIG_EXAMPLES_TOUCHSCREEN_MINOR.
       Default: "/dev/input0"
-    CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES - If CONFIG_NSH_BUILTIN_APPS
-      is defined, then the number of samples is provided on the command line
-      and this value is ignored.  Otherwise, this number of samples is
+    CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES - This number of samples is
       collected and the program terminates.  Default:  Samples are collected
       indefinitely.
     CONFIG_EXAMPLES_TOUCHSCREEN_MOUSE - The touchscreen test can also be
@@ -1898,7 +1862,7 @@ examples/unionfs
     CONFIG_EXAMPLES_UNIONFS_RAMDEVNO_B - ROMFS file system 2 RAM disk device number
     CONFIG_EXAMPLES_UNIONFS_SECTORSIZE - ROM disk sector size.
 
-  See the README.txt file at nuttx/configs/sim/README.txt for a walk-through of
+  See the README.txt file at nuttx/boards/sim/sim/sim/README.txt for a walk-through of
   the output of this text.
 
 examples/usbserial
@@ -2021,8 +1985,7 @@ examples/watchdog
 
     CONFIG_WATCHDOG- Enables watchdog timer support support.
     CONFIG_NSH_BUILTIN_APPS - Build the watchdog time test as an NSH
-      built-in function. Default: Not built!  The example can only be used
-      as an NSH built-in application
+      built-in function.
 
   Specific configuration options for this example include:
 
@@ -2045,7 +2008,7 @@ examples/webserver
 
     CONFIG_EXAMPLES_WEBSERVER_NOMAC     - (May be defined to use software assigned MAC)
     CONFIG_EXAMPLES_WEBSERVER_IPADDR    - Target IP address
-    CONFIG_EXAMPLES_WEBSERVER_DRIPADDR  - Default router IP addess
+    CONFIG_EXAMPLES_WEBSERVER_DRIPADDR  - Default router IP address
     CONFIG_EXAMPLES_WEBSERVER_NETMASK   - Network mask
     CONFIG_EXAMPLES_WEBSERVER_DHCPC     - Select to get IP address via DHCP
 
@@ -2093,7 +2056,7 @@ examples/wget
     CONFIG_EXAMPLES_WGET_URL       - The URL of the file to get
     CONFIG_EXAMPLES_WGET_NOMAC     - (May be defined to use software assigned MAC)
     CONFIG_EXAMPLES_WGET_IPADDR    - Target IP address
-    CONFIG_EXAMPLES_WGET_DRIPADDR  - Default router IP addess
+    CONFIG_EXAMPLES_WGET_DRIPADDR  - Default router IP address
     CONFIG_EXAMPLES_WGET_NETMASK   - Network mask
 
   This example uses netutils/webclient.  Additional configuration settings apply
@@ -2144,15 +2107,15 @@ examples/xmlrpc
 
     CONFIG_EXAMPLES_XMLRPC_BUFFERSIZE - HTTP buffer size. Default 1024
     CONFIG_EXAMPLES_XMLRPC_DHCPC - Use DHCP Client.  Default n. Ignored
-      if CONFIG_NSH_BUILTIN_APPS is selected.
-    CONFIG_EXAMPLES_XMLRPC_NOMAC - Use Canned MAC Address. Defaul n. Ignored
-      if CONFIG_NSH_BUILTIN_APPS is selected.
+      if CONFIG_NSH_NETINIT is selected.
+    CONFIG_EXAMPLES_XMLRPC_NOMAC - Use Canned MAC Address. Default n. Ignored
+      if CONFIG_NSH_NETINIT is selected.
     CONFIG_EXAMPLES_XMLRPC_IPADDR - Target IP address. Default 0x0a000002.
-      Ignored if CONFIG_NSH_BUILTIN_APPS is selected.
+      Ignored if CONFIG_NSH_NETINIT is selected.
     CONFIG_EXAMPLES_XMLRPC_DRIPADDR - Default Router IP address (Gateway).
-      Default 0x0a000001. Ignored if CONFIG_NSH_BUILTIN_APPS is selected.
+      Default 0x0a000001. Ignored if CONFIG_NSH_NETINIT is selected.
     CONFIG_EXAMPLES_XMLRPC_NETMASK - Network Mask.  Default 0xffffff00
-      Ignored if CONFIG_NSH_BUILTIN_APPS is selected.
+      Ignored if CONFIG_NSH_NETINIT is selected.
 
 examples/zerocross
 ^^^^^^^^^^^^^^^^^^

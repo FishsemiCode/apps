@@ -34,6 +34,5 @@
 ############################################################################
 
 ifeq ($(CONFIG_NETUTILS_CODECS),y)
-CONFIGURED_APPS += netutils/codecs
+CONFIGURED_APPS += $(APPDIR)/netutils/codecs
 endif
-

@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#include <net/if.h>
 #include <netinet/in.h>
 #include <nuttx/net/netconfig.h>
 
@@ -77,7 +78,7 @@
 #  define IPv6_ROUTE_PATH CONFIG_NETLIB_PROCFS_MOUNTPT "/net/route/ipv6"
 #endif
 
-/* Using the following defintions, the following socket() arguments should
+/* Using the following definitions, the following socket() arguments should
  * provide a valid socket in all configurations:
  *
  *   ret = socket(NETLIB_SOCK_FAMILY, NETLIB_SOCK_TYPE, NETLIB_SOCK_PROTOCOL);
@@ -103,6 +104,8 @@
 #  define NETLIB_SOCK_FAMILY  AF_BLUETOOTH
 #elif defined(CONFIG_NET_USRSOCK)
 #  define NETLIB_SOCK_FAMILY  AF_INET
+#elif defined(CONFIG_NET_NETLINK)
+#  define NETLIB_SOCK_FAMILY  AF_NETLINK
 #else
 #  define NETLIB_SOCK_FAMILY  AF_UNSPEC
 #endif
@@ -151,6 +154,8 @@
 #  define NETLIB_SOCK_TYPE SOCK_DGRAM
 #elif NETLIB_SOCK_FAMILY == AF_BLUETOOTH
 #  define NETLIB_SOCK_TYPE SOCK_RAW
+#elif NETLIB_SOCK_FAMILY == AF_NETLINK
+#  define NETLIB_SOCK_TYPE SOCK_DGRAM
 #endif
 
 /****************************************************************************
@@ -158,11 +163,11 @@
  ****************************************************************************/
 
 #ifdef HAVE_ROUTE_PROCFS
+#ifdef CONFIG_NET_IPv4
 /* Describes one entry from the IPv4 routing table.  All addresses are in
  * host byte order!
  */
 
-#ifdef CONFIG_NET_IPv4
 struct netlib_ipv4_route_s
 {
   in_addr_t prefix;               /* Routing prefix */
@@ -171,11 +176,11 @@ struct netlib_ipv4_route_s
 };
 #endif
 
+#ifdef CONFIG_NET_IPv6
 /* Describes one entry from the IPv6 routing table.  All addresses are in
  * host byte order!
  */
 
-#ifdef CONFIG_NET_IPv6
 struct netlib_ipv6_route_s
 {
   uint16_t prefix[8];             /* Routing prefix */
@@ -184,6 +189,39 @@ struct netlib_ipv6_route_s
 };
 #endif
 #endif /* HAVE_ROUTE_PROCFS */
+
+#ifdef CONFIG_NETLINK_ROUTE
+/* Describes one device returned by netlib_get_devices() */
+
+struct netlib_device_s
+{
+#ifdef CONFIG_NETDEV_IFINDEX
+  uint8_t ifindex;                /* Interface index */
+#endif
+  char ifname[IFNAMSIZ];          /* Interface name */
+};
+#endif /* CONFIG_NETLINK_ROUTE*/
+
+#ifdef CONFIG_NETUTILS_NETLIB_GENERICURLPARSER
+struct url_s
+{
+  FAR char *scheme;
+  int       schemelen;
+  FAR char *user;
+  int       userlen;
+  FAR char *password;
+  int       passwordlen;
+  FAR char *host;
+  int       hostlen;
+  int       port;
+  FAR char *path;
+  int       pathlen;
+  FAR char *parameters;
+  int       parameterslen;
+  FAR char *bookmark;
+  int       bookmarklen;
+};
+#endif
 
 /****************************************************************************
  * Public Data
@@ -201,6 +239,13 @@ extern "C"
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
+
+#ifdef CONFIG_NETLINK_ROUTE
+/* Return a list of all devices */
+
+ssize_t netlib_get_devices(FAR struct netlib_device_s *devlist,
+                           unsigned int nentries, sa_family_t family);
+#endif
 
 /* Convert a textual representation of an IP address to a numerical representation.
  *
@@ -275,7 +320,12 @@ int netlib_ipv6adaptor(FAR const struct in6_addr *destipaddr,
 
 uint8_t netlib_ipv6netmask2prefix(FAR const uint16_t *mask);
 void netlib_prefix2ipv6netmask(uint8_t preflen, FAR struct in6_addr *netmask);
+#ifdef CONFIG_NETLINK_ROUTE
+struct neighbor_entry_s;
+ssize_t netlib_get_nbtable(FAR struct neighbor_entry_s *nbtab,
+                           unsigned int nentries);
 #endif
+#endif /* CONFIG_NET_IPv6 */
 
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
 int netlib_getessid(FAR const char *ifname, FAR char *essid, size_t idlen);
@@ -290,6 +340,11 @@ int netlib_get_arpmapping(FAR const struct sockaddr_in *inaddr,
                           FAR uint8_t *macaddr);
 int netlib_set_arpmapping(FAR const struct sockaddr_in *inaddr,
                           FAR const uint8_t *macaddr);
+#ifdef CONFIG_NETLINK_ROUTE
+struct arp_entry_s;
+ssize_t netlib_get_arptable(FAR struct arp_entry_s *arptab,
+                            unsigned int nentries);
+#endif
 #endif
 
 #ifdef HAVE_ROUTE_PROCFS
@@ -311,6 +366,12 @@ int netlib_ipv6router(FAR const struct in6_addr *destipaddr,
 #  endif
 #endif
 
+#if defined(CONFIG_NETLINK_ROUTE) && defined(CONFIG_NET_ROUTE)
+struct rtentry;  /* Forward reference */
+ssize_t netlib_get_route(FAR struct rtentry *rtelist,
+                         unsigned int nentries, sa_family_t family);
+#endif
+
 #ifdef CONFIG_NET_ICMPv6_AUTOCONF
 /* ICMPv6 Autoconfiguration */
 
@@ -322,6 +383,10 @@ int netlib_icmpv6_autoconfiguration(FAR const char *ifname);
 int  netlib_parsehttpurl(FAR const char *url, uint16_t *port,
                       FAR char *hostname, int hostlen,
                       FAR char *filename, int namelen);
+
+#ifdef CONFIG_NETUTILS_NETLIB_GENERICURLPARSER
+int netlib_parseurl(FAR const char *str, FAR struct url_s *url);
+#endif
 
 /* Generic server logic */
 

@@ -56,7 +56,7 @@
 #include <arpa/inet.h>
 
 #include <nuttx/compiler.h>
-#include <nuttx/binfmt/symtab.h>
+#include <nuttx/symtab.h>
 #include "netutils/thttpd.h"
 
 #include "config.h"
@@ -652,11 +652,7 @@ static void occasional(ClientData client_data, struct timeval *nowP)
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
-int main(int argc, FAR char *argv[])
-#else
 int thttpd_main(int argc, char **argv)
-#endif
 {
   int num_ready;
   int cnum;
@@ -672,7 +668,7 @@ int thttpd_main(int argc, char **argv)
 
   /* Setup host address */
 
-#ifdef  CONFIG_NET_IPv6
+#ifdef CONFIG_NET_IPv6
 #  error "IPv6 support not yet implemented"
 #else
   sa.sin_family      = AF_INET;
@@ -763,7 +759,7 @@ int thttpd_main(int argc, char **argv)
   /* Main loop */
 
   ninfo("Entering the main loop\n");
-  (void)gettimeofday(&tv, NULL);
+  gettimeofday(&tv, NULL);
   for (;;)
     {
       /* Do the fd watch */
@@ -782,7 +778,7 @@ int thttpd_main(int argc, char **argv)
           exit(1);
         }
 
-      (void)gettimeofday(&tv, NULL);
+      gettimeofday(&tv, NULL);
 
       if (num_ready == 0)
         {
@@ -866,4 +862,3 @@ int thttpd_main(int argc, char **argv)
 }
 
 #endif /* CONFIG_THTTPD */
-

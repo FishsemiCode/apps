@@ -91,11 +91,7 @@ static void show_usage(FAR const char *progname, int errcode)
  * Public Functions
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int sz_main(int argc, FAR char **argv)
-#endif
 {
   enum zm_xfertype_e xfrtype = XM_XFERTYPE_NORMAL;
   enum zm_option_e xfroption = XM_OPTION_REPLACE;
@@ -275,7 +271,7 @@ int sz_main(int argc, FAR char **argv)
   exitcode = EXIT_SUCCESS;
 
 errout_with_zmodem:
-  (void)zms_release(handle);
+  zms_release(handle);
 
 errout_with_device:
 #ifdef CONFIG_SERIAL_TERMIOS
@@ -290,7 +286,7 @@ errout_with_device:
   tcsetattr(fd, TCSANOW, &saveterm);
 #endif
 
-  (void)close(fd);
+  close(fd);
 
 errout:
   return exitcode;

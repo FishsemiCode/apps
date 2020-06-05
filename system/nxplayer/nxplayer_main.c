@@ -33,7 +33,6 @@
  *
  ****************************************************************************/
 
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
@@ -58,7 +57,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define	NXPLAYER_VER		"1.05"
+#define NXPLAYER_VER    "1.05"
 
 #ifdef CONFIG_NXPLAYER_INCLUDE_HELP
 #  define NXPLAYER_HELP_TEXT(x)  #x
@@ -181,8 +180,8 @@ static struct mp_cmd_s g_nxplayer_cmds[] =
   { "volume",   "d%",       nxplayer_cmd_volume,    NXPLAYER_HELP_TEXT(Set volume to level specified) }
 #endif
 };
-static const int g_nxplayer_cmd_count = sizeof(g_nxplayer_cmds) / sizeof(struct mp_cmd_s);
 
+static const int g_nxplayer_cmd_count = sizeof(g_nxplayer_cmds) / sizeof(struct mp_cmd_s);
 
 /****************************************************************************
  * Private Functions
@@ -686,7 +685,7 @@ static int nxplayer_cmd_device(FAR struct nxplayer_s *pPlayer, char *parg)
 
   return OK;
 }
-#endif  /* CONFIG_NXPLAYER_INCLUDE_PREFERRED_DEVICE */
+#endif /* CONFIG_NXPLAYER_INCLUDE_PREFERRED_DEVICE */
 
 /****************************************************************************
  * Name: nxplayer_cmd_i2c
@@ -754,16 +753,21 @@ static int nxplayer_cmd_quit(FAR struct nxplayer_s *pPlayer, char *parg)
 #ifdef CONFIG_NXPLAYER_INCLUDE_HELP
 static int nxplayer_cmd_help(FAR struct nxplayer_s *pPlayer, char *parg)
 {
-  int   x, len, maxlen = 0;
+  int   len;
+  int   maxlen = 0;
+  int   x;
   int   c;
 
   /* Calculate length of longest cmd + arghelp */
 
   for (x = 0; x < g_nxplayer_cmd_count; x++)
     {
-      len = strlen(g_nxplayer_cmds[x].cmd) + strlen(g_nxplayer_cmds[x].arghelp);
+      len = strlen(g_nxplayer_cmds[x].cmd) +
+                   strlen(g_nxplayer_cmds[x].arghelp);
       if (len > maxlen)
-        maxlen = len;
+        {
+          maxlen = len;
+        }
     }
 
   printf("NxPlayer commands\n================\n");
@@ -775,9 +779,12 @@ static int nxplayer_cmd_help(FAR struct nxplayer_s *pPlayer, char *parg)
 
       /* Calculate number of spaces to print before the help text */
 
-      len = maxlen - (strlen(g_nxplayer_cmds[x].cmd) + strlen(g_nxplayer_cmds[x].arghelp));
+      len = maxlen - (strlen(g_nxplayer_cmds[x].cmd) +
+                      strlen(g_nxplayer_cmds[x].arghelp));
       for (c = 0; c < len; c++)
-        printf(" ");
+        {
+          printf(" ");
+        }
 
       printf("  : %s\n", g_nxplayer_cmds[x].help);
     }
@@ -794,10 +801,10 @@ static int nxplayer_cmd_help(FAR struct nxplayer_s *pPlayer, char *parg)
  * Name: nxplayer
  *
  *   nxplayer() reads in commands from the console using the readline
- *   system add-in and implemets a command-line based media player that
+ *   system add-in and impalements a command-line based media player that
  *   uses the NuttX audio system to play media files read in from the
  *   file system.  Commands are provided for setting volume, base and
- *   other audio features, as well as for pausing and stoping the
+ *   other audio features, as well as for pausing and stopping the
  *   playback.
  *
  * Input Parameters:
@@ -813,11 +820,7 @@ static int nxplayer_cmd_help(FAR struct nxplayer_s *pPlayer, char *parg)
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int nxplayer_main(int argc, char *argv[])
-#endif
 {
   char                    buffer[CONFIG_NSH_LINELEN];
   int                     len, x, running;
@@ -853,48 +856,63 @@ int nxplayer_main(int argc, char *argv[])
       buffer[len] = '\0';
       if (len > 0)
         {
-          if(strncmp(buffer, "!", 1) != 0)
+          if (strncmp(buffer, "!", 1) != 0)
             {
               /* nxplayer command */
 
-              if (buffer[len-1] == '\n')
-                buffer[len-1] = '\0';
+              if (buffer[len - 1] == '\n')
+                {
+                  buffer[len - 1] = '\0';
+                }
 
               /* Parse the command from the argument */
 
               cmd = strtok_r(buffer, " \n", &arg);
               if (cmd == NULL)
-                continue;
+                {
+                  continue;
+                }
 
               /* Remove leading spaces from arg */
 
               while (*arg == ' ')
-                arg++;
+                {
+                  arg++;
+                }
 
               /* Find the command in our cmd array */
 
               for (x = 0; x < g_nxplayer_cmd_count; x++)
                 {
                   if (strcmp(cmd, g_nxplayer_cmds[x].cmd) == 0)
-                  {
-                    /* Command found.  Call it's handler if not NULL */
+                    {
+                      /* Command found.  Call it's handler if not NULL */
 
-                    if (g_nxplayer_cmds[x].pFunc != NULL)
-                      g_nxplayer_cmds[x].pFunc(pPlayer, arg);
+                      if (g_nxplayer_cmds[x].pFunc != NULL)
+                        {
+                          g_nxplayer_cmds[x].pFunc(pPlayer, arg);
+                        }
 
-                    /* Test if it is a quit command */
+                      /* Test if it is a quit command */
 
-                    if (g_nxplayer_cmds[x].pFunc == nxplayer_cmd_quit)
-                      running = FALSE;
-                    break;
-                  }
+                      if (g_nxplayer_cmds[x].pFunc == nxplayer_cmd_quit)
+                        {
+                          running = FALSE;
+                        }
+
+                      break;
+                    }
                 }
             }
           else
             {
+#ifdef CONFIG_SYSTEM_SYSTEM
               /* Transfer nuttx shell */
 
               system(buffer + 1);
+#else
+              printf("%s:  unknown nxplayer command\n", buffer);
+#endif
             }
         }
     }
@@ -902,6 +920,7 @@ int nxplayer_main(int argc, char *argv[])
   /* Release the NxPlayer context */
 
   /* nxplayer_detach(pPlayer); */
+
   nxplayer_release(pPlayer);
 
   return OK;

@@ -6,7 +6,7 @@
 menuconfig SYSTEM_USBMSC
 	tristate "USB Mass Storage Device Commands"
 	default n
-	depends on LIB_BOARDCTL && USBMSC && !KERNEL_BUILD
+	depends on LIB_BOARDCTL && USBMSC && !BUILD_PROTECTED && !BUILD_KERNEL
 	select BOARDCTL_USBDEVCTRL
 	---help---
 		Enable the USB mass storage class controls.  These controls include:
@@ -99,7 +99,7 @@ config SYSTEM_USBMSC_DEBUGMM
 config SYSTEM_USBMSC_TRACE
 	bool "Trace USB activity"
 	default n
-	depends on (USBDEV_TRACE || DEBUG_USB) && !NSH_BUILTIN_APPS
+	depends on USBDEV_TRACE || DEBUG_USB
 	---help---
 		If this add-on is built as a standalone task and if USB device tracing is
 		enabled, then this add-on can be configured to unobtrusively monitor
@@ -154,8 +154,6 @@ config SYSTEM_USBMSC_TRACEINTERRUPTS
 
 endif # SYSTEM_USBMSC_TRACE
 
-if NSH_BUILTIN_APPS
-
 config SYSTEM_USBMSC_CMD_STACKSIZE
 	int "Stacksize of msconn and msdis commands"
 	default 768
@@ -170,6 +168,4 @@ config SYSTEM_USBMSC_CMD_PRIORITY
 	---help---
 		Priority of the small 'msconn' and 'msdis' command applications.
 
-endif # NSH_BUILTIN_APPS
 endif # SYSTEM_USBMSC
-

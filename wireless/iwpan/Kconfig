@@ -18,14 +18,13 @@ if WIRELESS_IWPAN
 config WIRELESS_IWPAN_PROGNAME
 	string "Program Name"
 	default "iwpan"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config WIRELESS_IWPAN_STACKSIZE
 	int "Stack Size (bytes)"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config WIRELESS_IWPAN_PRIORITY
 	int "Command Priority"

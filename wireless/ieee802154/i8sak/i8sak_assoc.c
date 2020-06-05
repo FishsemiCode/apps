@@ -159,7 +159,7 @@ void i8sak_assoc_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
             break;
 
           case 't':
-            /* Parse wait time and set the paremeter in the request */
+            /* Parse wait time and set the parameter in the request */
 
             setreq.attrval.mac.resp_waittime = i8sak_str2luint8(optarg);
             break;
@@ -311,7 +311,7 @@ void i8sak_assoc_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
 
   /* Clean up and return */
 
-  (void)i8sak_eventlistener_removereceiver(i8sak, assoc_eventcb);
+  i8sak_eventlistener_removereceiver(i8sak, assoc_eventcb);
   i8sak_releasedaemon(i8sak);
   close(fd);
 }

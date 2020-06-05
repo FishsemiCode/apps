@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/usbmsc/Make.defs
+# apps/system/telnet/Make.defs
 # Adds selected applications to apps/ build
 #
 #   Copyright (C) 2016 Gregory Nutt. All rights reserved.
@@ -35,7 +35,7 @@
 ############################################################################
 
 ifneq ($(CONFIG_SYSTEM_TELNET_CHATD),)
-CONFIGURED_APPS += system/telnet
+CONFIGURED_APPS += $(APPDIR)/system/telnet
 else ifneq ($(CONFIG_SYSTEM_TELNET_CLIENT),)
-CONFIGURED_APPS += system/telnet
+CONFIGURED_APPS += $(APPDIR)/system/telnet
 endif

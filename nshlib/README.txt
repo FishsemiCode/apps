@@ -252,9 +252,9 @@ NOTE:
    apps/nshlib/rcS.template generates the standard, default
    nsh_romfsimg.h file.  If CONFIG_NSH_ARCHROMFS is defined
    in the NuttX configuration file, then a custom, board-specific
-   nsh_romfsimg.h file residing in configs/<board>/include will be
-   used.  NOTE when the OS is configured, include/arch/board will
-   be linked to configs/<board>/include.
+   nsh_romfsimg.h file residing in boards/<arch>/<chip>/<board>/include
+   will be used.  NOTE when the OS is configured, include/arch/board will
+   be linked to boards/<arch>/<chip>/<board>/include.
 
 All of the startup-behavior is contained in rcS.template.  The
 role of mkromfsimg.sh is to (1) apply the specific configuration
@@ -318,7 +318,7 @@ o addroute <target> [<netmask>] <router>
   The second form of the addroute command can be used to set the default
   gateway.
 
-o arp [-a <ipaddr>|-d <ipaddr>|-s <ipaddr> <hwaddr>]
+o arp [-t|-a <ipaddr>|-d <ipaddr>|-s <ipaddr> <hwaddr>]
 
   Access the OS ARP table.
 
@@ -331,6 +331,10 @@ o arp [-a <ipaddr>|-d <ipaddr>|-s <ipaddr> <hwaddr>]
   -s <ipaddr> <hwaddr>
      Will set (or replace) the mapping of the IP address <ipaddr> to the
      hardware address <hwaddr>.
+
+  -t
+     Will dump the entire content of the ARP table.  This option is only
+     available if CONFIG_NETLINK_ROUTE is enabled.
 
   Example:
 
@@ -429,7 +433,7 @@ o dd if=<infile> of=<outfile> [bs=<sectsize>] [count=<sectors>] [skip=<sectors>]
      crw-rw-rw-       0 zero
     nsh> dd if=/dev/zero of=/dev/ram0
 
-    3. Read from a block devic, write to a character device.  This
+    3. Read from a block device, write to a character device.  This
        will read the entire block device and dump the contents in
        the bit bucket.
 
@@ -477,6 +481,17 @@ o dirname <path>
 
   Extract the path string leading up to the full <path> by removing
   the final directory or file name.
+
+o dmesg
+
+  This command can be used to dump (and clear) the content of any
+  buffered syslog output messages.  This command is only available
+  if CONFIG_RAMLOG_SYSLOG is enabled.  In that case, syslog output
+  will be collected in an in-memory, circular buffer.  Entering the
+  'dmesg' command will dump the content of that in-memory, circular
+  buffer to the NSH console output.  'dmesg' has the side effectof
+  clearing the buffered data so that entering 'dmesg' again will
+  show only newly buffered data.
 
 o echo [-n] [<string|$name> [<string|$name>...]]
 
@@ -609,7 +624,7 @@ o ifconfig [nic_name [<ip-address>|dhcp]] [dr|gw|gateway <dr-address>] [netmask 
   if networking statistics are enabled (CONFIG_NET_STATISTICS), then
   this command will also show the detailed state of transfers by protocol.
 
-  NOTE: This commands depends upon having the rpocfs file system configured
+  NOTE: This commands depends upon having the procfs file system configured
   into the system.   The procfs file system must also have been mounted
   with a command like:
 
@@ -865,7 +880,7 @@ o mkfifo <path>
 o mkrd [-m <minor>] [-s <sector-size>] <nsectors>
 
   Create a ramdisk consisting of <nsectors>, each of size
-  <sector-size> (or 512 bytes if <sector-size> is not specified.
+  <sector-size> (or 512 bytes if <sector-size> is not specified).
   The ramdisk will be registered as /dev/ram<minor>.  If <minor> is
   not specified, mkrd will attempt to register the ramdisk as
   /dev/ram0.
@@ -980,6 +995,10 @@ o passwd <username> <password>
 
   Set the password for the existing user <username> to <password>
 
+o pmconfig [stay|relax] [normal|idle|standby|sleep]
+
+  Control power management subsystem.
+
 o poweroff [<n>]
 
   Shutdown and power off the system.  This command depends on board-
@@ -1001,7 +1020,7 @@ o ps
       3 100 RR       pthread --- Waiting  Semaphore 00000000 <pthread>(21)
     nsh>
 
-  NOTE: This commands depends upon having the rpocfs file system configured
+  NOTE: This commands depends upon having the procfs file system configured
   into the system.   The procfs file system must also have been mounted
   with a command like:
 
@@ -1113,6 +1132,10 @@ o route ipv4|ipv6
   If only IPv4 or IPv6 is enabled, then the argument is optional but, if provided,
   must match the enabled internet protocol version.
 
+o rptun start|stop <dev-path>
+
+  Start or stop the OpenAMP RPC tunnel device at <dev-path>.
+
 o set [{+|-}{e|x|xe|ex}] [<name> <value>]
 
   Set the variable <name> to the string <value> and or set NSH parser control
@@ -1146,7 +1169,7 @@ o set [{+|-}{e|x|xe|ex}] [<name> <value>]
     foolbar=foovalue
 
   Set the 'exit on error control' and/or 'print a trace' of commands when parsing
-  scripts in NSH.  The settinngs are in effect from the point of exection, until
+  scripts in NSH.  The settinngs are in effect from the point of execution, until
   they are changed again, or in the case of the init script, the settings are
   returned to the default settings when it exits. Included child scripts will run
   with the parents settings and changes made in the child script will effect the
@@ -1167,10 +1190,10 @@ o set [{+|-}{e|x|xe|ex}] [<name> <value>]
     set -e
     notacommand
 
-  Example 3 - will exit on command not found, and print a trace of the script commmands
+  Example 3 - will exit on command not found, and print a trace of the script commands
     set -ex
 
-  Example 4 - will exit on command not found, and print a trace of the script commmands
+  Example 4 - will exit on command not found, and print a trace of the script commands
               and set foobar to foovalue.
     set -ex foobar foovalue
     nsh> echo $foobar
@@ -1203,7 +1226,7 @@ o telnetd
 
   Normally this command would be suppressed with CONFIG_NSH_DISABLE_TELNETD
   because the Telnet daemon is automatically started in nsh_main.c.  The
-  exception is when CONFIG_NSH_NETLOCAL is selected.  IN that case, the
+  exception is when CONFIG_NETINIT_NETLOCAL is selected.  IN that case, the
   network is not enabled at initialization but rather must be enabled from
   the NSH command line or via other applications.
 
@@ -1226,7 +1249,7 @@ o time "<command>"
     2.0100 sec
     nsh>
 
-  The additional 10 millseconds in this example is due to the way that the
+  The additional 10 milliseconds in this example is due to the way that the
   sleep command works: It always waits one system clock tick longer than
   requested and this test setup used a 10 millisecond periodic system
   timer.  Sources of error could include various quantization errors,
@@ -1312,7 +1335,7 @@ o uname [-a | -imnoprsv]
 
     -s, -o, Print the operating system name (NuttX)
 
-    -n Print the network node hostname (only availabel if CONFIG_NET=y)
+    -n Print the network node hostname (only available if CONFIG_NET=y)
 
     -r Print the kernel release
 
@@ -1425,8 +1448,9 @@ Command Dependencies on Configuration Settings
   cp         --
   dd         --
   delroute   CONFIG_NET && CONFIG_NET_ROUTE
-  df         !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_READABLE (see note 3)
+  df         !CONFIG_DISABLE_MOUNTPOINT
   dirname    --
+  dmesg      CONFIG_RAMLOG_SYSLOG
   echo       --
   env        -- CONFIG_FS_PROCFS && !CONFIG_DISABLE_ENVIRON && !CONFIG_PROCFS_EXCLUDE_ENVIRON
   exec       --
@@ -1441,50 +1465,52 @@ Command Dependencies on Configuration Settings
   ifup       CONFIG_NET && CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_NET
   insmod     CONFIG_MODULE
   irqinfo    CONFIG_FS_PROCFS && CONFIG_SCHED_IRQMONITOR
-  kill       !CONFIG_DISABLE_SIGNALS
+  kill       --
   losetup    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_DEV_LOOP
   ln         CONFIG_PSEUDOFS_SOFTLINK
   ls         --
   lsmod      CONFIG_MODULE && CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_MODULE
   md5        CONFIG_NETUTILS_CODECS && CONFIG_CODECS_HASH_MD5
   mb,mh,mw   ---
-  mkdir      (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
+  mkdir      !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
   mkfatfs    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FSUTILS_MKFATFS
   mkfifo     CONFIG_PIPES && CONFIG_DEV_FIFO_SIZE > 0
-  mkrd       !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE (see note 4)
-  mount      !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_READABLE (see note 3)
-  mv         (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS  (see note 4)
+  mkrd       !CONFIG_DISABLE_MOUNTPOINT
+  mount      !CONFIG_DISABLE_MOUNTPOINT
+  mv         !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS 
   nfsmount   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NET && CONFIG_NFS
   nslookup   CONFIG_LIBC_NETDB && CONFIG_NETDB_DNSCLIENT
-  password   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE && CONFIG_NSH_LOGIN_PASSWD
+  password   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NSH_LOGIN_PASSWD
+  pmconfig   CONFIG_PM && !CONFIG_NSH_DISABLE_PMCONFIG
   poweroff   CONFIG_BOARDCTL_POWEROFF
   ps         CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_PROC
   put        CONFIG_NET && CONFIG_NET_UDP && MTU >= 558 (see note 1,2)
   pwd        !CONFIG_DISABLE_ENVIRON
   readlink   CONFIG_PSEUDOFS_SOFTLINK
   reboot     CONFIG_BOARDCTL_RESET
-  rm         (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
-  rmdir      (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
+  rm         !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
+  rmdir      !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
   rmmod      CONFIG_MODULE
   route      CONFIG_FS_PROCFS && CONFIG_FS_PROCFS_EXCLUDE_NET &&
              !CONFIG_FS_PROCFS_EXCLUDE_ROUTE && CONFIG_NET_ROUTE &&
              !CONFIG_NSH_DISABLE_ROUTE && (CONFIG_NET_IPv4 || CONFIG_NET_IPv6)
+  rptun      CONFIG_RPTUN
   set        CONFIG_NSH_VARS || !CONFIG_DISABLE_ENVIRON
   sh         CONFIG_NFILE_STREAMS > 0 && !CONFIG_NSH_DISABLESCRIPT
   shutdown   CONFIG_BOARDCTL_POWEROFF || CONFIG_BOARDCTL_RESET
-  sleep      !CONFIG_DISABLE_SIGNALS
+  sleep      --
   test       !CONFIG_NSH_DISABLESCRIPT
   telnetd    CONFIG_NSH_TELNET && !CONFIG_NSH_DISABLE_TELNETD
   time       ---
   truncate   !CONFIG_DISABLE_MOUNTPOINT
-  umount     !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_READABLE
+  umount     !CONFIG_DISABLE_MOUNTPOINT
   uname      !CONFIG_NSH_DISABLE_UNAME
   unset      CONFIG_NSH_VARS || !CONFIG_DISABLE_ENVIRON
   urldecode  CONFIG_NETUTILS_CODECS && CONFIG_CODECS_URLCODE
   urlencode  CONFIG_NETUTILS_CODECS && CONFIG_CODECS_URLCODE
-  useradd    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE && CONFIG_NSH_LOGIN_PASSWD
-  userdel    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE && CONFIG_NSH_LOGIN_PASSWD
-  usleep     !CONFIG_DISABLE_SIGNALS
+  useradd    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NSH_LOGIN_PASSWD
+  userdel    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NSH_LOGIN_PASSWD
+  usleep     --
   get        CONFIG_NET && CONFIG_NET_TCP
   xd         ---
 
@@ -1493,11 +1519,6 @@ Command Dependencies on Configuration Settings
      operations size may be larger.
   2. Special TFTP server start-up options will probably be required to permit
      creation of file for the correct operation of the put command.
-  3. CONFIG_FS_READABLE is not a user configuration but is set automatically
-     if any readable file system is selected.  At present, this is either CONFIG_FS_FAT
-     and CONFIG_FS_ROMFS.
-  4. CONFIG_FS_WRITABLE is not a user configuration but is set automatically
-     if any writeable file system is selected.  At present, this is only CONFIG_FS_FAT.
 
 In addition, each NSH command can be individually disabled via one of the following
 settings.  All of these settings make the configuration of NSH potentially complex but
@@ -1506,25 +1527,26 @@ also allow it to squeeze into very small memory footprints.
   CONFIG_NSH_DISABLE_ADDROUTE,  CONFIG_NSH_DISABLE_BASE64DEC, CONFIG_NSH_DISABLE_BASE64ENC,
   CONFIG_NSH_DISABLE_BASENAME,  CONFIG_NSH_DISABLE_CAT,       CONFIG_NSH_DISABLE_CD,
   CONFIG_NSH_DISABLE_CP,        CONFIG_NSH_DISABLE_DD,        CONFIG_NSH_DISABLE_DELROUTE,
-  CONFIG_NSH_DISABLE_DF,        CONFIG_NSH_DISABLE_DIRNAME,   CONFIG_NSH_DISABLE_ECHO,
-  CONFIG_NSH_DISABLE_ENV,       CONFIG_NSH_DISABLE_EXEC,      CONFIG_NSH_DISABLE_EXIT,
-  CONFIG_NSH_DISABLE_EXPORT,    CONFIG_NSH_DISABLE_FREE,      CONFIG_NSH_DISABLE_GET,
-  CONFIG_NSH_DISABLE_HELP,      CONFIG_NSH_DISABLE_HEXDUMP,   CONFIG_NSH_DISABLE_IFCONFIG,
-  CONFIG_NSH_DISABLE_IFUPDOWN,  CONFIG_NSH_DISABLE_KILL,      CONFIG_NSH_DISABLE_LOSETUP,
-  CONFIG_NSH_DISABLE_LN,        CONFIG_NSH_DISABLE_LS,        CONFIG_NSH_DISABLE_MD5,
-  CONFIG_NSH_DISABLE_MB,        CONFIG_NSH_DISABLE_MKDIR,     CONFIG_NSH_DISABLE_MKFATFS,
-  CONFIG_NSH_DISABLE_MKFIFO,    CONFIG_NSH_DISABLE_MKRD,      CONFIG_NSH_DISABLE_MH,
-  CONFIG_NSH_DISABLE_MODCMDS,   CONFIG_NSH_DISABLE_MOUNT,     CONFIG_NSH_DISABLE_MW,
-  CONFIG_NSH_DISABLE_MV,        CONFIG_NSH_DISABLE_NFSMOUNT,  CONFIG_NSH_DISABLE_NSLOOKUP,
-  CONFIG_NSH_DISABLE_PASSWD,    CONFIG_NSH_DISABLE_PING6,     CONFIG_NSH_DISABLE_POWEROFF,
-  CONFIG_NSH_DISABLE_PS,        CONFIG_NSH_DISABLE_PUT,       CONFIG_NSH_DISABLE_PWD,
-  CONFIG_NSH_DISABLE_READLINK,  CONFIG_NSH_DISABLE_REBOOT,    CONFIG_NSH_DISABLE_RM,
-  CONFIG_NSH_DISABLE_RMDIR,     CONFIG_NSH_DISABLE_ROUTE,     CONFIG_NSH_DISABLE_SET,
-  CONFIG_NSH_DISABLE_SH,        CONFIG_NSH_DISABLE_SHUTDOWN,  CONFIG_NSH_DISABLE_SLEEP,
-  CONFIG_NSH_DISABLE_TEST,      CONFIG_NSH_DIABLE_TIME,       CONFIG_NSH_DISABLE_TRUNCATE,
-  CONFIG_NSH_DISABLE_UMOUNT,    CONFIG_NSH_DISABLE_UNSET,     CONFIG_NSH_DISABLE_URLDECODE,
-  CONFIG_NSH_DISABLE_URLENCODE, CONFIG_NSH_DISABLE_USERADD,   CONFIG_NSH_DISABLE_USERDEL,
-  CONFIG_NSH_DISABLE_USLEEP,    CONFIG_NSH_DISABLE_WGET,      CONFIG_NSH_DISABLE_XD
+  CONFIG_NSH_DISABLE_DF,        CONFIG_NSH_DISABLE_DIRNAME,   CONFIG_NSH_DISABLE_DMESG,
+  CONFIG_NSH_DISABLE_ECHO,      CONFIG_NSH_DISABLE_ENV,       CONFIG_NSH_DISABLE_EXEC,
+  CONFIG_NSH_DISABLE_EXIT,      CONFIG_NSH_DISABLE_EXPORT,    CONFIG_NSH_DISABLE_FREE,
+  CONFIG_NSH_DISABLE_GET,       CONFIG_NSH_DISABLE_HELP,      CONFIG_NSH_DISABLE_HEXDUMP,
+  CONFIG_NSH_DISABLE_IFCONFIG,  CONFIG_NSH_DISABLE_IFUPDOWN,  CONFIG_NSH_DISABLE_KILL,
+  CONFIG_NSH_DISABLE_LOSETUP,   CONFIG_NSH_DISABLE_LN,        CONFIG_NSH_DISABLE_LS,
+  CONFIG_NSH_DISABLE_MD5,       CONFIG_NSH_DISABLE_MB,        CONFIG_NSH_DISABLE_MKDIR,
+  CONFIG_NSH_DISABLE_MKFATFS,   CONFIG_NSH_DISABLE_MKFIFO,    CONFIG_NSH_DISABLE_MKRD,
+  CONFIG_NSH_DISABLE_MH,        CONFIG_NSH_DISABLE_MODCMDS,   CONFIG_NSH_DISABLE_MOUNT,
+  CONFIG_NSH_DISABLE_MW,        CONFIG_NSH_DISABLE_MV,        CONFIG_NSH_DISABLE_NFSMOUNT,
+  CONFIG_NSH_DISABLE_NSLOOKUP,  CONFIG_NSH_DISABLE_PASSWD,    CONFIG_NSH_DISABLE_PING6,
+  CONFIG_NSH_DISABLE_POWEROFF,  CONFIG_NSH_DISABLE_PS,        CONFIG_NSH_DISABLE_PUT,
+  CONFIG_NSH_DISABLE_PWD,       CONFIG_NSH_DISABLE_READLINK,  CONFIG_NSH_DISABLE_REBOOT,
+  CONFIG_NSH_DISABLE_RM,        CONFIG_NSH_DISABLE_RPTUN,     CONFIG_NSH_DISABLE_RMDIR,
+  CONFIG_NSH_DISABLE_ROUTE,     CONFIG_NSH_DISABLE_SET,       CONFIG_NSH_DISABLE_SH,
+  CONFIG_NSH_DISABLE_SHUTDOWN,  CONFIG_NSH_DISABLE_SLEEP,     CONFIG_NSH_DISABLE_TEST,
+  CONFIG_NSH_DIABLE_TIME,       CONFIG_NSH_DISABLE_TRUNCATE,  CONFIG_NSH_DISABLE_UMOUNT,
+  CONFIG_NSH_DISABLE_UNSET,     CONFIG_NSH_DISABLE_URLDECODE, CONFIG_NSH_DISABLE_URLENCODE,
+  CONFIG_NSH_DISABLE_USERADD,   CONFIG_NSH_DISABLE_USERDEL,   CONFIG_NSH_DISABLE_USLEEP,
+  CONFIG_NSH_DISABLE_WGET,      CONFIG_NSH_DISABLE_XD
 
 Verbose help output can be suppressed by defining CONFIG_NSH_HELP_TERSE.  In that
 case, the help command is still available but will be slightly smaller.
@@ -1536,15 +1558,15 @@ All built-in applications require that support for NSH built-in applications has
   Application Depends on Configuration
   ----------- --------------------------
   ping        CONFIG_NET && CONFIG_NET_ICMP && CONFIG_NET_ICMP_SOCKET &&
-              CONFIG_SYSTEM_PING && !CONFIG_DISABLE_POLL && !CONFIG_DISABLE_SIGNALS
+              CONFIG_SYSTEM_PING
   ping6       CONFIG_NET && CONFIG_NET_ICMPv6 && CONFIG_NET_ICMPv6_SOCKET &&
-              CONFIG_SYSTEM_PING6 && !CONFIG_DISABLE_POLL && !CONFIG_DISABLE_SIGNALS
+              CONFIG_SYSTEM_PING6
 
 NSH-Specific Configuration Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   The behavior of NSH can be modified with the following settings in
-  the configs/<board-name>/defconfig file:
+  the boards/<arch>/<chip>/<board>/configs/<config>/defconfig file:
 
   * CONFIG_NSH_READLINE
       Selects the minimal implementation of readline().  This minimal
@@ -1660,7 +1682,7 @@ NSH-Specific Configuration Settings
 
   * CONFIG_NSH_NESTDEPTH
       The maximum number of nested if-then[-else]-fi sequences that
-      are permissable.  Default: 3
+      are permissible.  Default: 3
 
   * CONFIG_NSH_DISABLESCRIPT
       This can be set to 'y' to suppress support for scripting.  This
@@ -1752,7 +1774,7 @@ NSH-Specific Configuration Settings
 
       CONFIG_NSH_USBDEV_TRACE
         If USB tracing is enabled (CONFIG_USBDEV_TRACE), then NSH can
-        be configured to show the buffered USB trace data afer each
+        be configured to show the buffered USB trace data after each
         NSH command:
 
       If CONFIG_NSH_USBDEV_TRACE is selected, then USB trace data
@@ -1834,22 +1856,22 @@ NSH-Specific Configuration Settings
 
   * CONFIG_NSH_IOBUFFER_SIZE
       Determines the size of the I/O buffer to use for sending/
-      receiving TELNET commands/reponses
+      receiving TELNET commands/responses
 
-  * CONFIG_NSH_DHCPC
+  * CONFIG_NETINIT_DHCPC
       Obtain the IP address via DHCP.
 
-  * CONFIG_NSH_IPADDR
-      If CONFIG_NSH_DHCPC is NOT set, then the static IP
+  * CONFIG_NETINIT_IPADDR
+      If CONFIG_NETINIT_DHCPC is NOT set, then the static IP
       address must be provided.
 
-  * CONFIG_NSH_DRIPADDR
+  * CONFIG_NETINIT_DRIPADDR
       Default router IP address
 
-  * CONFIG_NSH_NETMASK
+  * CONFIG_NETINIT_NETMASK
       Network mask
 
-  * CONFIG_NSH_NOMAC
+  * CONFIG_NETINIT_NOMAC
       Set if your ethernet hardware has no built-in MAC address.
       If set, a bogus MAC will be assigned.
 
@@ -1907,7 +1929,7 @@ NSH-Specific Configuration Settings
       This is the sector size use with the FAT FS. Default is 512.
 
   * CONFIG_NSH_FATNSECTORS
-      This is the number of sectors to use with the FAT FS.  Defalt is
+      This is the number of sectors to use with the FAT FS.  Default is
       1024.  The amount of memory used by the FAT FS will be
       CONFIG_NSH_FATSECTSIZE * CONFIG_NSH_FATNSECTORS
       bytes.
@@ -1918,16 +1940,6 @@ NSH-Specific Configuration Settings
 
 Common Problems
 ^^^^^^^^^^^^^^^
-
-  Problem:
-    Using NSH over serial, the "nsh>" prompt repeats over and over again
-    with no serial input.
-  Usual Cause:
-    NSH over serial needs to use the interrupt driven serial driver
-    (drivers/serial/serial.c) not the polled serial driver (drivers/serial/lowconsole.c).
-    Make sure that the polled console is disabled in the OS configuration
-    file, .config.  That file should have CONFIG_DEV_LOWCONSOLE=n for
-    NSH over serial.
 
   Problem:
     The function 'readline' is undefined.

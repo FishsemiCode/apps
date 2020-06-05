@@ -66,22 +66,20 @@
 #  define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
-#define PROGNAME "dac"
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
 struct command
 {
-  const char *name;
-  int (* const cmd)(int argc, const char *argv[]);
+  FAR const char *name;
+  CODE int (* const cmd)(int argc, const char *argv[]);
   const char *args;
 };
 
 struct dac_state_s
 {
-  char *devpath;
+  FAR char *devpath;
   int count;
   int delay;
   uint8_t channel;
@@ -92,8 +90,8 @@ struct dac_state_s
  * Private Function Prototypes
  ****************************************************************************/
 
-static int cmd_dac_put(int argc, const char *argv[]);
-static int cmd_dac_putv(int argc, const char *argv[]);
+static int cmd_dac_put(int argc, FAR const char *argv[]);
+static int cmd_dac_putv(int argc, FAR const char *argv[]);
 
 /****************************************************************************
  * Private Data
@@ -111,8 +109,8 @@ static struct dac_state_s g_dacstate;
  * Private Functions
  ****************************************************************************/
 
-static void dac_devpath(struct dac_state_s *dac,
-                        const char *devpath)
+static void dac_devpath(FAR struct dac_state_s *dac,
+                        FAR const char *devpath)
 {
   if (dac->devpath)
     {
@@ -122,10 +120,10 @@ static void dac_devpath(struct dac_state_s *dac,
   dac->devpath = strdup(devpath);
 }
 
-static void print_cmds(const char *header,
-                       const struct command *cmds,
+static void print_cmds(FAR const char *header,
+                       FAR const struct command *cmds,
                        size_t ncmds,
-                       const char *trailer)
+                       FAR const char *trailer)
 {
   printf(header);
   while (ncmds--)
@@ -134,11 +132,12 @@ static void print_cmds(const char *header,
                            (ncmds > 0) ? '\n' : ' ');
       cmds++;
     }
+
   printf(trailer);
 }
 
-static const struct command *find_cmd(const char *name,
-                                      const struct command *cmds,
+static const struct command *find_cmd(FAR const char *name,
+                                      FAR const struct command *cmds,
                                       size_t ncmds)
 {
   while (ncmds--)
@@ -147,18 +146,19 @@ static const struct command *find_cmd(const char *name,
         {
           return cmds;
         }
-        cmds++;
+
+      cmds++;
     }
 
   return NULL;
 }
 
 static int execute_cmd(int argc,
-                       const char *argv[],
-                       const struct command *cmds,
+                       FAR const char *argv[],
+                       FAR const struct command *cmds,
                        size_t ncmds)
 {
-  const struct command *cmd;
+  FAR const struct command *cmd;
 
   cmd = find_cmd(argv[0], cmds, ncmds);
   if (!cmd)
@@ -168,16 +168,18 @@ static int execute_cmd(int argc,
       return -EINVAL;
     }
 
-  return cmd->cmd(argc-1, argv+1);
+  return cmd->cmd(argc - 1, argv + 1);
 }
 
-static int dac_put(const char *devpath,
-                   struct dac_msg_s *msg,
+static int dac_put(FAR const char *devpath,
+                   FAR struct dac_msg_s *msg,
                    size_t nmsgs,
                    int delay)
 {
-  size_t retries, i;
-  int fd, ret;
+  size_t retries;
+  size_t i;
+  int fd;
+  int ret = OK;
 
   fd = open(devpath, O_WRONLY | O_NONBLOCK);
   if (fd < 0)
@@ -218,15 +220,17 @@ static int dac_put(const char *devpath,
   return (i > 0) ? i : ret;
 }
 
-static int cmd_dac_put(int argc, const char *argv[])
+static int cmd_dac_put(int argc, FAR const char *argv[])
 {
-  int i, data, delay;
   struct dac_msg_s msgs[1];
+  int data;
+  int delay;
+  int i;
   int ret = OK;
 
   /* This command allows overriding the "sticky" delay option. */
 
-  data = (argc > 0) ? atoi(argv[0]) : 100;
+  data  = (argc > 0) ? atoi(argv[0]) : 100;
   delay = (argc > 1) ? atoi(argv[1]) : g_dacstate.delay;
 
   printf("devpath=%s data=%d delay=%d\n",
@@ -243,10 +247,11 @@ static int cmd_dac_put(int argc, const char *argv[])
   return ret;
 }
 
-static int cmd_dac_putv(int argc, const char *argv[])
+static int cmd_dac_putv(int argc, FAR const char *argv[])
 {
-  int i, nmsgs;
   struct dac_msg_s msgs[CONFIG_NSH_MAXARGUMENTS];
+  int nmsgs;
+  int i;
   int ret = OK;
 
   for (nmsgs = 0; nmsgs < CONFIG_NSH_MAXARGUMENTS; nmsgs++)
@@ -255,6 +260,7 @@ static int cmd_dac_putv(int argc, const char *argv[])
         {
           break;
         }
+
       msgs[nmsgs].am_channel = g_dacstate.channel;
       msgs[nmsgs].am_data = atoi(argv[nmsgs]);
     }
@@ -268,7 +274,6 @@ static int cmd_dac_putv(int argc, const char *argv[])
   return ret;
 }
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static void dac_help(void)
 {
   printf("Usage: dac [OPTIONS] command [CMD OPTIONS]\n");
@@ -286,12 +291,10 @@ static void dac_help(void)
          CONFIG_EXAMPLES_DAC_DEVPATH, g_dacstate.devpath ? g_dacstate.devpath : "NONE");
   print_cmds("\nCommands:\n", commands, ARRAY_SIZE(commands), "\n");
 }
-#endif
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static int arg_string(const char **arg, const char **value)
+static int arg_string(FAR const char **arg, FAR const char **value)
 {
-  const char *ptr = *arg;
+  FAR const char *ptr = *arg;
 
   if (ptr[2] == '\0')
     {
@@ -304,29 +307,27 @@ static int arg_string(const char **arg, const char **value)
       return 1;
     }
 }
-#endif
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static int arg_decimal(const char **arg, long *value)
+static int arg_decimal(FAR const char **arg, FAR long *value)
 {
-  const char *string;
+  FAR const char *string;
   int ret;
 
   ret = arg_string(arg, &string);
   *value = strtol(string, NULL, 10);
   return ret;
 }
-#endif
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
-static int parse_args(struct dac_state_s *dac,
+static int parse_args(FAR struct dac_state_s *dac,
                       int argc,
                       const char *argv[])
 {
-  const char *ptr;
-  const char *str;
+  FAR const char *ptr;
+  FAR const char *str;
   long value;
-  int i, n, nargs;
+  int nargs;
+  int n;
+  int i;
 
   for (i = n = 1; i < argc; )
     {
@@ -392,15 +393,15 @@ static int parse_args(struct dac_state_s *dac,
             exit(1);
         }
     }
+
   return n;
 }
-#endif
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-int dac_main(int argc, const char *argv[])
+int main(int argc, FAR const char *argv[])
 {
   int ret;
   int nargs = 1;
@@ -414,16 +415,14 @@ int dac_main(int argc, const char *argv[])
       /* Set the default values */
 
       dac_devpath(&g_dacstate, CONFIG_EXAMPLES_DAC_DEVPATH);
-      g_dacstate.count = 1;
-      g_dacstate.channel = 0; /* This seems to be ignored by driver. */
+      g_dacstate.count       = 1;
+      g_dacstate.channel     = 0; /* This seems to be ignored by driver. */
       g_dacstate.initialized = true;
     }
 
   /* Parse the command line */
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
   nargs = parse_args(&g_dacstate, argc, argv);
-#endif
 
   argc -= nargs;
   argv += nargs;

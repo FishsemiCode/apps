@@ -37,15 +37,12 @@
 
 # Pipe Example
 
-APPNAME = pipe
+PROGNAME = pipe
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_PIPE)
 
-ASRCS =
 CSRCS = transfer_test.c interlock_test.c redirect_test.c
 MAINSRC = pipe_main.c
-
-CONFIG_XYZ_PROGNAME ?= pipe$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
-MODULE = CONFIG_EXAMPLES_PIPE
 
 include $(APPDIR)/Application.mk

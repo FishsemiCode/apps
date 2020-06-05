@@ -170,9 +170,6 @@
 #ifdef CONFIG_DISABLE_MQUEUE
 #  error "The multi-threaded example requires MQ support (CONFIG_DISABLE_MQUEUE=n)"
 #endif
-#ifdef CONFIG_DISABLE_SIGNALS
-#  error "This example requires signal support (CONFIG_DISABLE_SIGNALS=n)"
-#endif
 #ifdef CONFIG_DISABLE_PTHREAD
 #  error "This example requires pthread support (CONFIG_DISABLE_PTHREAD=n)"
 #endif
@@ -279,7 +276,7 @@ struct nxtext_state_s
  * Public Data
  ****************************************************************************/
 
-/* The connecton handler */
+/* The connection handler */
 
 extern NXHANDLE g_hnx;
 

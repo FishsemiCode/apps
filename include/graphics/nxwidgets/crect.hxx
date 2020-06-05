@@ -164,12 +164,25 @@ namespace NXWidgets
 
     /**
      * Get the rectangle's top y coordinate.
+     *
      * @return The rectangle's y coordinate.
      */
 
     inline nxgl_coord_t getY(void) const
     {
       return m_pos.y;
+    }
+
+    /**
+     * Get the position of the rectangle
+     *
+     * @pos The location to return the rectangle position
+     */
+
+    inline void getPos(struct nxgl_point_s &pos) const
+    {
+      pos.x = m_pos.x;
+      pos.y = m_pos.y;
     }
 
     /**
@@ -184,18 +197,6 @@ namespace NXWidgets
     }
 
     /**
-     * Get the size of the rectangle
-     *
-     * @return The rectangle's size
-     */
-
-    inline void getSize(struct nxgl_size_s &size) const
-    {
-      size.h = m_size.h;
-      size.w = m_size.w;
-    }
-
-    /**
      * Get the rectangle's height.
      *
      * @return The rectangle's height.
@@ -204,6 +205,18 @@ namespace NXWidgets
     inline nxgl_coord_t getHeight(void) const
     {
       return m_size.h;
+    }
+
+    /**
+     * Get the size of the rectangle
+     *
+     * @param size The location to return the rectangle size
+     */
+
+    inline void getSize(struct nxgl_size_s &size) const
+    {
+      size.h = m_size.h;
+      size.w = m_size.w;
     }
 
     /**
@@ -348,7 +361,7 @@ namespace NXWidgets
     }
 
     /**
-     * Populates dest with a rectangle representating the intersection
+     * Populates dest with a rectangle representing the intersection
      * of this rectangle and rect.
      *
      * @param rect The rectangle to intersect with this.
@@ -358,7 +371,7 @@ namespace NXWidgets
     void getIntersect(const CRect& rect, CRect& dest) const;
 
     /**
-     * Populates dest with a rectangle representating the smallest
+     * Populates dest with a rectangle representing the smallest
      * rectangle that contains this rectangle and rect.
      *
      * @param rect The rectangle to add to this.

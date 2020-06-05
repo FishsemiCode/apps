@@ -51,14 +51,6 @@ CSRCS += udp_client.c
 endif
 MAINSRC = udp_target1.c
 
-ifeq ($(CONFIG_EXAMPLES_UDP_SERVER1),y)
-CONFIG_EXAMPLES_UDP_PROGNAME1 ?= udpserver
-else
-CONFIG_EXAMPLES_UDP_PROGNAME1 ?= udpclient
-endif
-CONFIG_EXAMPLES_UDP_PRIORITY1 ?= 100
-CONFIG_EXAMPLES_UDP_STACKSIZE1 ?= 2048
-
 PROGNAME = $(CONFIG_EXAMPLES_UDP_PROGNAME1)
 PRIORITY = $(CONFIG_EXAMPLES_UDP_PRIORITY1)
 STACKSIZE = $(CONFIG_EXAMPLES_UDP_STACKSIZE1)
@@ -73,14 +65,6 @@ else
 CSRCS += udp_server.c
 endif
 MAINSRC += udp_target2.c
-
-ifeq ($(CONFIG_EXAMPLES_UDP_SERVER1),y)
-CONFIG_EXAMPLES_UDP_PROGNAME2 ?= udpclient
-else
-CONFIG_EXAMPLES_UDP_PROGNAME2 ?= udpserver
-endif
-CONFIG_EXAMPLES_UDP_PRIORITY2 ?= 100
-CONFIG_EXAMPLES_UDP_STACKSIZE2 ?= 2048
 
 PROGNAME += $(CONFIG_EXAMPLES_UDP_PROGNAME2)
 PRIORITY += $(CONFIG_EXAMPLES_UDP_PRIORITY2)
@@ -105,20 +89,13 @@ HOST_BIN = udpserver$(EXEEXT)
 endif
 
 HOST_OBJS = $(HOST_SRCS:.c=.$(HOSTOBJSEXT))
-endif
-
-ifeq ($(CONFIG_EXAMPLES_UDP_TARGET2),y)
-APPNAME = udp1 udp2
-else
-APPNAME = udp
-endif
 
 # Common build
 
-ifneq ($(CONFIG_EXAMPLES_UDP_TARGET2),y)
 $(HOST_OBJS): %.$(HOSTOBJSEXT): %.c
 	@echo "CC:  $<"
 	$(Q) $(HOSTCC) -c $(HOSTCFLAGS) -I. $< -o $@
+
 endif
 
 config.h: $(OUTDIR)/include/nuttx/config.h
@@ -126,8 +103,10 @@ config.h: $(OUTDIR)/include/nuttx/config.h
 	$(Q) cp $< $@
 
 ifneq ($(CONFIG_EXAMPLES_UDP_TARGET2),y)
+
 $(HOST_BIN): config.h $(HOST_OBJS)
 	$(Q) $(HOSTCC) $(HOSTLDFLAGS) $(HOST_OBJS) -o $@
+
 endif
 
 context:: config.h $(HOST_BIN)
@@ -136,10 +115,10 @@ clean::
 ifneq ($(CONFIG_EXAMPLES_UDP_TARGET2),y)
 	$(call DELFILE, $(HOST_BIN))
 	$(call DELFILE, *.$(HOSTOBJSEXT))
-endif
 	$(call DELFILE, *.dSYM)
+endif
 	$(call DELFILE, config.h)
 
-MODULE = CONFIG_EXAMPLES_UDP
+MODULE = $(CONFIG_EXAMPLES_UDP)
 
 include $(APPDIR)/Application.mk

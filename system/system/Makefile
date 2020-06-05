@@ -37,7 +37,6 @@
 
 # system command
 
-ASRCS =
 CSRCS = system.c
 
 include $(APPDIR)/Application.mk

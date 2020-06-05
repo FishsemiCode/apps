@@ -92,6 +92,15 @@
 #  define NSH_MEMLIST_FREE(m)
 #endif
 
+/* Do we need g_nullstring[]? */
+
+#undef NEED_NULLSTRING
+#if defined(NSH_HAVE_VARS) || defined(CONFIG_NSH_CMDPARMS)
+#  define NEED_NULLSTRING       1
+#elif !defined(CONFIG_NSH_ARGCAT) || !defined(HAVE_MEMLIST)
+#  define NEED_NULLSTRING       1
+#endif
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -222,7 +231,9 @@ static const char g_exitstatus[]      = "?";
 static const char g_success[]         = "0";
 static const char g_failure[]         = "1";
 #endif
+#ifdef NEED_NULLSTRING
 static const char g_nullstring[]      = "";
+#endif
 
 /****************************************************************************
  * Public Data
@@ -280,9 +291,7 @@ const char g_fmtcmdfailed[]      = "nsh: %s: %s failed: %d\n";
 #endif
 const char g_fmtcmdoutofmemory[] = "nsh: %s: out of memory\n";
 const char g_fmtinternalerror[]  = "nsh: %s: Internal error\n";
-#ifndef CONFIG_DISABLE_SIGNALS
 const char g_fmtsignalrecvd[]    = "nsh: %s: Interrupted by signal\n";
-#endif
 
 /****************************************************************************
  * Private Functions
@@ -348,7 +357,7 @@ static void nsh_releaseargs(struct cmdarg_s *arg)
 
   if (vtbl->np.np_redirect)
     {
-      (void)close(arg->fd);
+      close(arg->fd);
     }
 #endif
 
@@ -494,18 +503,59 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
 #endif
   int ret;
 
-  /* Does this command correspond to an application filename?
-   * nsh_fileapp() returns:
+  /* Does this command correspond to a built-in command?
+   * nsh_builtin() returns:
    *
-   *   -1 (ERROR)  if the application task corresponding to 'argv[0]' could not
-   *               be started (possibly because it does not exist).
+   *   -1 (ERROR)  if the application task corresponding to 'argv[0]' could
+   *               not be started (possibly because it doesn not exist).
    *    0 (OK)     if the application task corresponding to 'argv[0]' was
    *               and successfully started.  If CONFIG_SCHED_WAITPID is
    *               defined, this return value also indicates that the
    *               application returned successful status (EXIT_SUCCESS)
    *    1          If CONFIG_SCHED_WAITPID is defined, then this return value
-   *               indicates that the application task was spawned successfully
-   *               but returned failure exit status.
+   *               indicates that the application task was spawned
+   *               successfully but returned failure exit status.
+   *
+   * Note the priority if not effected by nice-ness.
+   */
+
+#ifdef CONFIG_NSH_BUILTIN_APPS
+#if CONFIG_NFILE_STREAMS > 0
+  ret = nsh_builtin(vtbl, argv[0], argv, redirfile, oflags);
+#else
+  ret = nsh_builtin(vtbl, argv[0], argv, NULL, 0);
+#endif
+  if (ret >= 0)
+    {
+      /* nsh_builtin() returned 0 or 1.  This means that the built-in
+       * command was successfully started (although it may not have ran
+       * successfully).  So certainly it is not an NSH command.
+       */
+
+      /* Save the result:  success if 0; failure if 1 */
+
+      return nsh_saveresult(vtbl, ret != OK);
+    }
+
+  /* No, not a built in command (or, at least, we were unable to start a
+   * built-in command of that name). Maybe it is a built-in application
+   * or an NSH command.
+   */
+
+#endif
+
+  /* Does this command correspond to an application filename?
+   * nsh_fileapp() returns:
+   *
+   *   -1 (ERROR)  if the application task corresponding to 'argv[0]' could
+   *               not be started (possibly because it does not exist).
+   *    0 (OK)     if the application task corresponding to 'argv[0]' was
+   *               and successfully started.  If CONFIG_SCHED_WAITPID is
+   *               defined, this return value also indicates that the
+   *               application returned successful status (EXIT_SUCCESS)
+   *    1          If CONFIG_SCHED_WAITPID is defined, then this return value
+   *               indicates that the application task was spawned
+   *               successfully but returned failure exit status.
    *
    * Note the priority is not effected by nice-ness.
    */
@@ -525,48 +575,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
     }
 
   /* No, not a file name command (or, at least, we were unable to start a
-   * program of that name).  Maybe it is a built-in application or an NSH
-   * command.
-   */
-
-#endif
-
-  /* Does this command correspond to a built-in command?
-   * nsh_builtin() returns:
-   *
-   *   -1 (ERROR)  if the application task corresponding to 'argv[0]' could not
-   *               be started (possibly because it doesn not exist).
-   *    0 (OK)     if the application task corresponding to 'argv[0]' was
-   *               and successfully started.  If CONFIG_SCHED_WAITPID is
-   *               defined, this return value also indicates that the
-   *               application returned successful status (EXIT_SUCCESS)
-   *    1          If CONFIG_SCHED_WAITPID is defined, then this return value
-   *               indicates that the application task was spawned successfully
-   *               but returned failure exit status.
-   *
-   * Note the priority if not effected by nice-ness.
-   */
-
-#if defined(CONFIG_NSH_BUILTIN_APPS) && (!defined(CONFIG_NSH_FILE_APPS) || !defined(CONFIG_FS_BINFS))
-#if CONFIG_NFILE_STREAMS > 0
-  ret = nsh_builtin(vtbl, argv[0], argv, redirfile, oflags);
-#else
-  ret = nsh_builtin(vtbl, argv[0], argv, NULL, 0);
-#endif
-  if (ret >= 0)
-    {
-      /* nsh_builtin() returned 0 or 1.  This means that the built-in
-       * command was successfully started (although it may not have ran
-       * successfully).  So certainly it is not an NSH command.
-       */
-
-      /* Save the result:  success if 0; failure if 1 */
-
-      return nsh_saveresult(vtbl, ret != OK);
-    }
-
-  /* No, not a built in command (or, at least, we were unable to start a
-   * built-in command of that name).  Treat it like an NSH command.
+   * program of that name). Treat it like an NSH command.
    */
 
 #endif
@@ -630,7 +639,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
 
       if (vtbl->np.np_redirect)
         {
-          (void)nsh_redirect(bkgvtbl, fd, NULL);
+          nsh_redirect(bkgvtbl, fd, NULL);
         }
 #endif
 
@@ -672,9 +681,9 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
 
       /* Set up the thread attributes */
 
-      (void)pthread_attr_init(&attr);
-      (void)pthread_attr_setschedpolicy(&attr, SCHED_NSH);
-      (void)pthread_attr_setschedparam(&attr, &param);
+      pthread_attr_init(&attr);
+      pthread_attr_setschedpolicy(&attr, SCHED_NSH);
+      pthread_attr_setschedparam(&attr, &param);
 
       /* Execute the command as a separate thread at the appropriate priority */
 
@@ -691,7 +700,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
        * Otherwise, we would have a memory leak.
        */
 
-      (void)pthread_detach(thread);
+      pthread_detach(thread);
 
       nsh_output(vtbl, "%s [%d:%d]\n", argv[0], thread, param.sched_priority);
     }
@@ -712,7 +721,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
       /* Then execute the command in "foreground" -- i.e., while the user waits
        * for the next prompt.  nsh_command will return:
        *
-       * -1 (ERRROR) if the command was unsuccessful
+       * -1 (ERROR) if the command was unsuccessful
        *  0 (OK)     if the command was successful
        */
 
@@ -834,13 +843,11 @@ static FAR char *nsh_filecat(FAR struct nsh_vtbl_s *vtbl, FAR char *s1,
             {
               /* EINTR is not an error (but will still stop the copy) */
 
-#ifndef CONFIG_DISABLE_SIGNALS
               if (errno == EINTR)
                 {
                   nsh_error(vtbl, g_fmtsignalrecvd, "``");
                 }
               else
-#endif
                 {
                   /* Read error */
 
@@ -2333,7 +2340,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
   int       argc;
   int       ret;
 #if CONFIG_NFILE_STREAMS > 0
-  bool      redirect_save;
+  bool      redirect_save = false;
 #endif
 
   /* Initialize parser state */

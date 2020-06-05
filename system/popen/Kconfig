@@ -18,7 +18,7 @@ if SYSTEM_POPEN
 config SYSTEM_POPEN_SHPATH
 	string "Path to shell command"
 	default "/bin/nsh"
-	depends on BUILD_LOADABLE
+	depends on SYSTEM_NSH=m
 	---help---
 		This is the full path to the program in a mounted file system that
 		implements the system() command.  That is, a program that starts the
@@ -26,8 +26,7 @@ config SYSTEM_POPEN_SHPATH
 
 config SYSTEM_POPEN_STACKSIZE
 	int "Shell stack size"
-	default 2048 if !ARCH_SIM
-	default 4096 if ARCH_SIM
+	default DEFAULT_TASK_STACKSIZE
 	---help---
 		The size of stack allocated for the shell.
 

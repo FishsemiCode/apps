@@ -171,6 +171,7 @@ int i2ctool_common_args(FAR struct i2ctool_s *i2ctool, FAR char **arg)
           }
 
         i2ctool->regaddr = (uint8_t)value;
+        i2ctool->hasregindx = true;
         return ret;
 
       case 's':
@@ -199,4 +200,3 @@ out_of_range:
   i2ctool_printf(i2ctool, g_i2cargrange, ptr);
   return ERROR;
 }
-

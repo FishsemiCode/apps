@@ -88,11 +88,7 @@
  * Name: tc_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int tc_main(int argc, char *argv[])
-#endif
 {
 #ifdef CONFIG_EXAMPLES_TOUCHSCREEN_MOUSE
   struct mouse_report_s sample;
@@ -100,9 +96,7 @@ int tc_main(int argc, char *argv[])
   struct touch_sample_s sample;
 #endif
   ssize_t nbytes;
-#if defined(CONFIG_NSH_BUILTIN_APPS) || CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES > 0
   long nsamples;
-#endif
   int fd;
   int errval = 0;
 
@@ -110,16 +104,12 @@ int tc_main(int argc, char *argv[])
    * samples that we collect before returning.  Otherwise, we never return
    */
 
-#if defined(CONFIG_NSH_BUILTIN_APPS)
-  nsamples = 1;
+  nsamples = CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES;
   if (argc > 1)
     {
       nsamples = strtol(argv[1], NULL, 10);
     }
   printf("tc_main: nsamples: %d\n", nsamples);
-#elif CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES > 0
-  printf("tc_main: nsamples: %d\n", CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES);
-#endif
 
   /* Open the touchscreen device for reading */
 
@@ -137,13 +127,7 @@ int tc_main(int argc, char *argv[])
    * touchscreen samples.
    */
 
-#if defined(CONFIG_NSH_BUILTIN_APPS)
-  for (; nsamples > 0; nsamples--)
-#elif CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES > 0
-  for (nsamples = 0; nsamples < CONFIG_EXAMPLES_TOUCHSCREEN_NSAMPLES; nsamples++)
-#else
   for (;;)
-#endif
   {
     /* Flush any output before the loop entered or from the previous pass
      * through the loop.
@@ -235,6 +219,11 @@ int tc_main(int argc, char *argv[])
         printf("  pressure : %d\n",   sample.point[0].pressure);
       }
 #endif
+
+    if (nsamples && --nsamples <= 0)
+      {
+        break;
+      }
   }
 
 errout_with_dev:

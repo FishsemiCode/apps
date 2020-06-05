@@ -92,7 +92,7 @@ static struct cu_globals_s g_cu;
 
 static FAR void *cu_listener(FAR void *parameter)
 {
-  for (;;)
+  for (; ; )
     {
       int rc;
       char ch;
@@ -150,7 +150,8 @@ static int enable_crlf_conversion(int fd)
 #endif
 }
 
-static int set_baudrate(int fd, int rate, enum parity_mode parity, int rtscts)
+static int set_baudrate(int fd, int rate, enum parity_mode parity,
+                        int rtscts)
 {
 #ifdef CONFIG_SERIAL_TERMIOS
   int rc = 0;
@@ -216,6 +217,7 @@ static void print_help(void)
          " -o: Set odd parity\n"
          " -s: Use given speed (default %d)\n"
          " -r: Disable RTS/CTS flow control (default: on)\n"
+         " -f: Enable endless mode without escape sequence (default: off)\n"
          " -?: This help\n",
          CONFIG_SYSTEM_CUTERM_DEFAULT_DEVICE,
          CONFIG_SYSTEM_CUTERM_DEFAULT_BAUD);
@@ -257,11 +259,7 @@ static int cu_cmd(char bcmd)
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int cu_main(int argc, FAR char *argv[])
-#endif
 {
   pthread_attr_t attr;
   struct sigaction sa;
@@ -269,6 +267,7 @@ int cu_main(int argc, FAR char *argv[])
   int baudrate = CONFIG_SYSTEM_CUTERM_DEFAULT_BAUD;
   enum parity_mode parity = PARITY_NONE;
   int rtscts = 1;
+  int nobreak = 0;
   int option;
   int ret;
   int bcmd;
@@ -285,7 +284,8 @@ int cu_main(int argc, FAR char *argv[])
   sa.sa_handler = sigint;
   sigaction(SIGINT, &sa, NULL);
 
-  while ((option = getopt(argc, argv, "l:s:eor?")) != ERROR)
+  optind = 0;   /* global that needs to be reset in FLAT mode */
+  while ((option = getopt(argc, argv, "l:s:efhor?")) != ERROR)
     {
       switch (option)
         {
@@ -298,17 +298,22 @@ int cu_main(int argc, FAR char *argv[])
             break;
 
           case 'e':
-            parity = PARITY_ODD;
+            parity = PARITY_EVEN;
             break;
 
           case 'o':
-            parity = PARITY_EVEN;
+            parity = PARITY_ODD;
             break;
 
           case 'r':
             rtscts = 0;
             break;
 
+          case 'f':
+              nobreak = 1;
+              break;
+
+          case 'h':
           case '?':
             print_help();
             return EXIT_SUCCESS;
@@ -331,8 +336,8 @@ int cu_main(int argc, FAR char *argv[])
   enable_crlf_conversion(g_cu.outfd);
   set_baudrate(g_cu.outfd, baudrate, parity, rtscts);
 
-  /* Open the serial device for reading.  Since we are already connected, this
-   * should not fail.
+  /* Open the serial device for reading.  Since we are already connected,
+   * this should not fail.
    */
 
   g_cu.infd = open(devname, O_RDONLY);
@@ -352,6 +357,10 @@ int cu_main(int argc, FAR char *argv[])
       goto errout_with_fds;
     }
 
+  /* Set priority of listener to configured value */
+
+  attr.priority = CONFIG_SYSTEM_CUTERM_PRIORITY;
+
   ret = pthread_create(&g_cu.listener, &attr,
                        cu_listener, (pthread_addr_t)0);
   if (ret != 0)
@@ -362,13 +371,19 @@ int cu_main(int argc, FAR char *argv[])
 
   /* Send messages and get responses -- forever */
 
-  for (;;)
+  for (; ; )
     {
       int ch = getc(stdin);
 
+      if (nobreak == 1)
+        {
+          write(g_cu.outfd, &ch, 1);
+          continue;
+        }
+
       if (ch <= 0)
         {
-          break;
+          continue;
         }
 
       if (start_of_line == 1 && ch == '~')

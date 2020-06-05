@@ -38,7 +38,7 @@
  ****************************************************************************/
 
 #ifndef __APPS_INCLUDE_SYSTEM_NXPLAYER_H
-#define __APPS_INCLUDE_SYSTEM_NXPLAYER_H 1
+#define __APPS_INCLUDE_SYSTEM_NXPLAYER_H
 
 /****************************************************************************
  * Included Files
@@ -78,7 +78,7 @@ struct nxplayer_s
   char        mediadir[CONFIG_NAME_MAX];   /* Root media directory where media is located */
 #endif
 #ifdef CONFIG_AUDIO_MULTI_SESSION
-  FAR void    *session;       /* Session assigment from device */
+  FAR void    *session;       /* Session assignment from device */
 #endif
 #ifndef CONFIG_AUDIO_EXCLUDE_VOLUME
   uint16_t    volume;         /* Volume as a whole percentage (0-100) */
@@ -123,7 +123,7 @@ extern "C"
  *   nxplayer_destroy() won't actually de-allocate anything.  The freeing
  *   will occur after the playthread has completed.
  *
- *   Alternately, the caller can create the objec and hold on to it, then
+ *   Alternately, the caller can create the object and hold on to it, then
  *   the context will persist until the original creator destroys it.
  *
  * Input Parameters:    None

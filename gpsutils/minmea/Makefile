@@ -37,7 +37,7 @@
 
 # NSH Library
 
-CSRCS  = minmea.c
+CSRCS   = minmea.c
 CFLAGS += -std=c99
 
 include $(APPDIR)/Application.mk

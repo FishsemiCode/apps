@@ -34,7 +34,7 @@
  ****************************************************************************/
 
 #ifndef __APPS_INCLUDE_NETUTILS_NTPCLIENT_H
-#define __APPS_INCLUDE_NETUTILS_NTPCLIENT_H 1
+#define __APPS_INCLUDE_NETUTILS_NTPCLIENT_H
 
 /****************************************************************************
  * Included Files
@@ -116,9 +116,7 @@ int ntpc_start(void);
  *
  ****************************************************************************/
 
-#ifndef CONFIG_DISABLE_SIGNALS
 int ntpc_stop(void);
-#endif
 
 #undef EXTERN
 #ifdef __cplusplus

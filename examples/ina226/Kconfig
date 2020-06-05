@@ -4,7 +4,7 @@
 #
 
 config EXAMPLES_INA226
-	bool "INA226 example"
+	tristate "INA226 example"
 	default n
 	---help---
 		Enable the INA226 example
@@ -14,9 +14,8 @@ if EXAMPLES_INA226
 config EXAMPLES_INA226_PROGNAME
 	string "Program name"
 	default "ina226"
-	depends on BUILD_KERNEL
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config INA226_SHUNTVAL
@@ -37,6 +36,6 @@ config EXAMPLES_INA226_PRIORITY
 
 config EXAMPLES_INA226_STACKSIZE
 	int "INA226 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

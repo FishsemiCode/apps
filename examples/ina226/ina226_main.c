@@ -62,11 +62,7 @@
  * ina226_main
  ****************************************************************************/
 
-#ifdef CONFIG_BUILD_KERNEL
 int main(int argc, FAR char *argv[])
-#else
-int ina226_main(int argc, char *argv[])
-#endif
 {
   struct ina226_s sample;
   int fd;
@@ -90,7 +86,7 @@ int ina226_main(int argc, char *argv[])
         }
 
       printf("U=%12u uV I=%12d uA\n", sample.voltage, sample.current);
-      
+
       usleep(500000);
     }
 

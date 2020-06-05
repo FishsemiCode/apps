@@ -72,11 +72,7 @@ static struct cdcacm_state_s g_cdcacm;
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int sercon_main(int argc, char *argv[])
-#endif
 {
   struct boardioc_usbdev_ctrl_s ctrl;
   int ret;
@@ -125,11 +121,7 @@ int sercon_main(int argc, char *argv[])
  *   device.
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
-int main(int argc, FAR char **argv)
-#else
 int serdis_main(int argc, char *argv[])
-#endif
 {
   struct boardioc_usbdev_ctrl_s ctrl;
 
@@ -154,7 +146,7 @@ int serdis_main(int argc, char *argv[])
   ctrl.instance = CONFIG_SYSTEM_CDCACM_DEVMINOR;
   ctrl.handle   = &g_cdcacm.handle;
 
-  (void)boardctl(BOARDIOC_USBDEV_CONTROL, (uintptr_t)&ctrl);
+  boardctl(BOARDIOC_USBDEV_CONTROL, (uintptr_t)&ctrl);
   g_cdcacm.handle = NULL;
   printf("serdis: Disconnected\n");
   return EXIT_SUCCESS;

@@ -14,9 +14,8 @@ if EXAMPLES_DSPTEST
 config EXAMPLES_DSPTEST_PROGNAME
 	string "Program name"
 	default "dsptest"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_DSPTEST_PRIORITY
@@ -25,6 +24,6 @@ config EXAMPLES_DSPTEST_PRIORITY
 
 config EXAMPLES_DSPTEST_STACKSIZE
 	int "Dsptest stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

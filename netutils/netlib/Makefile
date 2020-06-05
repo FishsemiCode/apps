@@ -1,7 +1,8 @@
 ############################################################################
 # apps/netutils/netlib/Makefile
 #
-#   Copyright (C) 2011-2012, 2014-2015, 2017 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2011-2012, 2014-2015, 2017, 2019 Gregory Nutt. All
+#     rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,6 +41,12 @@
 CSRCS  = netlib_ipv4addrconv.c netlib_ethaddrconv.c netlib_parsehttpurl.c
 CSRCS += netlib_setifstatus.c netlib_getifstatus.c
 
+# Generic URL parsing support
+
+ifeq ($(CONFIG_NETUTILS_NETLIB_GENERICURLPARSER),y)
+CSRCS += netlib_parseurl.c
+endif
+
 # IP address support
 
 ifeq ($(CONFIG_NET_IPv4),y)
@@ -49,6 +56,9 @@ CSRCS += netlib_getdripv4addr.c netlib_getipv4netmask.c
 CSRCS += netlib_ipv4adaptor.c
 ifeq ($(CONFIG_NET_ARP),y)
 CSRCS += netlib_getarp.c netlib_setarp.c netlib_delarp.c
+ifeq ($(CONFIG_NETLINK_ROUTE),y)
+CSRCS += netlib_getarptab.c
+endif
 endif
 ifeq ($(CONFIG_NETDB_DNSCLIENT),y)
 CSRCS += netlib_setipv4dnsaddr.c
@@ -68,6 +78,18 @@ CSRCS += netlib_autoconfig.c
 endif
 ifeq ($(CONFIG_NET_ROUTE),y)
 CSRCS += netlib_ipv6route.c netlib_ipv6router.c
+endif
+ifeq ($(CONFIG_NETLINK_ROUTE),y)
+CSRCS += netlib_getnbtab.c
+endif
+endif
+
+# Device support
+
+ifeq ($(CONFIG_NETLINK_ROUTE),y)
+CSRCS += netlib_getdevs.c
+ifeq ($(CONFIG_NET_ROUTE),y)
+CSRCS += netlib_getroute.c
 endif
 endif
 

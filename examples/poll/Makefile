@@ -38,9 +38,9 @@
 CSRCS = poll_listener.c select_listener.c net_listener.c net_reader.c
 MAINSRC = poll_main.c
 
-CONFIG_XYZ_PROGNAME ?= poll$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
-MODULE = CONFIG_EXAMPLES_POLL
+PROGNAME = poll
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_POLL)
 
 include $(APPDIR)/Application.mk

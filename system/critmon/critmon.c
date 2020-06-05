@@ -249,7 +249,7 @@ static int critmon_process_directory(FAR struct dirent *entryp)
     {
       maxcrit = "None";
     }
-  
+
   /* Finally, output the stack info that we gleaned from the procfs */
 
 #if CONFIG_TASK_NAME_SIZE > 0
@@ -375,7 +375,7 @@ static void critmon_global_crit(void)
           maxpreemp = "None";
           maxcrit   = "None";
         }
-  
+
       /* Finally, output the stack info that we gleaned from the procfs */
 
       printf("%11s %11s  ---  CPU %s\n", maxpreemp, maxcrit, cpu);
@@ -496,7 +496,7 @@ static int critmon_daemon(int argc, char **argv)
  * Public Functions
  ****************************************************************************/
 
-int critmon_start_main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   /* Has the monitor already started? */
 

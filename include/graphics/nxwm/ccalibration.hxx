@@ -117,7 +117,7 @@ namespace NxWM
 
   /**
    * The CCalibration class provides the the calibration window and obtains
-   * callibration data.
+   * calibration data.
    */
 
   class CCalibration : public IApplication
@@ -233,7 +233,7 @@ namespace NxWM
      *
      *  Both of those states will cause isRunning() to return false.
      *
-     * @return True if the calibration thread is runnning normally.
+     * @return True if the calibration thread is running normally.
      */
 
     inline bool isRunning(void) const
@@ -271,6 +271,7 @@ namespace NxWM
 
     static FAR void *calibration(FAR void *arg);
 
+#ifdef CONFIG_NXWM_CALIBRATION_AVERAGE
     /**
      * Accumulate and average touch sample data
      *
@@ -278,7 +279,6 @@ namespace NxWM
      * @return True: Average data is available; False: Need to collect more samples
      */
 
-#ifdef CONFIG_NXWM_CALIBRATION_AVERAGE
     bool averageSamples(struct nxgl_point_s &average);
 #endif
 

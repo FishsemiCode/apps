@@ -49,9 +49,9 @@
 #include "graphics/nxwidgets/cwidgeteventhandler.hxx"
 #include "graphics/nxwidgets/cwidgeteventargs.hxx"
 
-#include "graphics/nxwm/nxwmconfig.hxx"
-#include "graphics/nxwm/nxwmglyphs.hxx"
+#include "graphics/nxglyphs.hxx"
 
+#include "graphics/nxwm/nxwmconfig.hxx"
 #include "graphics/nxwm/capplicationwindow.hxx"
 #include "graphics/nxwm/cfullscreenwindow.hxx"
 #include "graphics/nxwm/iapplication.hxx"
@@ -121,7 +121,7 @@ namespace NxWM
      *
      * NOTE:  Actually, NxWM uses the CWindowMessenger class that inherits from
      * CWidgetControl.  That class just adds some unrelated messaging capability;
-     * It cohabitates with CWidgetControl only becuase it needs the CWidgetControl
+     * It cohabitates with CWidgetControl only because it needs the CWidgetControl
      * this point.
      */
 
@@ -179,7 +179,7 @@ namespace NxWM
     virtual bool redrawTaskbarWindow(void);
 
     /**
-     * Redraw the window at the top of the heirarchy.
+     * Redraw the window at the top of the hierarchy.
      *
      * @return true on success
      */
@@ -417,18 +417,6 @@ namespace NxWM
      */
 
     inline void redraw() { redrawTopApplication(); }
-
-    /**
-     * Simulate a mouse click or release on the icon at index.  This method
-     * is only available during automated testing of NxWM.
-     *
-     * @param index.  Selects the icon in the start window
-     * @param click.  True to click and false to release
-     */
-
-#if defined(CONFIG_NXWM_UNITTEST) && !defined(CONFIG_NXWM_TOUCHSCREEN)
-    void clickIcon(int index, bool click);
-#endif
   };
 }
 

@@ -37,9 +37,8 @@
 
 # Telnet daemon
 
-CSRCS		=
 ifeq ($(CONFIG_NET_TCP),y)
-CSRCS		+= ftpd.c
+CSRCS = ftpd.c
 endif
 
 include $(APPDIR)/Application.mk

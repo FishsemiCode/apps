@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # set -x
 
 usage="Usage: $0 <test-dir-path>"
@@ -23,7 +23,7 @@ fi
 # Extract all of the undefined symbols from the SOTEST files and create a
 # list of sorted, unique undefined variable names.
 
-tmplist=`find ${dir} -executable -type f | xargs nm | fgrep ' U ' | sed -e "s/^[ ]*//g" | cut -d' ' -f2 | sort | uniq`
+tmplist=`find ${dir} -type f -perm -a=x | xargs nm | fgrep ' U ' | sed -e "s/^[ ]*//g" | cut -d' ' -f2 | sort | uniq`
 
 # Remove the special symbol 'modprint'.  It it is not exported by the
 # base firmware, but rather in this test from one shared library to another.
@@ -36,7 +36,7 @@ varlist=`echo $tmplist | sed -e "s/modprint//g"`
 # fail
 
 echo "#include <nuttx/compiler.h>"
-echo "#include <nuttx/binfmt/symtab.h>"
+echo "#include <nuttx/symtab.h>"
 echo ""
 
 for var in $varlist; do
@@ -54,4 +54,3 @@ done
 echo "};"
 echo ""
 echo "const int g_sot_nexports = sizeof(g_sot_exports) / sizeof(struct symtab_s);"
-

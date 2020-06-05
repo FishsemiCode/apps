@@ -365,11 +365,7 @@ int ftpc_parse(SESSION handle, char *cmdline)
  * Public Functions
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int ftpc_main(int argc, char **argv, char **envp)
-#endif
 {
   union ftpc_sockaddr_u server;
   SESSION handle;
@@ -492,7 +488,7 @@ int ftpc_main(int argc, char **argv, char **envp)
         {
           /* Parse and process the command */
 
-          (void)ftpc_parse(handle, g_line);
+          ftpc_parse(handle, g_line);
           FFLUSH();
         }
     }

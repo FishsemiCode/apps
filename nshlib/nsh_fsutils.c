@@ -76,7 +76,6 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                 FAR const char *filepath)
 {
   FAR char *buffer;
-  char last = 0;
   int fd;
   int ret = OK;
 
@@ -92,7 +91,7 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
   buffer = (FAR char *)malloc(IOBUFFERSIZE);
   if(buffer == NULL)
     {
-      (void)close(fd);
+      close(fd);
       nsh_error(vtbl, g_fmtcmdfailed, cmd, "malloc", NSH_ERRNO);
       return ERROR;
     }
@@ -111,13 +110,11 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 
           /* EINTR is not an error (but will stop stop the cat) */
 
-#ifndef CONFIG_DISABLE_SIGNALS
           if (errval == EINTR)
             {
               nsh_error(vtbl, g_fmtsignalrecvd, cmd);
             }
           else
-#endif
             {
               nsh_error(vtbl, g_fmtcmdfailed, cmd, "read", NSH_ERRNO_OF(errval));
             }
@@ -132,7 +129,6 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
         {
           int nbyteswritten = 0;
 
-          last = buffer[nbytesread - 1];
           while (nbyteswritten < nbytesread)
             {
               ssize_t n = nsh_write(vtbl, buffer + nbyteswritten, nbytesread - nbyteswritten);
@@ -142,13 +138,11 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 
                   /* EINTR is not an error (but will stop stop the cat) */
 
-#ifndef CONFIG_DISABLE_SIGNALS
                   if (errcode == EINTR)
                     {
                       nsh_error(vtbl, g_fmtsignalrecvd, cmd);
                     }
                   else
-#endif
                     {
                       nsh_error(vtbl, g_fmtcmdfailed, cmd, "write",
                                  NSH_ERRNO_OF(errcode));
@@ -172,21 +166,16 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
         }
     }
 
-   /* Make sure that the following NSH prompt appears on a new line.  If the
-    * file ends in a newline, then this will print an extra blank line
-    * before the prompt, but that is preferable to the case where there is
-    * no newline and the NSH prompt appears on the same line as the cat'ed
-    * file.
+   /* NOTE that the following NSH prompt may appear on the same line as file
+    * content.  The IEEE Std requires that "The standard output shall
+    * contain the sequence of bytes read from the input files. Nothing else
+    * shall be written to the standard output." Reference:
+    * https://pubs.opengroup.org/onlinepubs/009695399/utilities/cat.html.
     */
-
-   if (ret == OK && last != '\n')
-     {
-       nsh_output(vtbl, "\n");
-     }
 
    /* Close the input file and return the result */
 
-   (void)close(fd);
+   close(fd);
    free(buffer);
    return ret;
 }
@@ -200,7 +189,7 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
  *   be a string and is guaranteed to be NUL-termined.  An error occurs if
  *   the file content (+terminator)  will not fit into the provided 'buffer'.
  *
- * Input Paramters:
+ * Input Parameters:
  *   vtbl     - The console vtable
  *   filepath - The full path to the file to be read
  *   buffer   - The user-provided buffer into which the file is read.
@@ -368,7 +357,7 @@ int nsh_foreach_direntry(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
  * Description:
  *   Skip any trailing '/' characters (unless it is also the leading '/')
  *
- * Input Parmeters:
+ * Input Parameters:
  *   dirpath - The directory path to be trimmed.  May be modified!
  *
  * Returned value:
@@ -396,8 +385,8 @@ void nsh_trimdir(FAR char *dirpath)
  * Description:
  *   Trim any leading or trailing spaces from a string.
  *
- * Input Parmeters:
- *   str - The sring to be trimmed.  May be modified!
+ * Input Parameters:
+ *   str - The string to be trimmed.  May be modified!
  *
  * Returned value:
  *   The new string pointer.
@@ -428,4 +417,3 @@ FAR char *nsh_trimspaces(FAR char *str)
   return trimmed;
 }
 #endif
-

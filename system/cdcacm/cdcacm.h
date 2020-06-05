@@ -60,10 +60,6 @@
 #  error "CONFIG_CDCACM is not defined"
 #endif
 
-#ifndef CONFIG_NSH_BUILTIN_APPS
-#  error "This add-on can only be built as an NSH built-in application"
-#endif
-
 /* Default configuration values */
 
 #ifndef CONFIG_SYSTEM_CDCACM_DEVMINOR
@@ -119,10 +115,8 @@
 struct cdcacm_state_s
 {
   /* This is the handle that references to this particular USB CDC/ACM driver
-   * instance.  It is only needed if the USB CDC/ACM device add-on is
-   * built using CONFIG_NSH_BUILTIN_APPS.  In this case, the value
-   * of the driver handle must be remembered between the 'sercon' and 'msdis'
-   * commands.
+   * instance. The value of the driver handle must be remembered between the
+   * 'sercon' and 'msdis' commands.
    */
 
   FAR void *handle;

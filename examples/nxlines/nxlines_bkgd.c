@@ -58,7 +58,7 @@
 
 #ifdef CONFIG_NX_ANTIALIASING
   /* If anti-aliasing is enabled, then we must clear a slightly
-   * larger region to prevent wierd edge effects.
+   * larger region to prevent weird edge effects.
    */
 
 #  define CLEAR_WIDTH (CONFIG_EXAMPLES_NXLINES_LINEWIDTH + 2)
@@ -112,8 +112,9 @@ const struct nx_callback_s g_nxlinescb =
   , nxlines_mousein /* mousein */
 #endif
 #ifdef CONFIG_NX_KBD
-  , nxlines_kbdin   /* my kbdin */
+  , nxlines_kbdin   /* kbdin */
 #endif
+  , NULL            /* event */
 };
 
 /****************************************************************************
@@ -329,7 +330,7 @@ void nxlines_test(NXWINDOW hwnd)
 
 #ifdef CONFIG_NX_ANTIALIASING
       /* If anti-aliasing is enabled, then we must clear a slightly
-       * larger region to prevent wierd edge effects.
+       * larger region to prevent weird edge effects.
        */
 
       halfx = b16toi(b16muli(sinangle, radius + 1));
@@ -351,17 +352,9 @@ void nxlines_test(NXWINDOW hwnd)
 
       if (angle > (31 *  (2 * b16PI) / 32))
         {
-#ifdef CONFIG_NSH_BUILTIN_APPS
-          /* If this example was built as an NSH add-on, then exit after we
-           * have gone all the way around once.
-           */
-
-          return;
-#else
           /* Wrap back to zero and continue with the test */
 
           angle = 0;
-#endif
         }
       usleep(500*1000);
     }

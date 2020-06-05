@@ -4,7 +4,7 @@
 #
 
 config EXAMPLES_MODBUSMASTER
-	bool "Modbus Master example"
+	tristate "Modbus Master example"
 	default n
 	---help---
 		Enable the Modbus Master example
@@ -14,9 +14,8 @@ if EXAMPLES_MODBUSMASTER
 config EXAMPLES_MODBUSMASTER_PROGNAME
 	string "Program name"
 	default "modbusmaster"
-	depends on BUILD_KERNEL
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_MODBUSMASTER_PRIORITY
@@ -25,7 +24,7 @@ config EXAMPLES_MODBUSMASTER_PRIORITY
 
 config EXAMPLES_MODBUSMASTER_STACKSIZE
 	int "Modbus Master stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_MODBUSMASTER_PORT
 	int "Modbus Master port (1 for /dev/ttyS1)"
@@ -48,11 +47,11 @@ config EXAMPLES_MODBUSMASTER_PARITY
 		0 = NONE ; 1 = ODD; 2 = EVEN
 
 config EXAMPLES_MODBUSMASTER_SLAVEADDR
-    int "Modbus Slave Address (master will query this slave)"
+	int "Modbus Slave Address (master will query this slave)"
 	default 1
 
 config EXAMPLES_MODBUSMASTER_SLAVEREG
-    int "Modbus Slave Holding Register address to query"
+	int "Modbus Slave Holding Register address to query"
 	default 1
 
 config EXAMPLES_MODBUSMASTER_TESTCOUNT

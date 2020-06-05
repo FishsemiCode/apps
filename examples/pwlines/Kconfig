@@ -101,16 +101,15 @@ comment "Tasking options"
 config EXAMPLES_PWLINES_PROGNAME
 	string "Program name"
 	default "pwlines"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_PWLINES_CLIENT_STACKSIZE
 	int "Example Main Stack Size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 	---help---
-		The stacksize to use when starting the example main(). 
+		The stacksize to use when starting the example main().
 		Default 2048
 
 config EXAMPLES_PWLINES_CLIENT_PRIO
@@ -123,7 +122,7 @@ config EXAMPLES_PWLINES_CLIENT_PRIO
 
 config EXAMPLES_PWLINES_LISTENER_STACKSIZE
 	int "Listener Stack Size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 	---help---
 		The stacksize to use when creating the NX server.  Default 2048
 

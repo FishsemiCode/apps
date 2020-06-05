@@ -38,9 +38,8 @@
 
 -include $(TOPDIR)/Make.defs
 
-CSRCS		=
 ifeq ($(CONFIG_NET_TCP),y)
-CSRCS		+= xmlparser.c response.c
+CSRCS = xmlparser.c response.c
 endif
 
 include $(APPDIR)/Application.mk

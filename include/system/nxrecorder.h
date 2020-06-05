@@ -34,7 +34,7 @@
  ****************************************************************************/
 
 #ifndef __APPS_INCLUDE_SYSTEM_NXRECORDER_H
-#define __APPS_INCLUDE_SYSTEM_NXRECORDER_H 1
+#define __APPS_INCLUDE_SYSTEM_NXRECORDER_H
 
 /****************************************************************************
  * Included Files
@@ -64,7 +64,7 @@ struct nxrecorder_s
   int         fd;             /* File descriptor of open file */
   char        device[CONFIG_NAME_MAX]; /* Preferred audio device */
 #ifdef CONFIG_AUDIO_MULTI_SESSION
-  FAR void    *session;       /* Session assigment from device */
+  FAR void    *session;       /* Session assignment from device */
 #endif
 };
 

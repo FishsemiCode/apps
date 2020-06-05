@@ -78,7 +78,7 @@ static uint64_t gettime_nsecs(void)
   struct timespec ts;
   uint64_t nsecs;
 
-  (void)clock_gettime(CLOCK_MONOTONIC, &ts);
+  clock_gettime(CLOCK_MONOTONIC, &ts);
 
   nsecs  = ts.tv_sec;
   nsecs *= 1000 * 1000 * 1000;
@@ -219,11 +219,7 @@ static int linreg(FAR struct measurement_s *point, int num_points,
  * calib_udelay_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int calib_udelay_main(int argc, char *argv[])
-#endif
 {
   const int num_measurements = CONFIG_EXAMPLES_CALIB_UDELAY_NUM_MEASUREMENTS;
   const int num_results = CONFIG_EXAMPLES_CALIB_UDELAY_NUM_RESULTS;

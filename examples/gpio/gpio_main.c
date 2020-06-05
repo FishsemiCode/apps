@@ -73,11 +73,7 @@ static void show_usage(FAR const char *progname)
  * gpio_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int gpio_main(int argc, char *argv[])
-#endif
 {
   FAR char *devpath = NULL;
   enum gpio_pintype_e pintype;
@@ -272,14 +268,14 @@ int gpio_main(int argc, char *argv[])
 
               /* Wait up to 5 seconds for the signal */
 
-              (void)sigemptyset(&set);
-              (void)sigaddset(&set, signo);
+              sigemptyset(&set);
+              sigaddset(&set, signo);
 
               ts.tv_sec  = 5;
               ts.tv_nsec = 0;
 
               ret = sigtimedwait(&set, NULL, &ts);
-              (void)ioctl(fd, GPIOC_UNREGISTER, 0);
+              ioctl(fd, GPIOC_UNREGISTER, 0);
 
               if (ret < 0)
                 {

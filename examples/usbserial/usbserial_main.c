@@ -177,7 +177,7 @@ static int trace_callback(struct usbtrace_s *trace, void *arg)
 
 static void dumptrace(void)
 {
-  (void)usbtrace_enumerate(trace_callback, NULL);
+  usbtrace_enumerate(trace_callback, NULL);
 }
 #else
 #  define dumptrace()
@@ -191,11 +191,7 @@ static void dumptrace(void)
  * usbserial_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int usbserial_main(int argc, char *argv[])
-#endif
 {
   struct boardioc_usbdev_ctrl_s ctrl;
   FAR void *handle;

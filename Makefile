@@ -2,7 +2,7 @@
 # apps/Makefile
 #
 #   Copyright (C) 2011 Uros Platise. All rights reserved.
-#   Copyright (C) 2011-2014, 2018 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2011-2014, 2018-2019 Gregory Nutt. All rights reserved.
 #   Authors: Uros Platise <uros.platise@isotel.eu>
 #            Gregory Nutt <gnutt@nuttx.org>
 #
@@ -69,8 +69,11 @@ LIBPATH ?= $(TOPDIR)$(DELIM)staging
 
 # The final build target
 
-BIN = libapps$(LIBEXT)
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+APPDIR := ${shell echo %CD%}
+endif
 
+BIN = libapps$(LIBEXT)
 VPATH := $(APPDIR)
 
 # Symbol table for loadable apps.
@@ -95,7 +98,7 @@ endef
 define SDIR_template
 $(1)_$(2):
 	$(call MKDIR, $(1))
-	$(Q) $(MAKE) -C $(1) -f $(APPDIR)/$(1)/Makefile -I $(APPDIR)/$(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C $(subst $(APPDIR)/,,$(1)) -f $(1)/Makefile -I $(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 endef
 
@@ -147,21 +150,16 @@ $(MODTABSRC): all_target
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mkmodsymtab.sh $(LIBIST_DIR) $@
 
 $(SYMTABOBJ): %$(OBJEXT): %.c
-ifeq ($(WINTOOL),y)
-	$(call COMPILE, -fno-lto "${shell cygpath -w $<}", "${shell cygpath -w $@}")
-else
 	$(call COMPILE, -fno-lto $<, $@)
-endif
 
 $(BIN): $(SYMTABOBJ)
 ifeq ($(WINTOOL),y)
-	$(call ARCHIVE, $(BIN), "${shell cygpath -w $^}")
+	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
 else
-	$(call ARCHIVE, $(BIN), $^)
+	$(call ARLOCK, $(BIN), $^)
 endif
-endif # !CONFIG_BUILD_KERNEL && CONFIG_BUILD_LOADABLE
 
-.install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
+endif # !CONFIG_BUILD_LOADABLE
 
 $(MKDIR_LIST):
 	$(Q) mkdir -p $@
@@ -193,9 +191,19 @@ Kconfig:
 
 preconfig: Kconfig
 
+export:
+ifneq ($(EXPORTDIR),)
+ifneq ($(BUILTIN_REGISTRY),)
+	$(Q) mkdir -p "${EXPORTDIR}"/registry || exit 1; \
+	for f in "${BUILTIN_REGISTRY}"/*.bdat "${BUILTIN_REGISTRY}"/*.pdat ; do \
+		[ -f "$${f}" ] && cp -f "$${f}" "${EXPORTDIR}"/registry ; \
+	done
+endif
+endif
+
 .depdirs: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_depend)
 
-.depend: context Makefile .depdirs
+.depend: Makefile .depdirs
 	$(Q) touch $@
 
 depend: .depend
@@ -210,6 +218,7 @@ clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(SYM_DIR))
 	$(call DELDIR, $(IST_DIR))
+	$(call DELDIR, $(BINDIR))
 	$(call CLEAN)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
@@ -224,9 +233,10 @@ else
 		echo "********************************************************"; \
 		echo "* The external directory/link must be removed manually *"; \
 		echo "********************************************************"; \
-	   fi; \
+		fi; \
 	)
 endif
+	$(call DELFILE, *.lock)
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))
@@ -234,4 +244,5 @@ endif
 	$(call DELFILE, Kconfig)
 	$(call DELDIR, $(SYM_DIR))
 	$(call DELDIR, $(IST_DIR))
+	$(call DELDIR, $(BINDIR))
 	$(call CLEAN)

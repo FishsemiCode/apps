@@ -126,12 +126,11 @@ struct args_s g_args;
  * Name: powerled_help
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static void powerled_help(FAR struct args_s *args)
 {
   printf("Usage: powerled [OPTIONS]\n\n");
   printf("  [-m mode] select mode\n");
-  printf("       0 - demo mode [deafult]\n");
+  printf("       0 - demo mode [default]\n");
   printf("       1 - continuous mode\n");
   printf("       2 - flash mode\n");
   printf("  [-d duty] selects duty cycle for flash mode in %%\n");
@@ -145,13 +144,11 @@ static void powerled_help(FAR struct args_s *args)
   printf("       -1 for infinity [default]\n");
   printf("\n");
 }
-#endif
 
 /****************************************************************************
  * Name: arg_string
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static int arg_string(FAR char **arg, FAR char **value)
 {
   FAR char *ptr = *arg;
@@ -167,13 +164,11 @@ static int arg_string(FAR char **arg, FAR char **value)
       return 1;
     }
 }
-#endif
 
 /****************************************************************************
  * Name: arg_decimal
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static int arg_decimal(FAR char **arg, FAR int *value)
 {
   FAR char *string;
@@ -184,13 +179,11 @@ static int arg_decimal(FAR char **arg, FAR int *value)
 
   return ret;
 }
-#endif
 
 /****************************************************************************
  * Name: arg_float
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static int arg_float(FAR char **arg, FAR float *value)
 {
   FAR char *string;
@@ -201,13 +194,11 @@ static int arg_float(FAR char **arg, FAR float *value)
 
   return ret;
 }
-#endif
 
 /****************************************************************************
  * Name: parse_args
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static void parse_args(FAR struct args_s *args, int argc, FAR char **argv)
 {
   FAR char *ptr;
@@ -336,13 +327,11 @@ static void parse_args(FAR struct args_s *args, int argc, FAR char **argv)
         }
     }
 }
-#endif
 
 /****************************************************************************
  * Name: validate_args
  ****************************************************************************/
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
 static int validate_args(FAR struct args_s *args)
 {
   int ret = OK;
@@ -421,7 +410,6 @@ static int validate_args(FAR struct args_s *args)
 errout:
   return ret;
 }
-#endif
 
 /****************************************************************************
  * Public Functions
@@ -431,7 +419,7 @@ errout:
  * Name: powerled_main
  ****************************************************************************/
 
-int powerled_main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   struct powerled_limits_s powerled_limits;
   struct powerled_params_s powerled_params;
@@ -456,37 +444,33 @@ int powerled_main(int argc, char *argv[])
   terminate = false;
   config    = true;
 
-  /* Initialize powerled stuctures */
+  /* Initialize powerled structures */
 
   memset(&powerled_limits, 0, sizeof(struct powerled_limits_s));
   memset(&powerled_params, 0, sizeof(struct powerled_params_s));
 
   /* Parse the command line */
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
   parse_args(args, argc, argv);
-#endif
 
   /* Validate arguments */
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
   ret = validate_args(args);
   if (ret != OK)
     {
       printf("powerled_main: validate arguments failed!\n");
       goto errout;
     }
-#endif
 
-#ifndef CONFIG_NSH_BUILTIN_APPS
+#ifndef CONFIG_NSH_ARCHINIT
   /* Perform architecture-specific initialization (if configured) */
 
-  (void)boardctl(BOARDIOC_INIT, 0);
+  boardctl(BOARDIOC_INIT, 0);
 
 #ifdef CONFIG_BOARDCTL_FINALINIT
   /* Perform architecture-specific final-initialization (if configured) */
 
-  (void)boardctl(BOARDIOC_FINALINIT, 0);
+  boardctl(BOARDIOC_FINALINIT, 0);
 #endif
 #endif
 

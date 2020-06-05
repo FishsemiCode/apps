@@ -304,7 +304,7 @@ namespace NXWidgets
     inline void drawFilledCircle(struct nxgl_point_s *center, nxgl_coord_t radius,
                                  nxgl_mxpixel_t color)
     {
-      (void)m_pNxWnd->drawFilledCircle(center, radius, color);
+      m_pNxWnd->drawFilledCircle(center, radius, color);
     }
 
     /**
@@ -319,7 +319,7 @@ namespace NXWidgets
                   const CNxString &string);
 
     /**
-     * Draw a particular length of a string to the window in a secific color.
+     * Draw a particular length of a string to the window in a specific color.
      * @param pos The window-relative x/y coordinate of the string.
      * @param bound The window-relative bounds of the string.
      * @param font The font to draw with.
@@ -469,7 +469,7 @@ namespace NXWidgets
     /**
      * Invert colors in a region.  NOTE:  This allocates an in-memory
      * buffer the size of one row in graphic memory.  So it may only be
-     * useful for inverting small regions and its only current use of for
+     * useful for inverting small regions and its only current use is for
      * the inverted cursor text.
      *
      * @param x X coordinate of the region to change.

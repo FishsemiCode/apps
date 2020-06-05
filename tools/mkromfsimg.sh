@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ############################################################################
 # apps/tools/mkromfsimg.sh
 #
@@ -47,7 +47,7 @@ fi
 # Environmental stuff
 
 topdir=$PWD
-fsdir=${topdir}/exe/system
+fsdir=${topdir}/bin
 romfsimg=romfs.img
 headerfile=boot_romfsimg.h
 
@@ -70,6 +70,6 @@ genromfs -f ${romfsimg} -d ${fsdir} -V "NuttXBootVol" || { echo "genromfs failed
 
 # And, finally, create the header file
 
-xxd -i ${romfsimg} >${headerfile} || \
+xxd -i ${romfsimg} | sed 's/unsigned/const unsigned/' >${headerfile} || \
   { echo "ERROR: xxd of $< failed" ; rm -f ${romfsimg}; exit 1 ; }
 rm -f ${romfsimg}

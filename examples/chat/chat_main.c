@@ -75,7 +75,7 @@ struct chat_app
   FAR char** argv;                 /* command-line arguments */
   char tty[CHAT_TTYNAME_SIZE];     /* modem TTY device node */
   FAR const char *script;          /* raw chat script - input to the parser */
-  bool script_dynalloc;            /* true iff the script should be freed */
+  bool script_dynalloc;            /* true if the script should be freed */
 };
 
 /****************************************************************************
@@ -320,11 +320,7 @@ static int chat_parse_args(FAR struct chat_app* priv)
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char** argv)
-#else
-int chat_main(int argc, FAR char** argv)
-#endif
 {
   struct chat_app priv;
   int ret;

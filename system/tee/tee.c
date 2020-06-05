@@ -121,11 +121,7 @@ static void show_usage(FAR const char *progrname, int exitcode)
  * Public Functions
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int tee_main(int argc, char *argv[])
-#endif
 {
   FAR struct tee_list_s *head = NULL;
   FAR struct tee_list_s *curr;
@@ -232,7 +228,7 @@ errout_with_list:
   for (curr = head; curr; curr = next)
     {
       next = curr->next;
-      (void)close(curr->fd);
+      close(curr->fd);
       free(curr);
     }
 

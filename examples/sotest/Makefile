@@ -42,17 +42,15 @@ DELIM ?= /
 
 # Shared library example built-in application info
 
-APPNAME = sotest
+PROGNAME = sotest
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_SOTEST)
 
 # Shared Library Example
 
 CSRCS = sot_symtab.c
 MAINSRC = sotest_main.c
-
-CONFIG_XYZ_PROGNAME ?= sotest$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
 ROOTDEPPATH += --dep-path lib
 
@@ -60,12 +58,14 @@ ROOTDEPPATH += --dep-path lib
 
 VPATH = lib
 
-context::
-	@$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile -I $(SRCDIR)/lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+sotest_main.c: build
+lib/sot_symtab.c: build
+
+.PHONY: build
+build:
+	+$(Q) $(MAKE) -C lib -f $(SRCDIR)/lib/Makefile -I $(SRCDIR)/lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 clean::
-	@$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile -I $(SRCDIR)/lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
-
-MODULE = CONFIG_EXAMPLES_SOTEST
+	+$(Q) $(MAKE) -C lib -f $(SRCDIR)/lib/Makefile -I $(SRCDIR)/lib TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 include $(APPDIR)/Application.mk

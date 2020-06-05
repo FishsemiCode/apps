@@ -67,6 +67,9 @@ struct fb_state_s
   int fd;
   struct fb_videoinfo_s vinfo;
   struct fb_planeinfo_s pinfo;
+#ifdef CONFIG_FB_OVERLAY
+  struct fb_overlayinfo_s oinfo;
+#endif
   FAR void *fbmem;
 };
 
@@ -190,7 +193,7 @@ static void draw_rect1(FAR struct fb_state_s *state,
   startx = (rect->pt1.x >> 3);
   endx   = ((rect->pt2.x + 7) >> 3);
 
-  /* Caculate a mask on the first and last bytes of the sequence that may
+  /* Calculate a mask on the first and last bytes of the sequence that may
    * not be completely filled with pixel.
    */
 
@@ -284,11 +287,7 @@ static void draw_rect(FAR struct fb_state_s *state,
  * fb_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int fb_main(int argc, char *argv[])
-#endif
 {
   FAR const char *fbdev = g_default_fbdev;
   struct fb_state_s state;
@@ -346,6 +345,50 @@ int fb_main(int argc, char *argv[])
   printf("     xres: %u\n", state.vinfo.xres);
   printf("     yres: %u\n", state.vinfo.yres);
   printf("  nplanes: %u\n", state.vinfo.nplanes);
+
+#ifdef CONFIG_FB_OVERLAY
+  printf("noverlays: %u\n", state.vinfo.noverlays);
+
+  /* Select the first overlay, which should be the composed framebuffer */
+
+  ret = ioctl(state.fd, FBIO_SELECT_OVERLAY, 0);
+  if (ret < 0)
+    {
+      int errcode = errno;
+      fprintf(stderr, "ERROR: ioctl(FBIO_SELECT_OVERLAY) failed: %d\n",
+              errcode);
+      close(state.fd);
+      return EXIT_FAILURE;
+    }
+
+  ret = ioctl(state.fd, FBIOGET_OVERLAYINFO,
+                        (unsigned long)((uintptr_t)&state.oinfo));
+  if (ret < 0)
+    {
+      int errcode = errno;
+      fprintf(stderr, "ERROR: ioctl(FBIOGET_OVERLAYINFO) failed: %d\n",
+              errcode);
+      close(state.fd);
+      return EXIT_FAILURE;
+    }
+
+  printf("OverlayInfo (overlay 0):\n");
+  printf("    fbmem: %p\n", state.oinfo.fbmem);
+  printf("    fblen: %lu\n", (unsigned long)state.oinfo.fblen);
+  printf("   stride: %u\n", state.oinfo.stride);
+  printf("  overlay: %u\n", state.oinfo.overlay);
+  printf("      bpp: %u\n", state.oinfo.bpp);
+  printf("    blank: %u\n", state.oinfo.blank);
+  printf("chromakey: 0x%08x\n", state.oinfo.chromakey);
+  printf("    color: 0x%08x\n", state.oinfo.color);
+  printf("   transp: 0x%02x\n", state.oinfo.transp.transp);
+  printf("     mode: %u\n", state.oinfo.transp.transp_mode);
+  printf("     area: (%u,%u) => (%u,%u)\n",
+                      state.oinfo.sarea.x, state.oinfo.sarea.y,
+                      state.oinfo.sarea.w, state.oinfo.sarea.h);
+  printf("     accl: %u\n", state.oinfo.accl);
+
+#endif
 
   ret = ioctl(state.fd, FBIOGET_PLANEINFO,
               (unsigned long)((uintptr_t)&state.pinfo));

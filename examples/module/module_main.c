@@ -46,6 +46,7 @@
 #include <sys/boardctl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -54,7 +55,7 @@
 #include <debug.h>
 
 #include <nuttx/module.h>
-#include <nuttx/binfmt/symtab.h>
+#include <nuttx/symtab.h>
 
 #if  defined(CONFIG_EXAMPLES_MODULE_ROMFS)
 #  include <nuttx/drivers/ramdisk.h>
@@ -143,11 +144,7 @@ extern const int g_mod_nexports;
  * Name: module_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int module_main(int argc, char *argv[])
-#endif
 {
 #ifdef CONFIG_BUILD_FLAT
   struct boardioc_symtab_s symdesc;
@@ -170,7 +167,8 @@ int module_main(int argc, char *argv[])
   ret = boardctl(BOARDIOC_OS_SYMTAB, (uintptr_t)&symdesc);
   if (ret < 0)
     {
-      fprintf(stderr, "ERROR: boardctl(BOARDIOC_OS_SYMTAB) failed: %d\n", ret);
+      fprintf(stderr, "ERROR: boardctl(BOARDIOC_OS_SYMTAB) failed: %d\n",
+              ret);
       exit(EXIT_FAILURE);
     }
 #endif
@@ -191,7 +189,8 @@ int module_main(int argc, char *argv[])
    * anyway).
    */
 
-  ret = romdisk_register(CONFIG_EXAMPLES_MODULE_DEVMINOR, (FAR uint8_t *)romfs_img,
+  ret = romdisk_register(CONFIG_EXAMPLES_MODULE_DEVMINOR,
+                         (FAR uint8_t *)romfs_img,
                          NSECTORS(romfs_img_len), SECTORSIZE);
   if (ret < 0)
     {
@@ -217,7 +216,7 @@ int module_main(int argc, char *argv[])
   if (ret < 0)
     {
       fprintf(stderr, "ERROR: mount(%s,%s,romfs) failed: %s\n",
-              CONFIG_EXAMPLES_MODULE_DEVPATH, MOUNTPT, errno);
+              CONFIG_EXAMPLES_MODULE_DEVPATH, MOUNTPT, strerror(errno));
       exit(EXIT_FAILURE);
     }
 
@@ -233,7 +232,7 @@ int module_main(int argc, char *argv[])
     }
 
 #endif /* CONFIG_EXAMPLES_MODULE_ROMFS */
-#else /*  CONFIG_EXAMPLES_MODULE_BUILTINFS */
+#else /* CONFIG_EXAMPLES_MODULE_BUILTINFS */
   /* An external file system is being used */
 
 #if defined(CONFIG_EXAMPLES_MODULE_FSMOUNT)
@@ -267,7 +266,7 @@ int module_main(int argc, char *argv[])
         }
     }
   while (ret < 0);
-#endif  /* CONFIG_EXAMPLES_MODULE_FSREMOVEABLE */
+#endif /* CONFIG_EXAMPLES_MODULE_FSREMOVEABLE */
 
   /* Mount the external file system */
 
@@ -278,7 +277,7 @@ int module_main(int argc, char *argv[])
               CONFIG_EXAMPLES_MODULE_FSTYPE, MS_RDONLY, NULL);
   if (ret < 0)
     {
-      printf("ERROR: mount(%s, %s, %s) failed: %d\n",\
+      printf("ERROR: mount(%s, %s, %s) failed: %d\n",
              CONFIG_EXAMPLES_MODULE_DEVPATH, CONFIG_EXAMPLES_MODULE_FSTYPE,
              MOUNTPT, errno);
     }
@@ -333,7 +332,8 @@ int module_main(int argc, char *argv[])
     }
 
   printf("main: Wrote %d bytes: %d\n", (int)nbytes);
-  lib_dumpbuffer("main: Bytes written", (FAR const uint8_t *)g_write_string, nbytes);
+  lib_dumpbuffer("main: Bytes written", (FAR const uint8_t *)g_write_string,
+                 nbytes);
 
   close(fd);
   ret = rmmod(handle);

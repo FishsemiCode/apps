@@ -1,7 +1,8 @@
 /****************************************************************************
  * examples/nx/nx_main.c
  *
- *   Copyright (C) 2008-2011, 2015-2016 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2008-2011, 2015-2016, 2019 Gregory Nutt. All rights
+ *     reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,10 +56,6 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
-
-#ifdef CONFIG_VNCSERVER
-#  include <nuttx/video/vnc.h>
-#endif
 
 #include <nuttx/nx/nx.h>
 #include <nuttx/nx/nxtk.h>
@@ -146,7 +143,7 @@ static void nxeg_drivemouse(void)
       for (y = 0; y < g_yres; y += ystep)
         {
           printf("nxeg_drivemouse: Mouse left button at (%d,%d)\n", x, y);
-          (void)nx_mousein(g_hnx, x, y, NX_MOUSE_LEFTBUTTON);
+          nx_mousein(g_hnx, x, y, NX_MOUSE_LEFTBUTTON);
         }
     }
 }
@@ -458,24 +455,30 @@ static int nxeg_initialize(void)
 #ifdef CONFIG_VNCSERVER
       /* Setup the VNC server to support keyboard/mouse inputs */
 
-      ret = vnc_default_fbinitialize(0, g_hnx);
-      if (ret < 0)
-        {
-          printf("vnc_default_fbinitialize failed: %d\n", ret);
-          nx_disconnect(g_hnx);
-          g_exitcode = NXEXIT_FBINITIALIZE;
-          return ERROR;
-        }
+       struct boardioc_vncstart_s vnc =
+       {
+         0, g_hnx
+       };
+
+       ret = boardctl(BOARDIOC_VNC_START, (uintptr_t)&vnc);
+       if (ret < 0)
+         {
+           printf("boardctl(BOARDIOC_VNC_START) failed: %d\n", ret);
+           nx_disconnect(g_hnx);
+           g_exitcode = NXEXIT_FBINITIALIZE;
+           return ERROR;
+         }
 #endif
+
        /* Start a separate thread to listen for server events.  This is probably
         * the least efficient way to do this, but it makes this example flow more
         * smoothly.
         */
 
-       (void)pthread_attr_init(&attr);
+       pthread_attr_init(&attr);
        param.sched_priority = CONFIG_EXAMPLES_NX_LISTENERPRIO;
-       (void)pthread_attr_setschedparam(&attr, &param);
-       (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NX_STACKSIZE);
+       pthread_attr_setschedparam(&attr, &param);
+       pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NX_STACKSIZE);
 
        ret = pthread_create(&thread, &attr, nx_listenerthread, NULL);
        if (ret != 0)
@@ -493,7 +496,7 @@ static int nxeg_initialize(void)
             * are connected.
             */
 
-           (void)sem_wait(&g_semevent);
+           sem_wait(&g_semevent);
          }
     }
   else
@@ -514,11 +517,7 @@ static int nxeg_initialize(void)
  * Name: nx_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int nx_main(int argc, char *argv[])
-#endif
 {
   NXEGWINDOW hwnd1;
   NXEGWINDOW hwnd2;
@@ -575,7 +574,7 @@ int nx_main(int argc, char *argv[])
 
   while (!b_haveresolution)
     {
-      (void)sem_wait(&g_semevent);
+      sem_wait(&g_semevent);
     }
   printf("nx_main: Screen resolution (%d,%d)\n", g_xres, g_yres);
 
@@ -776,13 +775,13 @@ int nx_main(int argc, char *argv[])
 
 errout_with_hwnd2:
   printf("nx_main: Close window #2\n");
-  (void)nxeg_closewindow(hwnd2, &g_wstate[1]);
+  nxeg_closewindow(hwnd2, &g_wstate[1]);
 
   /* Close the window1 */
 
 errout_with_hwnd1:
   printf("nx_main: Close window #1\n");
-  (void)nxeg_closewindow(hwnd1, &g_wstate[0]);
+  nxeg_closewindow(hwnd1, &g_wstate[0]);
 
 errout_with_nx:
   /* Disconnect from the server */

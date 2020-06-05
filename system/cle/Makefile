@@ -36,6 +36,6 @@
 -include $(TOPDIR)/Make.defs
 
 # EMACS-like Command Line Editor (CLE)
-CSRCS		= cle.c
+CSRCS = cle.c
 
 include $(APPDIR)/Application.mk

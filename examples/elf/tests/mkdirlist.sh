@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage="Usage: %0 <fsimg-dir-path>"
 
@@ -31,5 +31,3 @@ echo "  NULL"
 echo "};"
 echo ""
 echo "#endif /* __EXAMPLES_ELF_TESTS_DIRLIST_H */"
-
-

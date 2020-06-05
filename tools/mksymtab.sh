@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ############################################################################
 # apps/tools/mksymtab.sh
 #
@@ -48,13 +48,6 @@ if [ -z "$dir" ]; then
   exit 1
 fi
 
-if [ ! -d "$dir" ]; then
-  echo "ERROR: Directory $dir does not exist"
-  echo ""
-  echo $usage
-  exit 1
-fi
-
 # Get the output file name
 
 outfile=$2
@@ -83,10 +76,10 @@ fi
 # Now output the symbol table as a structure in a C source file.  All
 # undefined symbols are declared as void* types.  If the toolchain does
 # any kind of checking for function vs. data objects, then this could
-# faile
+# failed
 
 echo "#include <nuttx/compiler.h>" >$outfile
-echo "#include <nuttx/binfmt/symtab.h>" >>$outfile
+echo "#include <nuttx/symtab.h>" >>$outfile
 echo "" >>$outfile
 
 for var in $varlist; do

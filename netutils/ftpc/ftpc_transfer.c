@@ -139,7 +139,7 @@ static int ftp_cmd_epsv(FAR struct ftpc_session_s *session,
    * are supplied.
    */
 
-  nscan = sscanf(ptr, "|||%u|", &tmp);
+  nscan = sscanf(ptr, "|||%hu|", &tmp);
   if (nscan != 1)
     {
       nwarn("WARNING: Error parsing EPSV reply: '%s'\n", session->reply);
@@ -274,7 +274,7 @@ static FAR char *ftpc_abspath(FAR struct ftpc_session_s *session,
 
       else if (relpath[1] == '/')
         {
-          (void)asprintf(&ptr, "%s%s", homedir, &relpath[1]);
+          asprintf(&ptr, "%s%s", homedir, &relpath[1]);
         }
 
       /* Hmmm... this pretty much guaranteed to fail */
@@ -291,7 +291,7 @@ static FAR char *ftpc_abspath(FAR struct ftpc_session_s *session,
 
   else if (strncmp(relpath, "./", 2) == 0)
     {
-      (void)asprintf(&ptr, "%s%s", curdir, relpath+1);
+      asprintf(&ptr, "%s%s", curdir, relpath+1);
     }
 
   /* Check for an absolute path */
@@ -305,7 +305,7 @@ static FAR char *ftpc_abspath(FAR struct ftpc_session_s *session,
 
   else
     {
-      (void)asprintf(&ptr, "%s/%s", curdir, relpath);
+      asprintf(&ptr, "%s/%s", curdir, relpath);
     }
 
   return ptr;
@@ -608,7 +608,7 @@ int ftpc_xfrabort(FAR struct ftpc_session_s *session, FAR FILE *stream)
 
   fptc_getreply(session);
 
-  /* Expected replys are: "226 Closing data connection" or
+  /* Expected replies are: "226 Closing data connection" or
    * "426 Connection closed; transfer aborted"
    */
 
@@ -622,7 +622,7 @@ int ftpc_xfrabort(FAR struct ftpc_session_s *session, FAR FILE *stream)
 
       fptc_getreply(session);
 
-     /* Expected replys are:  or "225 Data connection open; no transfer in progress"
+     /* Expected replies are:  or "225 Data connection open; no transfer in progress"
       * "226 Closing data connection"
       */
 
@@ -647,7 +647,7 @@ int ftpc_xfrabort(FAR struct ftpc_session_s *session, FAR FILE *stream)
  *
  ****************************************************************************/
 
-void ftpc_timeout(int argc, uint32_t arg1, ...)
+void ftpc_timeout(int argc, wdparm_t arg1, ...)
 {
   FAR struct ftpc_session_s *session = (FAR struct ftpc_session_s *)arg1;
 
@@ -689,5 +689,3 @@ FAR char *ftpc_abslpath(FAR struct ftpc_session_s *session,
   ninfo("%s -> %s\n", relpath, abslpath);
   return abslpath;
 }
-
-

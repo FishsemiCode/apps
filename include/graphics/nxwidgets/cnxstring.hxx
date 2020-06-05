@@ -257,6 +257,11 @@ namespace NXWidgets
 
     void setText(const CNxString &text);
 
+    inline void setText(FAR const CNxString *text)
+    {
+      setText(*text);
+    }
+
     /**
      * Set the text in the string.
      *
@@ -276,7 +281,7 @@ namespace NXWidgets
     /**
      * Set the 8-bit C-string text in the string.
      *
-     * @param text Character to to use as the new data for this string.
+     * @param text Character to use as the new data for this string.
      */
 
     void setText(const nxwidget_char_t text);
@@ -433,7 +438,7 @@ namespace NXWidgets
      * substring.
      */
 
-    CNxString *subString(int startIndex) const;
+    FAR CNxString *subString(int startIndex) const;
 
     /**
      * Get a substring from this string.  It is the responsibility of the
@@ -445,7 +450,7 @@ namespace NXWidgets
      * substring.
      */
 
-    CNxString *subString(int startIndex, int length) const;
+    FAR CNxString *subString(int startIndex, int length) const;
 
     /**
      * Overloaded assignment operator.  Copies the data within the argument
@@ -465,7 +470,7 @@ namespace NXWidgets
      * @return This string.
      */
 
-    CNxString &operator=(const char *string);
+    CNxString &operator=(FAR const char *string);
 
     /**
      * Overloaded assignment operator.  Copies the data from the argument
@@ -509,6 +514,7 @@ namespace NXWidgets
      */
 
     int compareTo(const CNxString &string) const;
+    int compareTo(FAR const char *string) const;
 
     /**
      * snprintf()-style string formatting. Automatically allocates correct

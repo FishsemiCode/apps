@@ -37,16 +37,14 @@
 
 # ROMFS built-in application info
 
-APPNAME = romfs
+PROGNAME = romfs
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_ROMFS)
 
 # ROMFS File System Example
 
 MAINSRC = romfs_main.c
-
-CONFIG_XYZ_PROGNAME ?= romfs$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
 # Common build
 
@@ -70,7 +68,6 @@ context:: romfs_testdir.h
 
 distclean::
 	$(call DELFILE, testdir.img)
-
-MODULE = CONFIG_EXAMPLES_ROMFS
+	$(call DELFILE, romfs_testdir.h)
 
 include $(APPDIR)/Application.mk

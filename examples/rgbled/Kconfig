@@ -18,9 +18,8 @@ config EXAMPLES_RGBLED_DEVNAME
 config EXAMPLES_RGBLED_PROGNAME
 	string "Program name"
 	default "rgbled"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_RGBLED_PRIORITY
@@ -29,6 +28,6 @@ config EXAMPLES_RGBLED_PRIORITY
 
 config EXAMPLES_RGBLED_STACKSIZE
 	int "RGBLED stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif # EXAMPLES_RGBLED

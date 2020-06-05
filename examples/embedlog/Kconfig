@@ -3,13 +3,10 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-comment "embedlog example needs SYSTEM_EMBEDLOG"
-	depends on !SYSTEM_EMBEDLOG
-
 if SYSTEM_EMBEDLOG
 
 config EXAMPLES_EMBEDLOG
-	bool "embedlog example"
+	tristate "embedlog example"
 	default n
 	select EMBEDLOG_ENABLE_OUT_FILE
 	select EMBEDLOG_ENABLE_OUT_STDERR
@@ -29,9 +26,8 @@ if EXAMPLES_EMBEDLOG
 config EXAMPLES_EMBEDLOG_PROGNAME
 	string "Program name"
 	default "embedlog"
-	depends on BUILD_KERNEL
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_EMBEDLOG_PRIORITY
@@ -40,7 +36,7 @@ config EXAMPLES_EMBEDLOG_PRIORITY
 
 config EXAMPLES_EMBEDLOG_STACKSIZE
 	int "embedlog example stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif #EXAMPLES_EMBEDLOG
 endif #SYSTEM_EMBEDLOG

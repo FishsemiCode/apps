@@ -140,11 +140,7 @@ static void show_joystick(djoy_buttonset_t oldset, djoy_buttonset_t newset)
  * djoy_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int djoy_main(int argc, char *argv[])
-#endif
 {
   struct djoy_notify_s notify;
   int fd;
@@ -194,16 +190,9 @@ int djoy_main(int argc, char *argv[])
       goto errout_with_fd;
     }
 
-  /* Then loop, receiving signals indicating joystick events.  If this is an
-   * NSH builtin application, we will turn as soon as the SELECT button is
-   * depressed.
-   */
+  /* Then loop, receiving signals indicating joystick events. */
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
-  while ((g_djoylast & DJOY_BUTTON_SELECT_BIT) == 0)
-#else
   for (;;)
-#endif
     {
       struct siginfo value;
       sigset_t set;
@@ -212,8 +201,8 @@ int djoy_main(int argc, char *argv[])
 
       /* Wait for a signal */
 
-      (void)sigemptyset(&set);
-      (void)sigaddset(&set, CONFIG_EXAMPLES_DJOYSTICK_SIGNO);
+      sigemptyset(&set);
+      sigaddset(&set, CONFIG_EXAMPLES_DJOYSTICK_SIGNO);
       ret = sigwaitinfo(&set, &value);
       if (ret < 0)
         {

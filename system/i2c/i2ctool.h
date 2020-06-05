@@ -54,14 +54,17 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
 /* Configuration ************************************************************/
-/* CONFIG_NSH_BUILTIN_APPS - Build the tools as an NSH built-in command
- * CONFIG_I2CTOOL_MINBUS - Smallest bus index supported by the hardware (default 0).
- * CONFIG_I2CTOOL_MAXBUS - Largest bus index supported by the hardware (default 3)
- * CONFIG_I2CTOOL_MINADDR - Minium device address (default: 0x03)
- * CONFIG_I2CTOOL_MAXADDR - Largest device address (default: 0x77)
+
+/* CONFIG_I2CTOOL_MINBUS     - Smallest bus index supported by the hardware
+ *                             (default 0).
+ * CONFIG_I2CTOOL_MAXBUS     - Largest bus index supported by the hardware
+ *                             (default 3)
+ * CONFIG_I2CTOOL_MINADDR    - Minimum device address (default: 0x03)
+ * CONFIG_I2CTOOL_MAXADDR    - Largest device address (default: 0x77)
  * CONFIG_I2CTOOL_MAXREGADDR - Largest register address (default: 0xff)
- * CONFIG_I2CTOOL_DEFFREQ - Default frequency (default: 4000000)
+ * CONFIG_I2CTOOL_DEFFREQ    - Default frequency (default: 4000000)
  */
 
 #ifndef CONFIG_I2CTOOL_MINBUS
@@ -95,6 +98,10 @@
  */
 
 #define MAX_ARGUMENTS 12
+
+/* Maximum number of bytes to dump */
+
+#define MAX_DUMP_CNT  256
 
 /* Maximum size of one command line */
 
@@ -140,6 +147,7 @@ struct i2ctool_s
   uint8_t  width;      /* [-w width] is the data width (8 or 16) */
   bool     start;      /* [-s|n], send|don't send start between command and data */
   bool     autoincr;   /* [-i|j], Auto increment|don't increment regaddr on repititions */
+  bool     hasregindx; /* true with the use of -r */
   uint32_t freq;       /* [-f freq] I2C frequency */
 
   /* Output streams */
@@ -150,7 +158,8 @@ struct i2ctool_s
 #endif
 };
 
-typedef int  (*cmd_t)(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
+typedef int  (*cmd_t)(FAR struct i2ctool_s *i2ctool, int argc,
+                      FAR char **argv);
 
 struct cmdmap_s
 {
@@ -178,21 +187,24 @@ extern const char g_i2cxfrerror[];
 
 /* Message handler */
 
-ssize_t i2ctool_write(FAR struct i2ctool_s *i2ctool, FAR const void *buffer, size_t nbytes);
+ssize_t i2ctool_write(FAR struct i2ctool_s *i2ctool, FAR const void *buffer,
+                      size_t nbytes);
 int i2ctool_printf(FAR struct i2ctool_s *i2ctool, const char *fmt, ...);
 void i2ctool_flush(FAR struct i2ctool_s *i2ctool);
+void i2ctool_hexdump(FILE *outstream, void *addr, int len);
 
 /* Command handlers */
 
 int i2ccmd_bus(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
 int i2ccmd_dev(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
 int i2ccmd_get(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
+int i2ccmd_dump(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
 int i2ccmd_set(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
 int i2ccmd_verf(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv);
 
 /* I2C access functions */
 
-int i2ctool_get(FAR struct i2ctool_s *i2ctool, int fd, uint8_t addr,
+int i2ctool_get(FAR struct i2ctool_s *i2ctool, int fd, uint8_t regaddr,
                 FAR uint16_t *result);
 int i2ctool_set(FAR struct i2ctool_s *i2ctool, int fd, uint8_t regaddr,
                 uint16_t value);

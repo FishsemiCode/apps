@@ -1,7 +1,8 @@
 /****************************************************************************
  * apps/nshlib/nsh_telnetd.c
  *
- *   Copyright (C) 2007-2013, 2016-2017 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2013, 2016-2017, 2019 Gregory Nutt. All rights
+ *     reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +90,7 @@ static int nsh_telnetmain(int argc, char *argv[])
   DEBUGASSERT(pstate != NULL);
   vtbl = &pstate->cn_vtbl;
 
-  _info("Session [%d] Started\n", getpid());
+  ninfo("Session [%d] Started\n", getpid());
 
 #ifdef CONFIG_NSH_TELNET_LOGIN
   /* Login User and Password Check */
@@ -132,58 +133,77 @@ static int nsh_telnetmain(int argc, char *argv[])
    */
 
 #if defined(CONFIG_NSH_ROMFSETC) && !defined(CONFIG_NSH_CONSOLE)
-  (void)nsh_initscript(vtbl);
+  nsh_initscript(vtbl);
 #endif
 
   /* Execute the login script */
 
 #ifdef CONFIG_NSH_ROMFSRC
-  (void)nsh_loginscript(vtbl);
+  nsh_loginscript(vtbl);
 #endif
 
   /* Then enter the command line parsing loop */
 
-  for (;;)
+  for (; ; )
     {
+      /* Get the next line of input from the Telnet client */
+
+#ifdef CONFIG_TELNET_CHARACTER_MODE
+#ifdef CONFIG_NSH_CLE
+      /* cle() returns a negated errno value on failure (errno is not set) */
+
+      ret = cle(pstate->cn_line, g_nshprompt, CONFIG_NSH_LINELEN,
+                INSTREAM(pstate), OUTSTREAM(pstate));
+      if (ret < 0)
+        {
+          fprintf(pstate->cn_errstream, g_fmtcmdfailed, "nsh_telnetmain",
+                  "cle", NSH_ERRNO_OF(-ret));
+          nsh_exit(vtbl, 1);
+        }
+#else
       /* Display the prompt string */
 
       fputs(g_nshprompt, pstate->cn_outstream);
       fflush(pstate->cn_outstream);
 
-      /* Get the next line of input from the Telnet client */
-#ifdef CONFIG_TELNET_CHARACTER_MODE
-#ifdef CONFIG_NSH_CLE
-      ret = cle(pstate->cn_line, CONFIG_NSH_LINELEN,
-                INSTREAM(pstate), OUTSTREAM(pstate));
-#else
+      /* readline() returns EOF on failure (errno is not set) */
+
       ret = readline(pstate->cn_line, CONFIG_NSH_LINELEN,
                      INSTREAM(pstate), OUTSTREAM(pstate));
-#endif
-#else
-      if (fgets(pstate->cn_line, CONFIG_NSH_LINELEN,
-                INSTREAM(pstate)) != NULL)
+      if (ret == EOF)
         {
-          ret = strlen(pstate->cn_line);
-        }
-      else
-        {
-          ret = EOF;
-        }
-#endif
+          /* NOTE: readline() does not set the errno variable, but perhaps we
+           * will be lucky and it will still be valid.
+           */
 
-      if (ret != EOF)
-        {
-          /* Parse process the received Telnet command */
-
-          (void)nsh_parse(vtbl, pstate->cn_line);
-          fflush(pstate->cn_outstream);
-        }
-      else
-        {
           fprintf(pstate->cn_errstream, g_fmtcmdfailed, "nsh_telnetmain",
-                  "cle/readline/fgets", NSH_ERRNO);
+                  "readline", NSH_ERRNO);
           nsh_exit(vtbl, 1);
         }
+#endif
+#else
+      /* Display the prompt string */
+
+      fputs(g_nshprompt, pstate->cn_outstream);
+      fflush(pstate->cn_outstream);
+
+      /* fgets() returns NULL on failure (errno will be set) */
+
+      if (fgets(pstate->cn_line, CONFIG_NSH_LINELEN,
+                INSTREAM(pstate)) == NULL)
+        {
+          fprintf(pstate->cn_errstream, g_fmtcmdfailed, "nsh_telnetmain",
+                  "fgets", NSH_ERRNO);
+          nsh_exit(vtbl, 1);
+        }
+
+      ret = strlen(pstate->cn_line);
+#endif
+
+      /* Parse process the received Telnet command */
+
+      nsh_parse(vtbl, pstate->cn_line);
+      fflush(pstate->cn_outstream);
     }
 
   /* Clean up */
@@ -192,6 +212,7 @@ static int nsh_telnetmain(int argc, char *argv[])
 
   /* We do not get here, but this is necessary to keep some compilers happy */
 
+  UNUSED(ret);
   return OK;
 }
 
@@ -248,7 +269,6 @@ int nsh_telnetstart(sa_family_t family)
       /* Configure the telnet daemon */
 
       config.d_port      = HTONS(CONFIG_NSH_TELNETD_PORT);
-      config.d_family    = family;
       config.d_priority  = CONFIG_NSH_TELNETD_DAEMONPRIO;
       config.d_stacksize = CONFIG_NSH_TELNETD_DAEMONSTACKSIZE;
       config.t_priority  = CONFIG_NSH_TELNETD_CLIENTPRIO;
@@ -257,17 +277,43 @@ int nsh_telnetstart(sa_family_t family)
 
       /* Start the telnet daemon */
 
-      _info("Starting the Telnet daemon\n");
+      ninfo("Starting the Telnet daemon\n");
 
-      ret = telnetd_start(&config);
-      if (ret < 0)
+#ifdef CONFIG_NET_IPv4
+      if (family == AF_UNSPEC || family == AF_INET)
         {
-          _err("ERROR: Failed to tart the Telnet daemon: %d\n", ret);
-          state = TELNETD_NOTRUNNING;
+          config.d_family = AF_INET;
+          ret = telnetd_start(&config);
+          if (ret < 0)
+            {
+              _err("ERROR: Failed to start the Telnet IPv4 daemon: %d\n", ret);
+            }
+          else
+            {
+              state = TELNETD_RUNNING;
+            }
         }
-      else
+#endif
+
+#ifdef CONFIG_NET_IPv6
+      if (family == AF_UNSPEC || family == AF_INET6)
         {
-          state = TELNETD_RUNNING;
+          config.d_family = AF_INET6;
+          ret = telnetd_start(&config);
+          if (ret < 0)
+            {
+              _err("ERROR: Failed to start the Telnet IPv6 daemon: %d\n", ret);
+            }
+          else
+            {
+              state = TELNETD_RUNNING;
+            }
+        }
+#endif
+
+      if (state == TELNETD_STARTED)
+        {
+          state = TELNETD_NOTRUNNING;
         }
     }
 
@@ -284,7 +330,7 @@ int nsh_telnetstart(sa_family_t family)
  *
  *   Normally this command would be suppressed with CONFIG_NSH_DISABLE_TELNETD
  *   because the Telnet daemon is automatically started in nsh_main.c.  The
- *   exception is when CONFIG_NSH_NETLOCAL is selected.  IN that case, the
+ *   exception is when CONFIG_NETINIT_NETLOCAL is selected.  IN that case, the
  *   network is not enabled at initialization but rather must be enabled from
  *   the NSH command line or via other applications.
  *
@@ -303,18 +349,17 @@ int nsh_telnetstart(sa_family_t family)
 #ifndef CONFIG_NSH_DISABLE_TELNETD
 int cmd_telnetd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  sa_family_t family;
+  sa_family_t family = AF_UNSPEC;
 
-  /* If both IPv6 nd IPv4 are enabled, then the address family must
+  /* If both IPv6 and IPv4 are enabled, then the address family must
    * be specified on the command line.
    */
 
 #if defined(CONFIG_NET_IPv4) && defined(CONFIG_NET_IPv6)
-  family = (strcmp(argv[1], "ipv6") == 0) ? AF_INET6 : AF_INET;
-#elif defined(CONFIG_NET_IPv6)
-  family = AF_INET6;
-#else /* if defined(CONFIG_NET_IPv4) */
-  family = AF_INET;
+  if (argc >= 2)
+    {
+      family = (strcmp(argv[1], "ipv6") == 0) ? AF_INET6 : AF_INET;
+    }
 #endif
 
   return nsh_telnetstart(family) < 0 ? ERROR : OK;

@@ -95,12 +95,13 @@
  * webserver_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int webserver_main(int argc, char *argv[])
-#endif
 {
+#ifndef CONFIG_NSH_NETINIT
+  /* We are running standalone (as opposed to a NSH built-in app). Therefore
+   * we need to initialize the network before we start.
+   */
+
   struct in_addr addr;
 #if defined(CONFIG_EXAMPLES_WEBSERVER_DHCPC) || defined(CONFIG_EXAMPLES_WEBSERVER_NOMAC)
   uint8_t mac[IFHWADDRLEN];
@@ -163,7 +164,7 @@ int webserver_main(int argc, char *argv[])
   if (handle)
     {
         struct dhcpc_state ds;
-        (void)dhcpc_request(handle, &ds);
+        dhcpc_request(handle, &ds);
         netlib_set_ipv4addr("eth0", &ds.ipaddr);
 
         if (ds.netmask.s_addr != 0)
@@ -185,13 +186,20 @@ int webserver_main(int argc, char *argv[])
         printf("IP: %s\n", inet_ntoa(ds.ipaddr));
     }
 #endif
+#endif /* CONFIG_NSH_NETINIT */
 
 #ifdef CONFIG_NET_TCP
   printf("Starting webserver\n");
   httpd_init();
+#ifndef CONFIG_NETUTILS_HTTPD_SCRIPT_DISABLE
   cgi_register();
+#endif
   httpd_listen();
 #endif
+
+  /* We are running standalone (as opposed to a NSH built-in app). Therefore
+   * we should not exit after httpd failure.
+   */
 
   while (1)
     {

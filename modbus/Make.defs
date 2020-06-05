@@ -35,6 +35,5 @@
 ############################################################################
 
 ifeq ($(CONFIG_MODBUS),y)
-CONFIGURED_APPS += modbus
+CONFIGURED_APPS += $(APPDIR)/modbus
 endif
-

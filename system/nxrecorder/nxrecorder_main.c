@@ -79,21 +79,28 @@ struct mp_cmd_s
  * Private Function Prototypes
  ****************************************************************************/
 
-static int nxrecorder_cmd_quit(FAR struct nxrecorder_s *pRecorder, char *parg);
-static int nxrecorder_cmd_recordraw(FAR struct nxrecorder_s *pRecorder, char *parg);
-static int nxrecorder_cmd_device(FAR struct nxrecorder_s *pRecorder, char *parg);
+static int nxrecorder_cmd_quit(FAR struct nxrecorder_s *pRecorder,
+                               FAR char *parg);
+static int nxrecorder_cmd_recordraw(FAR struct nxrecorder_s *pRecorder,
+                                    FAR char *parg);
+static int nxrecorder_cmd_device(FAR struct nxrecorder_s *pRecorder,
+                                 FAR char *parg);
 
 #ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
-static int nxrecorder_cmd_pause(FAR struct nxrecorder_s *pRecorder, char *parg);
-static int nxrecorder_cmd_resume(FAR struct nxrecorder_s *pRecorder, char *parg);
+static int nxrecorder_cmd_pause(FAR struct nxrecorder_s *pRecorder,
+                                FAR char *parg);
+static int nxrecorder_cmd_resume(FAR struct nxrecorder_s *pRecorder,
+                                 FAR char *parg);
 #endif
 
 #ifndef CONFIG_AUDIO_EXCLUDE_STOP
-static int nxrecorder_cmd_stop(FAR struct nxrecorder_s *pRecorder, char *parg);
+static int nxrecorder_cmd_stop(FAR struct nxrecorder_s *pRecorder,
+                               FAR char *parg);
 #endif
 
 #ifdef CONFIG_NXRECORDER_INCLUDE_HELP
-static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg);
+static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder,
+                               FAR char *parg);
 #endif
 
 /****************************************************************************
@@ -118,8 +125,8 @@ static const struct mp_cmd_s g_nxrecorder_cmds[] =
   { "q",         "",         nxrecorder_cmd_quit,      NXRECORDER_HELP_TEXT(Exit NxRecorder) },
   { "quit",      "",         nxrecorder_cmd_quit,      NXRECORDER_HELP_TEXT(Exit NxRecorder) },
 };
-static const int g_nxrecorder_cmd_count = sizeof(g_nxrecorder_cmds) / sizeof(struct mp_cmd_s);
 
+static const int g_nxrecorder_cmd_count = sizeof(g_nxrecorder_cmds) / sizeof(struct mp_cmd_s);
 
 /****************************************************************************
  * Private Functions
@@ -133,7 +140,8 @@ static const int g_nxrecorder_cmd_count = sizeof(g_nxrecorder_cmds) / sizeof(str
  *
  ****************************************************************************/
 
-static int nxrecorder_cmd_recordraw(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_recordraw(FAR struct nxrecorder_s *pRecorder,
+                                    FAR char *parg)
 {
   int ret;
   int channels = 0;
@@ -194,7 +202,8 @@ static int nxrecorder_cmd_recordraw(FAR struct nxrecorder_s *pRecorder, char *pa
  ****************************************************************************/
 
 #ifndef CONFIG_AUDIO_EXCLUDE_STOP
-static int nxrecorder_cmd_stop(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_stop(FAR struct nxrecorder_s *pRecorder,
+                               FAR char *parg)
 {
   /* Stop the record */
 
@@ -213,7 +222,8 @@ static int nxrecorder_cmd_stop(FAR struct nxrecorder_s *pRecorder, char *parg)
  ****************************************************************************/
 
 #ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
-static int nxrecorder_cmd_pause(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_pause(FAR struct nxrecorder_s *pRecorder,
+                                FAR char *parg)
 {
   /* Pause the record */
 
@@ -232,7 +242,8 @@ static int nxrecorder_cmd_pause(FAR struct nxrecorder_s *pRecorder, char *parg)
  ****************************************************************************/
 
 #ifndef CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME
-static int nxrecorder_cmd_resume(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_resume(FAR struct nxrecorder_s *pRecorder,
+                                 FAR char *parg)
 {
   /* Resume the record */
 
@@ -249,7 +260,8 @@ static int nxrecorder_cmd_resume(FAR struct nxrecorder_s *pRecorder, char *parg)
  *
  ****************************************************************************/
 
-static int nxrecorder_cmd_device(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_device(FAR struct nxrecorder_s *pRecorder,
+                                 FAR char *parg)
 {
   int     ret;
   char    path[32];
@@ -307,7 +319,8 @@ static int nxrecorder_cmd_device(FAR struct nxrecorder_s *pRecorder, char *parg)
  *   nxrecorder_cmd_quit() terminates the application
  ****************************************************************************/
 
-static int nxrecorder_cmd_quit(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_quit(FAR struct nxrecorder_s *pRecorder,
+                               FAR char *parg)
 {
   /* Stop the record if any */
 
@@ -326,16 +339,20 @@ static int nxrecorder_cmd_quit(FAR struct nxrecorder_s *pRecorder, char *parg)
  ****************************************************************************/
 
 #ifdef CONFIG_NXRECORDER_INCLUDE_HELP
-static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
+static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder,
+                               FAR char *parg)
 {
-  int   x, len, maxlen = 0;
+  int   len;
+  int   maxlen = 0;
+  int   x;
   int   c;
 
   /* Calculate length of longest cmd + arghelp */
 
   for (x = 0; x < g_nxrecorder_cmd_count; x++)
     {
-      len = strlen(g_nxrecorder_cmds[x].cmd) + strlen(g_nxrecorder_cmds[x].arghelp);
+      len = strlen(g_nxrecorder_cmds[x].cmd) +
+            strlen(g_nxrecorder_cmds[x].arghelp);
       if (len > maxlen)
         {
           maxlen = len;
@@ -347,11 +364,13 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
     {
       /* Print the command and it's arguments */
 
-      printf("  %s %s", g_nxrecorder_cmds[x].cmd, g_nxrecorder_cmds[x].arghelp);
+      printf("  %s %s",
+            g_nxrecorder_cmds[x].cmd, g_nxrecorder_cmds[x].arghelp);
 
       /* Calculate number of spaces to print before the help text */
 
-      len = maxlen - (strlen(g_nxrecorder_cmds[x].cmd) + strlen(g_nxrecorder_cmds[x].arghelp));
+      len = maxlen - (strlen(g_nxrecorder_cmds[x].cmd) +
+                      strlen(g_nxrecorder_cmds[x].arghelp));
       for (c = 0; c < len; c++)
         {
           printf(" ");
@@ -372,10 +391,10 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
  * Name: nxrecorder
  *
  *   nxrecorder() reads in commands from the console using the readline
- *   system add-in and implemets a command-line based pcm raw data recorder
+ *   system add-in and implements a command-line based pcm raw data recorder
  *   that uses the NuttX audio system to record pcm raw data files read in
- *   from the audio device.  Commands are provided for setting volume, base and
- *   other audio features, as well as for pausing and stopping the
+ *   from the audio device.  Commands are provided for setting volume, base
+ *   and other audio features, as well as for pausing and stopping the
  *   record.
  *
  * Input Parameters:
@@ -391,15 +410,14 @@ static int nxrecorder_cmd_help(FAR struct nxrecorder_s *pRecorder, char *parg)
  *
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int nxrecorder_main(int argc, char *argv[])
-#endif
 {
   char                    buffer[CONFIG_NSH_LINELEN];
-  int                     len, x, running;
-  char                    *cmd, *arg;
+  int                     len;
+  int                     x;
+  int                     running;
+  char                    *cmd;
+  char                    *arg;
   FAR struct nxrecorder_s *pRecorder;
 
   printf("NxRecorder version " NXRECORDER_VER "\n");
@@ -435,9 +453,9 @@ int nxrecorder_main(int argc, char *argv[])
             {
               /* nxrecorder command */
 
-              if (buffer[len-1] == '\n')
+              if (buffer[len - 1] == '\n')
                 {
-                  buffer[len-1] = '\0';
+                  buffer[len - 1] = '\0';
                 }
 
               /* Parse the command from the argument */
@@ -474,15 +492,20 @@ int nxrecorder_main(int argc, char *argv[])
                         {
                           running = FALSE;
                         }
+
                       break;
                     }
                 }
             }
           else
             {
+#ifdef CONFIG_SYSTEM_SYSTEM
               /* Transfer nuttx shell */
 
               system(buffer + 1);
+#else
+              printf("%s:  unknown nxplayer command\n", buffer);
+#endif
             }
         }
     }

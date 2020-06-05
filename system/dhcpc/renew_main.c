@@ -69,11 +69,7 @@ static void dhcpc_showusage(FAR const char *progname, int exitcode)
  * renew_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int renew_main(int argc, char *argv[])
-#endif
 {
   FAR const char *devname;
   FAR void *handle;
@@ -109,7 +105,7 @@ int renew_main(int argc, char *argv[])
   ret = dhcpc_request(handle, &ds);
   if (ret < 0)
     {
-      (void)dhcpc_close(handle);
+      dhcpc_close(handle);
       fprintf(stderr, "ERROR: dhcpc_request() failed\n");
       return EXIT_FAILURE;
     }

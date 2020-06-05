@@ -39,7 +39,7 @@ CREATEDIR := registry
 
 # Source and object files
 
-CSRCS = builtin_forindex.c builtin_list.c exec_builtin.c
+CSRCS = builtin_list.c exec_builtin.c
 
 # Registry entry lists
 
@@ -49,7 +49,7 @@ BDATLIST = $(strip $(call RWILDCARD, registry, *.bdat))
 registry$(DELIM).updated:
 	$(Q) $(MAKE) -C registry -f $(SRCDIR)/registry/Makefile -I $(SRCDIR)/registry .updated TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
-builtin_list$(OBJEXT): builtin_list.h builtin_proto.h
+builtin_list.o: builtin_list.h builtin_proto.h
 
 builtin_list.h: registry$(DELIM).updated
 	$(call DELFILE, .xx_builtin_list.h)

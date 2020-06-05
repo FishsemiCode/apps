@@ -1,7 +1,8 @@
 /****************************************************************************
  * apps/nshlib/nsh_netcmds.c
  *
- *   Copyright (C) 2007-2012, 2014-2015, 2017 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2007-2012, 2014-2015, 2017 Gregory Nutt.
+ *   All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +48,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -57,10 +59,8 @@
 #include <errno.h>
 #include <debug.h>
 
-#if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
-#  ifndef CONFIG_NSH_DISABLE_NSLOOKUP
-#    include <netdb.h>
-#  endif
+#if defined(CONFIG_LIBC_NETDB) && !defined(CONFIG_NSH_DISABLE_NSLOOKUP)
+#  include <netdb.h>
 #endif
 
 #include <net/ethernet.h>
@@ -85,6 +85,10 @@
 #  endif
 #endif
 
+#ifdef CONFIG_NETLINK_ROUTE
+#    include <nuttx/net/arp.h>
+#endif
+
 #ifdef CONFIG_NETUTILS_NETLIB
 #  include "netutils/netlib.h"
 #endif
@@ -102,7 +106,7 @@
 #  endif
 #endif
 
-#if defined(CONFIG_NSH_DHCPC) || defined(CONFIG_NSH_DNS)
+#if defined(CONFIG_NETINIT_DHCPC) || defined(CONFIG_NETINIT_DNS)
 #  include "netutils/dhcpc.h"
 #endif
 
@@ -180,7 +184,7 @@ typedef int (*nsh_netdev_callback_t)(FAR struct nsh_vtbl_s *vtbl,
 #if !defined(CONFIG_NSH_DISABLE_IFCONFIG)
 static inline void net_statistics(FAR struct nsh_vtbl_s *vtbl)
 {
-  (void)nsh_catfile(vtbl, "ifconfig", CONFIG_NSH_PROC_MOUNTPOINT "/net/stat");
+  nsh_catfile(vtbl, "ifconfig", CONFIG_NSH_PROC_MOUNTPOINT "/net/stat");
 }
 #else
 # define net_statistics(vtbl)
@@ -199,8 +203,9 @@ static int ifconfig_callback(FAR struct nsh_vtbl_s *vtbl, FAR char *devname)
 
   /* Construct the full path to the /proc/net entry for this device */
 
-  snprintf(buffer, IFNAMSIZ + 12, CONFIG_NSH_PROC_MOUNTPOINT "/net/%s", devname);
-  (void)nsh_catfile(vtbl, "ifconfig", buffer);
+  snprintf(buffer, IFNAMSIZ + 12,
+           CONFIG_NSH_PROC_MOUNTPOINT "/net/%s", devname);
+  nsh_catfile(vtbl, "ifconfig", buffer);
 
   return OK;
 }
@@ -238,7 +243,7 @@ int tftpc_parseargs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv,
             break;
 
           case 'h':
-            if (!netlib_ipv4addrconv(optarg, (FAR unsigned char*)&args->ipaddr))
+            if (!netlib_ipv4addrconv(optarg, (FAR uint8_t *)&args->ipaddr))
               {
                 nsh_error(vtbl, g_fmtarginvalid, argv[0]);
                 badarg = true;
@@ -258,7 +263,7 @@ int tftpc_parseargs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv,
         }
     }
 
-  /* If a bad argument was encountered, then return without processing the command */
+  /* If a bad argument was encountered, then return without processing */
 
   if (badarg)
     {
@@ -352,7 +357,7 @@ errout:
 static void wget_callback(FAR char **buffer, int offset, int datend,
                           FAR int *buflen, FAR void *arg)
 {
-  (void)write((int)((intptr_t)arg), &((*buffer)[offset]), datend - offset);
+  write((int)((intptr_t)arg), &((*buffer)[offset]), datend - offset);
 }
 #endif
 #endif
@@ -391,7 +396,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
           strcmp(entry->d_name, "stat") != 0)
         {
           /* Performt he callback.  It returns any non-zero value, then
-           * terminate the serach.
+           * terminate the search.
            */
 
           ret = callback(vtbl, entry->d_name);
@@ -404,7 +409,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
 
   /* Close the directory */
 
-  (void)closedir(dir);
+  closedir(dir);
   return ret;
 }
 #endif
@@ -413,8 +418,9 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
  * Name: nsh_addrconv
  ****************************************************************************/
 
-#ifdef HAVE_HWADDR
-static inline bool nsh_addrconv(FAR const char *hwstr, FAR mac_addr_t *macaddr)
+#if !defined(CONFIG_NSH_DISABLE_IFCONFIG) && defined(HAVE_HWADDR)
+static inline bool nsh_addrconv(FAR const char *hwstr,
+                                FAR mac_addr_t *macaddr)
 {
   /* REVISIT: How will we handle Ethernet and SLIP networks together? */
 
@@ -434,8 +440,9 @@ static inline bool nsh_addrconv(FAR const char *hwstr, FAR mac_addr_t *macaddr)
  * Name: nsh_sethwaddr
  ****************************************************************************/
 
-#ifdef HAVE_HWADDR
-static inline void nsh_sethwaddr(FAR const char *ifname, FAR mac_addr_t *macaddr)
+#if !defined(CONFIG_NSH_DISABLE_IFCONFIG) && defined(HAVE_HWADDR)
+static inline void nsh_sethwaddr(FAR const char *ifname,
+                                 FAR mac_addr_t *macaddr)
 {
 #if defined(CONFIG_NET_ETHERNET)
   netlib_setmacaddr(ifname, *macaddr);
@@ -534,7 +541,8 @@ int cmd_ifdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   ifname = argv[1];
   ret = netlib_ifdown(ifname);
-  nsh_output(vtbl, "ifdown %s...%s\n", ifname, (ret == OK) ? "OK" : "Failed");
+  nsh_output(vtbl, "ifdown %s...%s\n",
+             ifname, (ret == OK) ? "OK" : "Failed");
   return ret;
 }
 #endif
@@ -562,7 +570,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifdef HAVE_HWADDR
   FAR char *hw = NULL;
 #endif
-#if defined(CONFIG_NSH_DHCPC) || defined(CONFIG_NSH_DNS)
+#if defined(CONFIG_NETINIT_DHCPC) || defined(CONFIG_NETINIT_DNS)
   FAR char *dns = NULL;
 #endif
 #if defined(CONFIG_NET_IPv4) && defined(CONFIG_NET_IPv6)
@@ -573,7 +581,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifdef HAVE_HWADDR
   mac_addr_t macaddr;
 #endif
-#if defined(CONFIG_NSH_DHCPC)
+#if defined(CONFIG_NETINIT_DHCPC)
   FAR void *handle;
 #endif
   int ret;
@@ -659,7 +667,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
                 }
 
 #ifdef HAVE_HWADDR
-              /* REVISIT: How will we handle Ethernet and SLIP networks together? */
+              /* REVISIT: How will we handle Ethernet and SLIP together? */
 
               else if (!strcmp(tmp, "hw"))
                 {
@@ -677,7 +685,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
                 }
 #endif
 
-#if defined(CONFIG_NSH_DHCPC) || defined(CONFIG_NSH_DNS)
+#if defined(CONFIG_NETINIT_DHCPC) || defined(CONFIG_NETINIT_DNS)
               else if (!strcmp(tmp, "dns"))
                 {
                   if (argc - 1 >= i + 1)
@@ -717,7 +725,6 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
 #ifdef HAVE_HWADDR
   /* Set Hardware Ethernet MAC address */
-  /* REVISIT: How will we handle Ethernet and SLIP networks together? */
 
   if (hw != NULL)
     {
@@ -726,7 +733,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     }
 #endif
 
-   /* Set IP address */
+  /* Set IP address */
 
 #ifdef CONFIG_NET_IPv6
 #ifdef CONFIG_NET_IPv4
@@ -752,7 +759,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       if (hostip != NULL)
         {
-#if defined(CONFIG_NSH_DHCPC)
+#if defined(CONFIG_NETINIT_DHCPC)
           if (strcmp(hostip, "dhcp") == 0)
             {
               /* Set DHCP addr */
@@ -832,7 +839,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       if (mask != NULL)
         {
-          ninfo("Netmask: %s\n",mask);
+          ninfo("Netmask: %s\n", mask);
           inet_pton(AF_INET6, mask, &addr6);
         }
       else
@@ -867,7 +874,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   UNUSED(ifname); /* Not used in all configurations */
 
-#if defined(CONFIG_NSH_DHCPC) || defined(CONFIG_NSH_DNS)
+#if defined(CONFIG_NETINIT_DHCPC) || defined(CONFIG_NETINIT_DNS)
 #ifdef CONFIG_NET_IPv6
 #ifdef CONFIG_NET_IPv4
   if (inet6)
@@ -896,9 +903,9 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       netlib_set_ipv4dnsaddr(&addr);
     }
 #endif /* CONFIG_NET_IPv4 */
-#endif /* CONFIG_NSH_DHCPC || CONFIG_NSH_DNS */
+#endif /* CONFIG_NETINIT_DHCPC || CONFIG_NETINIT_DNS */
 
-#if defined(CONFIG_NSH_DHCPC)
+#if defined(CONFIG_NETINIT_DHCPC)
   /* Get the MAC address of the NIC */
 
   if (!gip)
@@ -918,7 +925,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
         {
           struct dhcpc_state ds;
 
-          (void)dhcpc_request(handle, &ds);
+          dhcpc_request(handle, &ds);
           netlib_set_ipv4addr("eth0", &ds.ipaddr);
 
           if (ds.netmask.s_addr != 0)
@@ -954,82 +961,52 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 }
 #endif
 
-
 /****************************************************************************
  * Name: cmd_nslookup
  ****************************************************************************/
 
-#if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT) && \
-   !defined(CONFIG_NSH_DISABLE_NSLOOKUP)
+#if defined(CONFIG_LIBC_NETDB) && !defined(CONFIG_NSH_DISABLE_NSLOOKUP)
 int cmd_nslookup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  FAR struct hostent *host;
-  FAR const char *addrtype;
+  FAR struct addrinfo *info;
+  FAR struct addrinfo *next;
   char buffer[48];
+  int ret;
 
   /* We should be guaranteed this by the command line parser */
 
   DEBUGASSERT(argc == 2);
 
-  /* Get the matching address + any aliases */
+  /* Get the matching address + canonical name */
 
-  host = gethostbyname(argv[1]);
-  if (!host)
+  ret = getaddrinfo(argv[1], NULL, NULL, &info);
+  if (ret != OK)
     {
-      /* REVISIT: gethostbyname() does not set errno, but h_errno */
-
-       nsh_error(vtbl, g_fmtcmdfailed, argv[0], "gethostbyname", NSH_ERRNO);
-       return ERROR;
+      nsh_error(vtbl, g_fmtcmdfailed,
+                argv[0], "getaddrinfo", NSH_HERRNO_OF(ret));
+      return ERROR;
     }
 
-  /* Convert the address to a string */
-  /* Handle IPv4 addresses */
-
-  if (host->h_addrtype == AF_INET)
+  for (next = info; next != NULL; next = next->ai_next)
     {
-      if (inet_ntop(AF_INET, host->h_addr, buffer, 48) == NULL)
+      /* Convert the address to a string */
+
+      ret = getnameinfo(next->ai_addr, next->ai_addrlen,
+                        buffer, sizeof(buffer), NULL, 0, NI_NUMERICHOST);
+      if (ret != OK)
         {
-          nsh_error(vtbl, g_fmtcmdfailed, argv[0], "inet_ntop", NSH_ERRNO);
+          freeaddrinfo(info);
+          nsh_error(vtbl, g_fmtcmdfailed,
+                    argv[0], "getnameinfo", NSH_HERRNO_OF(ret));
           return ERROR;
         }
 
-      addrtype = "IPv4";
+      /* Print the host name / address mapping */
+
+      nsh_output(vtbl, "Host: %s Addr: %s\n", next->ai_canonname, buffer);
     }
 
-  /* Handle IPv6 addresses */
-
-  else /* if (host->h_addrtype == AF_INET6) */
-    {
-      DEBUGASSERT(host->h_addrtype == AF_INET6);
-
-      if (inet_ntop(AF_INET6, host->h_addr, buffer, 48) == NULL)
-        {
-          nsh_error(vtbl, g_fmtcmdfailed, argv[0], "inet_ntop", NSH_ERRNO);
-          return ERROR;
-        }
-
-      addrtype = "IPv6";
-    }
-
-  /* Print the host name / address mapping */
-
-  nsh_output(vtbl, "Host: %s  %s Addr: %s\n", host->h_name, addrtype, buffer);
-
-  /* Print any host name aliases */
-
-  if (host->h_aliases != NULL && *host->h_aliases != NULL)
-    {
-      FAR char **alias;
-
-      nsh_output(vtbl, "Aliases:");
-      for (alias = host->h_aliases; *alias != NULL; alias++)
-        {
-          nsh_output(vtbl, " %s", *alias);
-        }
-
-      nsh_output(vtbl, "\n");
-    }
-
+  freeaddrinfo(info);
   return OK;
 }
 #endif
@@ -1047,11 +1024,90 @@ int cmd_arp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   /* Forms:
    *
-   * aap -a <ipaddr>
+   * arp -t
+   * arp -a <ipaddr>
    * arp -d <ipdaddr>
    * arp -s <ipaddr> <hwaddr>
    */
 
+#ifdef CONFIG_NETLINK_ROUTE
+  if (strcmp(argv[1], "-t") == 0)
+    {
+      FAR struct arp_entry_s *arptab;
+      size_t arpsize;
+      ssize_t nentries;
+      char ipaddr[16];
+      char ethaddr[24];
+      int i;
+
+      if (argc != 2)
+        {
+          goto errout_toomany;
+        }
+
+      /* Allocate a buffer to hold the ARP table */
+
+      arpsize = CONFIG_NET_ARPTAB_SIZE * sizeof(struct arp_entry_s);
+      arptab  = (FAR struct arp_entry_s *)malloc(arpsize);
+      if (arptab == NULL)
+        {
+          nsh_error(vtbl, g_fmtcmdoutofmemory, argv[0]);
+          return ERROR;
+        }
+
+      /* Read the ARP table */
+
+      nentries = netlib_get_arptable(arptab, CONFIG_NET_ARPTAB_SIZE);
+      if (nentries < 0)
+        {
+          nsh_error(vtbl, g_fmtcmdfailed, argv[0], netlib_get_arptable,
+                    NSH_ERRNO_OF(-nentries));
+          free(arptab);
+          return ERROR;
+        }
+
+      /* Dump the ARP table
+       *
+       * xx.xx.xx.xx xx:xx:xx:xx:xx:xx xxxxxxxx[xxxxxxxx]
+       */
+
+      nsh_output(vtbl, "%-12s %-17s Last Access Time\n",
+                 "IP Address", "Ethernet Address");
+
+      for (i = 0; i < nentries; i++)
+        {
+          FAR uint8_t *ptr;
+
+          /* Convert the IPv4 address to a string */
+
+          ptr = (FAR uint8_t *)&arptab[i].at_ipaddr;
+          snprintf(ipaddr, 16, "%u.%u.%u.%u",
+                   ptr[0], ptr[1], ptr[2], ptr[3]);
+
+          /* Convert the MAC address string to a binary */
+
+          snprintf(ethaddr, 24, "%02x:%02x:%02x:%02x:%02x:%02x",
+                   arptab[i].at_ethaddr.ether_addr_octet[0],
+                   arptab[i].at_ethaddr.ether_addr_octet[1],
+                   arptab[i].at_ethaddr.ether_addr_octet[2],
+                   arptab[i].at_ethaddr.ether_addr_octet[3],
+                   arptab[i].at_ethaddr.ether_addr_octet[4],
+                   arptab[i].at_ethaddr.ether_addr_octet[5]);
+
+#ifdef CONFIG_SYSTEM_TIME64
+          nsh_output(vtbl, "%-12s %-17s 0x%" PRIx64 "\n",
+                     ipaddr, ethaddr, (uint64_t)arptab[i].at_time);
+#else
+          nsh_output(vtbl, "%-12s %-17s 0x%" PRIx32 "\n",
+                     ipaddr, ethaddr, (uint32_t)arptab[i].at_time);
+#endif
+        }
+
+      free(arptab);
+      ret = OK;
+    }
+  else
+#endif
   if (strcmp(argv[1], "-a") == 0)
     {
       if (argc != 3)
@@ -1125,7 +1181,7 @@ int cmd_arp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   return OK;
 
-/* Error exits */
+  /* Error exits */
 
 errout_cmdfaild:
   if (ret == -ENOENT)
@@ -1277,7 +1333,7 @@ int cmd_wget(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   /* Open the local file for writing */
 
-  fd = open(fullpath, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+  fd = open(fullpath, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (fd < 0)
     {
       nsh_error(vtbl, g_fmtcmdfailed, argv[0], "open", NSH_ERRNO);
@@ -1337,4 +1393,3 @@ errout:
 #endif
 
 #endif /* CONFIG_NET */
-

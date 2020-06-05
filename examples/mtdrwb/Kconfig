@@ -6,7 +6,7 @@
 config EXAMPLES_MTDRWB
 	tristate "MTD R/W buffer test"
 	default n
-	depends on (MTD_WRBUFFER || MTD_READAHEAD) && !BUILD_PROTECTED && !BUILD_LOADABLE
+	depends on (MTD_WRBUFFER || MTD_READAHEAD) && !BUILD_PROTECTED && !BUILD_KERNEL
 	---help---
 		Enable the MTD R/W buffer test example.
 
@@ -18,9 +18,8 @@ if EXAMPLES_MTDRWB
 config EXAMPLES_MTDRWB_PROGNAME
 	string "Program name"
 	default "mtdrwb"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_MTDRWB_ARCHINIT

@@ -39,9 +39,10 @@ CREATEDIR := drivers
 
 # Module example built-in application info
 
-APPNAME = module
+PROGNAME = module
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_MODULE)
 
 # Module Example
 
@@ -51,20 +52,21 @@ ifeq ($(CONFIG_BUILD_FLAT),y)
 CSRCS += mod_symtab.c
 endif
 
-CONFIG_XYZ_PROGNAME ?= module$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
 VPATH += drivers
 ROOTDEPPATH += --dep-path drivers
 
 # Build targets
 
-context::
-	@$(MAKE) -C drivers -f $(SRCDIR)/drivers/Makefile -I $(SRCDIR)/drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+module_main.c: build
+ifeq ($(CONFIG_BUILD_FLAT),y)
+drivers/mod_symtab.c: build
+endif
+
+.PHONY: build
+build:
+	+$(Q) $(MAKE) -C drivers -f $(SRCDIR)/drivers/Makefile -I $(SRCDIR)/drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 clean::
-	@$(MAKE) -C drivers -f $(SRCDIR)/drivers/Makefile -I $(SRCDIR)/drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
-
-MODULE = CONFIG_EXAMPLES_MODULE
+	+$(Q) $(MAKE) -C drivers -f $(SRCDIR)/drivers/Makefile -I $(SRCDIR)/drivers  TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 include $(APPDIR)/Application.mk

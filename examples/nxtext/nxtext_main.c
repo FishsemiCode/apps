@@ -1,7 +1,8 @@
 /****************************************************************************
  * examples/nxtext/nxtext_main.c
  *
- *   Copyright (C) 2011-2012, 2015-2017 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011-2012, 2015-2017, 2019 Gregory Nutt. All rights
+ *     reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,9 +61,6 @@
 #  include <nuttx/lcd/lcd.h>
 #else
 #  include <nuttx/video/fb.h>
-#  ifdef CONFIG_VNCSERVER
-#    include <nuttx/video/vnc.h>
-#  endif
 #endif
 
 #include <nuttx/nx/nx.h>
@@ -138,7 +136,7 @@ static const char *g_bgmsg[BGMSG_LINES] =
  * Public Data
  ****************************************************************************/
 
-/* The connecton handler */
+/* The connection handler */
 
 NXHANDLE g_hnx = NULL;
 
@@ -204,24 +202,30 @@ static int nxtext_initialize(void)
 #ifdef CONFIG_VNCSERVER
       /* Setup the VNC server to support keyboard/mouse inputs */
 
-      ret = vnc_default_fbinitialize(0, g_hnx);
-      if (ret < 0)
-        {
-          printf("vnc_default_fbinitialize failed: %d\n", ret);
+       struct boardioc_vncstart_s vnc =
+       {
+         0, g_hnx
+       };
 
-          g_exitcode = NXEXIT_FBINITIALIZE;
-          return ERROR;
-        }
+       ret = boardctl(BOARDIOC_VNC_START, (uintptr_t)&vnc);
+       if (ret < 0)
+         {
+           printf("boardctl(BOARDIOC_VNC_START) failed: %d\n", ret);
+           nx_disconnect(g_hnx);
+           g_exitcode = NXEXIT_FBINITIALIZE;
+           return ERROR;
+         }
 #endif
+
       /* Start a separate thread to listen for server events.  This is probably
        * the least efficient way to do this, but it makes this example flow more
        * smoothly.
        */
 
-      (void)pthread_attr_init(&attr);
+      pthread_attr_init(&attr);
       param.sched_priority = CONFIG_EXAMPLES_NXTEXT_LISTENERPRIO;
-      (void)pthread_attr_setschedparam(&attr, &param);
-      (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXTEXT_STACKSIZE);
+      pthread_attr_setschedparam(&attr, &param);
+      pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXTEXT_STACKSIZE);
 
       ret = pthread_create(&thread, &attr, nxtext_listener, NULL);
       if (ret != 0)
@@ -240,7 +244,7 @@ static int nxtext_initialize(void)
            * are connected.
            */
 
-          (void)sem_wait(&g_semevent);
+          sem_wait(&g_semevent);
         }
     }
   else
@@ -262,11 +266,7 @@ static int nxtext_initialize(void)
  * Name: nxtext_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int nxtext_main(int argc, char **argv)
-#endif
 {
   FAR struct nxtext_state_s *bgstate;
   NXWINDOW hwnd = NULL;
@@ -331,7 +331,7 @@ int nxtext_main(int argc, char **argv)
 
   while (!b_haveresolution)
     {
-      (void)sem_wait(&g_semevent);
+      sem_wait(&g_semevent);
     }
 
   printf("nxtext_main: Screen resolution (%d,%d)\n", g_xres, g_yres);
@@ -376,7 +376,7 @@ int nxtext_main(int argc, char **argv)
           /* Destroy the pop-up window and restart the sequence */
 
           printf("nxtext_main: Close pop-up\n");
-          (void)nxpu_close(hwnd);
+          nxpu_close(hwnd);
           popcnt = 0;
         }
 
@@ -400,11 +400,11 @@ errout_with_hwnd:
   if (popcnt >= 3)
     {
       printf("nxtext_main: Close pop-up\n");
-     (void)nxpu_close(hwnd);
+     nxpu_close(hwnd);
     }
 
 //errout_with_bkgd:
-  (void)nx_releasebkgd(g_bgwnd);
+  nx_releasebkgd(g_bgwnd);
 
 errout_with_nx:
   /* Disconnect from the server */

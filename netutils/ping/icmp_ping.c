@@ -38,6 +38,10 @@
  *
  ****************************************************************************/
 
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
 #include <nuttx/config.h>
 
 #include <sys/socket.h>
@@ -49,7 +53,7 @@
 #include <string.h>
 #include <errno.h>
 
-#if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
+#ifdef CONFIG_LIBC_NETDB
 #  include <netdb.h>
 #endif
 
@@ -100,30 +104,30 @@ struct rcvdmap_s {
 
 static int ping_gethostip(FAR const char *hostname, FAR struct in_addr *dest)
 {
-#if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
+#ifdef CONFIG_LIBC_NETDB
   /* Netdb DNS client support is enabled */
 
-  FAR struct hostent *he;
+  FAR struct addrinfo hint;
+  FAR struct addrinfo *info;
+  FAR struct sockaddr_in *addr;
 
-  he = gethostbyname(hostname);
-  if (he == NULL)
+  memset(&hint, 0, sizeof(hint));
+  hint.ai_family = AF_INET;
+
+  if (getaddrinfo(hostname, NULL, &hint, &info) != OK)
     {
-      return -ENOENT;
-    }
-  else if (he->h_addrtype == AF_INET)
-    {
-       memcpy(dest, he->h_addr, sizeof(in_addr_t));
-    }
-  else
-    {
-      return -ENOEXEC;
+      return ERROR;
     }
 
+  addr = (FAR struct sockaddr_in *)info->ai_addr;
+  memcpy(dest, &addr->sin_addr, sizeof(struct in_addr));
+
+  freeaddrinfo(info);
   return OK;
 
 #else /* CONFIG_LIBC_NETDB */
-
   /* No host name support */
+
   /* Convert strings to numeric IPv6 address */
 
   int ret = inet_pton(AF_INET, hostname, dest);
@@ -143,7 +147,8 @@ static int ping_gethostip(FAR const char *hostname, FAR struct in_addr *dest)
  * Name: icmp_callback
  ****************************************************************************/
 
-static void icmp_callback(FAR struct ping_result_s *result, int code, int extra)
+static void icmp_callback(FAR struct ping_result_s *result,
+                          int code, int extra)
 {
   result->code = code;
   result->extra = extra;
@@ -243,7 +248,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
 
       memcpy(iobuffer, &outhdr, sizeof(struct icmp_hdr_s));
 
-     /* Add some easily verifiable payload data */
+      /* Add some easily verifiable payload data */
 
       ptr = &iobuffer[sizeof(struct icmp_hdr_s)];
       ch  = 0x20;
@@ -260,7 +265,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
       maps[result.seqno].clock = clock();
       maps[result.seqno].marker = 0;
       nsent = sendto(sockfd, iobuffer, result.outsize, 0,
-                     (FAR struct sockaddr*)&destaddr,
+                     (FAR struct sockaddr *)&destaddr,
                      sizeof(struct sockaddr_in));
       if (nsent < 0)
         {
@@ -316,7 +321,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
           else if (nrecvd < sizeof(struct icmp_hdr_s))
             {
               icmp_callback(&result, ICMP_E_RECVSMALL, nrecvd);
-             goto done;
+              goto done;
             }
 
           inhdr     = (FAR struct icmp_hdr_s *)iobuffer;

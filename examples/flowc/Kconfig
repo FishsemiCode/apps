@@ -14,7 +14,7 @@ config EXAMPLES_FLOWC
 
 			CONFIG_SERIAL_TERMIOS=y
 
-		In addtion, you will need these related serial driver settings (the
+		In addition, you will need these related serial driver settings (the
 		actual values of the watermark setting may be tuned to suit your
 		preferences)
 
@@ -52,11 +52,10 @@ config EXAMPLES_FLOWC_SENDER1
 
 config EXAMPLES_FLOWC_PROGNAME1
 	string "Target1 program name"
-	default "receiver" if !EXAMPLES_FLOWC_SENDER1
-	default "sender" if EXAMPLES_FLOWC_SENDER1
-	depends on BUILD_LOADABLE
+	default "flowc" if !EXAMPLES_FLOWC_TARGET2
+	default "flowc1" if EXAMPLES_FLOWC_TARGET2
 	---help---
-		This is the name of the Target1 program that will be use when the
+		This is the name of the Target1 program that will be used when the
 		NSH ELF program is installed.
 
 config EXAMPLES_FLOWC_PRIORITY1
@@ -65,7 +64,7 @@ config EXAMPLES_FLOWC_PRIORITY1
 
 config EXAMPLES_FLOWC_STACKSIZE1
 	int "Target1 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_FLOWC_TARGET2
 	bool "Second endpoint is a target"
@@ -81,11 +80,9 @@ if EXAMPLES_FLOWC_TARGET2
 
 config EXAMPLES_FLOWC_PROGNAME2
 	string "Target2 program name"
-	default "receiver" if !EXAMPLES_FLOWC_RECEIVER2
-	default "sender" if EXAMPLES_FLOWC_RECEIVER2
-	depends on BUILD_LOADABLE
+	default "flowc2"
 	---help---
-		This is the name of the Target2 program that will be use when the
+		This is the name of the Target2 program that will be used when the
 		NSH ELF program is installed.
 
 config EXAMPLES_FLOWC_PRIORITY2
@@ -94,7 +91,7 @@ config EXAMPLES_FLOWC_PRIORITY2
 
 config EXAMPLES_FLOWC_STACKSIZE2
 	int "Target2 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif # EXAMPLES_FLOWC_TARGET2
 

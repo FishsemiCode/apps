@@ -23,7 +23,7 @@ part of the configuration that you may choose to use or not.
 Directory Location
 ------------------
 The default application directory used by the NuttX build should be named
-apps/ (or apps-x.y/ where x.y is the NuttX version number).  This apps/
+apps/ (or apps-x.y.z/ where x.y.z is the NuttX version number).  This apps/
 directory should appear in the directory tree at the same level as the
 NuttX directory.  Like:
 
@@ -44,7 +44,7 @@ ways to do that:
    like:  make APPDIR=<path> or make CONFIG_APPS_DIR=<path>
 3) When you configure NuttX using tools/configure.sh, you can provide that
    path to the application directory on the configuration command line
-   like: ./configure.sh -a <app-dir> <board-name>/<config-name>
+   like: ./configure.sh -a <app-dir> <board-name>:<config-name>
 
 Built-In Applications
 ---------------------
@@ -104,11 +104,11 @@ may have:
 This will select the apps/examples/hello in the following way:
 
 - The top-level make will include examples/Make.defs
-- examples/Make.defs will set CONFIGURED_APPS += examples/hello
+- examples/Make.defs will set CONFIGURED_APPS += $(APPDIR)/examples/hello
   like this:
 
-  ifeq ($(CONFIG_EXAMPLES_HELLO),y)
-  CONFIGURED_APPS += examples/hello
+  ifneq ($(CONFIG_EXAMPLES_HELLO),)
+  CONFIGURED_APPS += $(APPDIR)/examples/hello
   endif
 
 Example Built-In Application
@@ -117,7 +117,7 @@ An example application skeleton can be found under the examples/hello
 sub-directory.  This example shows how a builtin application can be added
 to the project. One must:
 
- 1. Create sub-directory as: appname
+ 1. Create sub-directory as: progname
 
  2. In this directory there should be:
 
@@ -129,11 +129,11 @@ to the project. One must:
     - The application source code.
 
  3. The application source code should provide the entry point:
-    appname_main()
+    main()
 
  4. Set the requirements in the file: Makefile, specially the lines:
 
-    APPNAME    = appname
+    PROGNAME   = progname
     PRIORITY   = SCHED_PRIORITY_DEFAULT
     STACKSIZE  = 768
     ASRCS      = asm source file list as a.asm b.asm ...
@@ -141,8 +141,8 @@ to the project. One must:
 
  4b. The Make.defs file should include a line like:
 
-    ifeq ($(CONFIG_APPNAME),y)
-    CONFIGURED_APPS += appname
+    ifneq ($(CONFIG_PROGNAME),)
+    CONFIGURED_APPS += progname
     endif
 
 Building NuttX with Board-Specific Pieces Outside the Source Tree
@@ -153,10 +153,10 @@ Q: Has anyone come up with a tidy way to build NuttX with board-
 A: Here are three:
 
    1) There is a make target called 'make export'. It will build
-      NuttX, then bundle all of the header files, libaries, startup
+      NuttX, then bundle all of the header files, libraries, startup
       objects, and other build components into a .zip file. You
-      can can move that .zip file into any build environment you
-      want. You even build NuttX under a DOS CMD window.
+      can move that .zip file into any build environment you
+      want. You can even build NuttX under a DOS CMD window.
 
       This make target is documented in the top level nuttx/README.txt.
 
@@ -168,22 +168,22 @@ A: Here are three:
       You can copy any pieces that you like from the old apps/directory
       to your custom apps directory as necessary.
 
-      This is documented in NuttX/configs/README.txt and
+      This is documented in NuttX/boards/README.txt and
       nuttx/Documentation/NuttxPortingGuide.html (Online at
-      https://bitbucket.org/nuttx/documentation/src/master/NuttxPortingGuide.html#apndxconfigs
+      https://bitbucket.org/nuttx/nuttx/src/master/Documentation/NuttxPortingGuide.html#apndxconfigs
       under Build options). And in the apps/README.txt file.
 
    3) If you like the random collection of stuff in the apps/ directory
       but just want to expand the existing components with your own,
       external sub-directory then there is an easy way to that too:
-      You just create a sympolic link in the apps/ directory that
+      You just create a symbolic link in the apps/ directory that
       redirects to your application sub-directory.
 
       In order to be incorporated into the build, the directory that
       you link under the apps/ directory should contain (1) a Makefile
       that supports the clean and distclean targets (see other Makefiles
       for examples), and (2) a tiny Make.defs file that simply adds the
-      custon build directories to the variable CONFIGURED_APPS like:
+      custom build directories to the variable CONFIGURED_APPS like:
 
         CONFIGURED_APPS += my_directory1 my_directory2
 
@@ -212,11 +212,11 @@ A: Here are three:
       installs a custom application, configuration, and board specific
       directory:
 
-        a) Copy 'MyBoard' directory to configs/MyBoard.
+        a) Copy 'MyBoard' directory to boards/MyBoard.
         b) Add a symbolic link to MyApplication at apps/external
         c) Configure NuttX (usually by:
 
-           tools/configure.sh MyBoard/MyConfiguration
+           tools/configure.sh MyBoard:MyConfiguration
 
       Use of the name ''apps/external'' is suggested because that name
       is included in the .gitignore file and will save you some nuisance

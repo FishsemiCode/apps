@@ -102,7 +102,7 @@ static int tcpecho_netsetup()
    * network has already been configured by NSH's start-up logic.
    */
 
-#ifndef CONFIG_NSH_BUILTIN_APPS
+#ifndef CONFIG_NSH_NETINIT
   struct in_addr addr;
 #if defined(CONFIG_EXAMPLES_TCPECHO_DHCPC) || defined(CONFIG_EXAMPLES_TCPECHO_NOMAC)
   uint8_t mac[IFHWADDRLEN];
@@ -193,7 +193,7 @@ static int tcpecho_netsetup()
   printf("IP: %s\n", inet_ntoa(ds.ipaddr));
 
 #endif /* CONFIG_EXAMPLES_TCPECHO_DHCPC */
-#endif /* CONFIG_NSH_BUILTIN_APPS */
+#endif /* CONFIG_NSH_NETINIT */
 
   return OK;
 }
@@ -369,11 +369,7 @@ static int tcpecho_server(void)
  * tcpecho_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int tcpecho_main(int argc, char *argv[])
-#endif
 {
   int ret;
 
@@ -390,4 +386,3 @@ int tcpecho_main(int argc, char *argv[])
 
   return ret;
 }
-

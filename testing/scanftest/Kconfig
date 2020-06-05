@@ -18,9 +18,8 @@ if TESTING_SCANFTEST
 config TESTING_SCANFTEST_PROGNAME
 	string "Program name"
 	default "scanftest"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config TESTING_SCANFTEST_PRIORITY
@@ -29,6 +28,6 @@ config TESTING_SCANFTEST_PRIORITY
 
 config TESTING_SCANFTEST_STACKSIZE
 	int "Scanftest stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

@@ -181,7 +181,7 @@ void mld_catfile(FAR const char *filepath, FAR char **iobuffer)
       *iobuffer = (FAR char *)malloc(IOBUFFERSIZE);
       if (*iobuffer == NULL)
         {
-          (void)close(fd);
+          close(fd);
           fprintf(stderr, "Failed to allocation I/O buffer\n");
           return;
         }
@@ -244,7 +244,7 @@ void mld_catfile(FAR const char *filepath, FAR char **iobuffer)
         }
     }
 
-  (void)close(fd);
+  close(fd);
 }
 #endif
 
@@ -268,11 +268,7 @@ void mld_catfile(FAR const char *filepath, FAR char **iobuffer)
  * mld_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int mld_main(int argc, char *argv[])
-#endif
 {
   FAR char *iobuffer = NULL;
   struct sockaddr_in6 host;

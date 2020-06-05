@@ -106,9 +106,9 @@ static const char g_dd[] = "dd";
  * Name: dd_write
  ****************************************************************************/
 
-static int dd_write(struct dd_s *dd)
+static int dd_write(FAR struct dd_s *dd)
 {
-  uint8_t *buffer = dd->buffer;
+  FAR uint8_t *buffer = dd->buffer;
   uint16_t written ;
   ssize_t nbytes;
 
@@ -137,9 +137,9 @@ static int dd_write(struct dd_s *dd)
  * Name: dd_read
  ****************************************************************************/
 
-static int dd_read(struct dd_s *dd)
+static int dd_read(FAR struct dd_s *dd)
 {
-  uint8_t *buffer = dd->buffer;
+  FAR uint8_t *buffer = dd->buffer;
   ssize_t nbytes;
 
   dd->nbytes = 0;
@@ -166,7 +166,7 @@ static int dd_read(struct dd_s *dd)
  * Name: dd_infopen
  ****************************************************************************/
 
-static inline int dd_infopen(const char *name, struct dd_s *dd)
+static inline int dd_infopen(FAR const char *name, FAR struct dd_s *dd)
 {
   dd->infd = open(name, O_RDONLY);
   if (dd->infd < 0)
@@ -183,12 +183,13 @@ static inline int dd_infopen(const char *name, struct dd_s *dd)
  * Name: dd_outfopen
  ****************************************************************************/
 
-static inline int dd_outfopen(const char *name, struct dd_s *dd)
+static inline int dd_outfopen(FAR const char *name, FAR struct dd_s *dd)
 {
-  dd->outfd = open(name, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+  dd->outfd = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (dd->outfd < 0)
     {
-      nsh_error(dd->vtbl, g_fmtcmdfailed, g_dd, "open", NSH_ERRNO);
+      FAR struct nsh_vtbl_s *vtbl = dd->vtbl;
+      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "open", NSH_ERRNO);
       return ERROR;
     }
 
@@ -206,8 +207,8 @@ static inline int dd_outfopen(const char *name, struct dd_s *dd)
 int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   struct dd_s dd;
-  char *infile = NULL;
-  char *outfile = NULL;
+  FAR char *infile = NULL;
+  FAR char *outfile = NULL;
 #ifdef CONFIG_NSH_CMDOPT_DD_STATS
   struct timespec ts0;
   struct timespec ts1;
@@ -313,9 +314,9 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
 #ifdef CONFIG_NSH_CMDOPT_DD_STATS
 #ifdef CONFIG_CLOCK_MONOTONIC
-  (void)clock_gettime(CLOCK_MONOTONIC, &ts0);
+  clock_gettime(CLOCK_MONOTONIC, &ts0);
 #else
-  (void)clock_gettime(CLOCK_REALTIME, &ts0);
+  clock_gettime(CLOCK_REALTIME, &ts0);
 #endif
 #endif
 
@@ -366,9 +367,9 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
 #ifdef CONFIG_NSH_CMDOPT_DD_STATS
 #ifdef CONFIG_CLOCK_MONOTONIC
-  (void)clock_gettime(CLOCK_MONOTONIC, &ts1);
+  clock_gettime(CLOCK_MONOTONIC, &ts1);
 #else
-  (void)clock_gettime(CLOCK_REALTIME, &ts1);
+  clock_gettime(CLOCK_REALTIME, &ts1);
 #endif
 
   elapsed  = (((uint64_t)ts1.tv_sec * NSEC_PER_SEC) + ts1.tv_nsec);
@@ -384,10 +385,10 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #endif
 
 errout_with_outf:
-  (void)close(dd.outfd);
+  close(dd.outfd);
 
 errout_with_inf:
-  (void)close(dd.infd);
+  close(dd.infd);
   free(dd.buffer);
 
 errout_with_paths:

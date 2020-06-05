@@ -34,6 +34,5 @@
 ############################################################################
 
 ifeq ($(CONFIG_NETUTILS_DHCPD),y)
-CONFIGURED_APPS += netutils/dhcpd
+CONFIGURED_APPS += $(APPDIR)/netutils/dhcpd
 endif
-

@@ -22,9 +22,8 @@ config EXAMPLES_UDP_PROGNAME1
 	string "Target1 program name"
 	default "udpserver" if EXAMPLES_UDP_SERVER1
 	default "udpclient" if !EXAMPLES_UDP_SERVER1
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the Target1 program that will be use when the
+		This is the name of the Target1 program that will be used when the
 		NSH ELF program is installed.
 
 config EXAMPLES_UDP_PRIORITY1
@@ -33,7 +32,7 @@ config EXAMPLES_UDP_PRIORITY1
 
 config EXAMPLES_UDP_STACKSIZE1
 	int "Target1 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_UDP_TARGET2
 	bool "Second endpoint is a target"
@@ -49,11 +48,10 @@ if EXAMPLES_UDP_TARGET2
 
 config EXAMPLES_UDP_PROGNAME2
 	string "Target2 program name"
-	default "udpserver" if !EXAMPLES_UDP_SERVER2
-	default "udpclient" if EXAMPLES_UDP_SERVER2
-	depends on BUILD_LOADABLE
+	default "udpserver" if !EXAMPLES_UDP_SERVER1
+	default "udpclient" if EXAMPLES_UDP_SERVER1
 	---help---
-		This is the name of the Target2 program that will be use when the
+		This is the name of the Target2 program that will be used when the
 		NSH ELF program is installed.
 
 config EXAMPLES_UDP_PRIORITY2
@@ -62,7 +60,7 @@ config EXAMPLES_UDP_PRIORITY2
 
 config EXAMPLES_UDP_STACKSIZE2
 	int "Target2 stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif # EXAMPLES_UDP_TARGET2
 

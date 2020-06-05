@@ -4,13 +4,13 @@
 /.config
 /System.map
 /User.map
-/symtab.c
 /arch
-/build
 /libs
 /include
+/scripts
 /startup
 /tmp
+/tools
 /*.asm
 /*.obj
 /*.rel

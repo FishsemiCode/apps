@@ -27,8 +27,8 @@ testing/cxxtest
 
   Example Configuration Options
   -----------------------------
-    CONFIG_TESTINGCXXTEST=y - Eanbles the example
-    CONFIG_TESTINGCXXTEST_CXXINITIALIZE=y - By default, if CONFIG_HAVE_CXX
+    CONFIG_TESTING_CXXTEST=y - Eanbles the example
+    CONFIG_TESTING_CXXTEST_CXXINITIALIZE=y - By default, if CONFIG_HAVE_CXX
       and CONFIG_HAVE_CXXINITIALIZE are defined, then this example
       will call the NuttX function to initialize static C++ constructors.
       This option may be disabled, however, if that static initialization
@@ -65,6 +65,11 @@ testing/fstest
   * CONFIG_TESTING_FSTEST_NLOOPS: Number of test loops. default 100
   * CONFIG_TESTING_FSTEST_VERBOSE: Verbose output
 
+testing/mm
+==========
+
+  This is a simple test of the memory manager.
+
 testing/nxffs
 =============
 
@@ -81,7 +86,8 @@ testing/ostest
   as of this writing, but it is used to qualify each NuttX release.
 
   The behavior of the ostest can be modified with the following
-  settings in the configs/<board-name>/defconfig file:
+  settings in the boards/<arch>/<chip>/<board>/configs/<config>/defconfig
+  file:
 
   * CONFIG_NSH_BUILTIN_APPS
       Build the OS test example as an NSH built-in application.
@@ -122,7 +128,7 @@ testing/smart
   * CONFIG_TESTING_SMART_NEBLOCKS: When CONFIG_TESTING_SMART_ARCHINIT is not
     defined, this test will use the RAM MTD device at drivers/mtd/rammtd.c
     to simulate FLASH.  In this case, this value must be provided to give
-    the nubmer of erase blocks in MTD RAM device.  The size of the allocated
+    the number of erase blocks in MTD RAM device.  The size of the allocated
     RAM drive will be: CONFIG_RAMMTD_ERASESIZE * CONFIG_TESTING_SMART_NEBLOCKS
   * CONFIG_TESTING_SMART_MAXNAME: Determines the maximum size of names used
     in the filesystem
@@ -140,11 +146,6 @@ testing/smart_test
   seek, append and seek-with-write operations.
 
     * CONFIG_TESTING_SMART_TEST=y
-
-  Dependencies:
-
-    * CONFIG_NSH_BUILTIN_APPS=y: This test can be built only as an NSH
-      command
 
     Source: NuttX
     Author: Ken Pettit

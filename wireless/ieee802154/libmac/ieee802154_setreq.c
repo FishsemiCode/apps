@@ -148,3 +148,23 @@ int ieee802154_settxpwr(int fd, int32_t txpwr)
 
   return ieee802154_set_req(fd, &req);
 }
+
+int ieee802154_setmaxretries(int fd, uint8_t retries)
+{
+  struct ieee802154_set_req_s req;
+
+  req.attr = IEEE802154_ATTR_MAC_MAX_FRAME_RETRIES;
+  req.attrval.mac.max_retries = retries;
+
+  return ieee802154_set_req(fd, &req);
+}
+
+int ieee802154_setfcslen(int fd, uint8_t fcslen)
+{
+  struct ieee802154_set_req_s req;
+
+  req.attr = IEEE802154_ATTR_PHY_FCS_LEN;
+  req.attrval.phy.fcslen = fcslen;
+
+  return ieee802154_set_req(fd, &req);
+}

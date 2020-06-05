@@ -136,11 +136,7 @@ extern FAR struct mtd_dev_s *mtdpart_archinitialize(void);
  * Name: mtdpart_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int mtdpart_main(int argc, char *argv[])
-#endif
 {
   FAR struct mtd_dev_s *master;
   FAR struct mtd_dev_s *part[CONFIG_EXAMPLES_MTDPART_NPARTITIONS + 1];
@@ -421,7 +417,7 @@ int mtdpart_main(int argc, char *argv[])
               exit(16);
             }
 
-          /* Verfy the offsets in the block */
+          /* Verify the offsets in the block */
 
           for (k = 0; k < geo.blocksize / sizeof(uint32_t); k++)
             {
@@ -492,7 +488,7 @@ int mtdpart_main(int argc, char *argv[])
    * should on the device.
    */
 
-  printf("Verfying media:\n");
+  printf("Verifying media:\n");
 
   fd = open("/dev/mtd0", O_RDONLY);
   if (fd < 0)
@@ -530,7 +526,7 @@ int mtdpart_main(int argc, char *argv[])
           exit(26);
         }
 
-      /* Verfy the values in the block */
+      /* Verify the values in the block */
 
       for (k = 0; k < geo.blocksize / sizeof(uint32_t); k++)
         {
@@ -554,4 +550,3 @@ int mtdpart_main(int argc, char *argv[])
   fflush(stdout);
   return 0;
 }
-

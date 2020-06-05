@@ -261,7 +261,7 @@ FILE *popen(FAR const char *command, FAR const char *mode)
   argv[0] = (FAR char *)command;
   argv[1] = NULL;
 
-#ifdef CONFIG_BUILD_LOADABLE
+#ifdef CONFIG_SYSTEM_POPEN_SHPATH
   errcode = posix_spawn(&container->shell, CONFIG_SYSTEM_POPEN_SHPATH,
                         &file_actions, &attr, argv,
                         (FAR char * const *)NULL);
@@ -280,14 +280,14 @@ FILE *popen(FAR const char *command, FAR const char *mode)
    * the interface.
    */
 
-  (void)close(newfd);
+  close(newfd);
 
   /* Free attributes and file actions.  Ignoring return values in the case
    * of an error.
    */
 
-  (void)posix_spawn_file_actions_destroy(&file_actions);
-  (void)posix_spawnattr_destroy(&attr);
+  posix_spawn_file_actions_destroy(&file_actions);
+  posix_spawnattr_destroy(&attr);
 
   /* Finale and return input input/output stream */
 
@@ -295,17 +295,17 @@ FILE *popen(FAR const char *command, FAR const char *mode)
   return &container->copy;
 
 errout_with_actions:
-  (void)posix_spawn_file_actions_destroy(&file_actions);
+  posix_spawn_file_actions_destroy(&file_actions);
 
 errout_with_attrs:
-  (void)posix_spawnattr_destroy(&attr);
+  posix_spawnattr_destroy(&attr);
 
 errout_with_stream:
-  (void)fclose(container->original);
+  fclose(container->original);
 
 errout_with_pipe:
-  (void)close(fd[0]);
-  (void)close(fd[1]);
+  close(fd[0]);
+  close(fd[1]);
 
 errout_with_container:
   free(container);
@@ -380,7 +380,7 @@ int pclose(FILE *stream)
    * process)
    */
 
-  (void)fclose(original);
+  fclose(original);
 
   shell = container->shell;
   free(container);

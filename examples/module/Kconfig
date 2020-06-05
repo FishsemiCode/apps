@@ -47,15 +47,15 @@ config EXAMPLES_MODULE_ROMFS
 	bool "ROMFS"
 	depends on FS_ROMFS && BUILD_FLAT
 	---help---
-		 Automatically generates and mounts an internal ROMFS file
-		 system
+		Automatically generates and mounts an internal ROMFS file
+		system
 
 config EXAMPLES_MODULE_CROMFS
 	bool "CROMFS"
 	depends on FS_CROMFS && BUILD_FLAT
-	 ---help---
-		 Automatically generates and mounts an internal CROMFS file
-		 system
+	---help---
+		Automatically generates and mounts an internal CROMFS file
+		system
 
 endchoice # Built-in file system type
 
@@ -111,24 +111,13 @@ config EXAMPLES_MODULE_BINDIR
 	default "/mnt/moddata"
 	depends on !EXAMPLES_MODULE_BUILTINFS && !EXAMPLES_MODULE_FSMOUNT
 	---help---
-		The full, absolte path to the location for the binaries can be
+		The full, absolute path to the location for the binaries can be
 		located in a pre-mounted external file system.
-
-config EXAMPLES_MODULE_NOSTRIP
-	bool "Do not strip debug symbols"
-	default n
-	depends on DEBUG_SYMBOLS
-	---help---
-		 By default, if debug symbols are enabled (via CONFIG_DEBUG_SYMBOLS), then the
-		 ELF executables will also retain debug symbols in the resulting ELF binaries.
-		 Select this option if you do not want that behavior, this option will permit
-		 debug symbols in the base code but will strip debug symbols out of the ELF
-		 binaries for a smaller ROM file system image.
 
 config EXAMPLES_MODULE_LIBC
 	bool "Link with LIBC"
 	default n
-	depends on !BUILD_LOADABLE && EXPERIMENTAL
+	depends on EXPERIMENTAL
 	---help---
 		Link with the C library (and also math library if it was built).
 		By default, all undefined symbols must be provided via a symbol
@@ -147,6 +136,6 @@ config EXAMPLES_MODULE_LIBC
 config EXAMPLES_MODULE_LIBGCC
 	bool "Link with LIBGCC"
 	default n
-	depends on !BUILD_LOADABLE && EXPERIMENTAL
+	depends on EXPERIMENTAL
 
 endif

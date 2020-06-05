@@ -39,7 +39,6 @@
 
 #include <nuttx/config.h>
 
-#include <nuttx/power/pm.h>
 #include <nuttx/rptun/rptun.h>
 #include <sys/boardctl.h>
 #include <sys/ioctl.h>
@@ -128,7 +127,7 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
        * reset the board due to some constraints.
        */
 
-      (void)boardctl(BOARDIOC_RESET, EXIT_SUCCESS);
+      boardctl(BOARDIOC_RESET, EXIT_SUCCESS);
     }
   else
     {
@@ -137,7 +136,7 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
        * to power-off the* board due to some constraints.
        */
 
-      (void)boardctl(BOARDIOC_POWEROFF, EXIT_SUCCESS);
+      boardctl(BOARDIOC_POWEROFF, EXIT_SUCCESS);
     }
 
 #elif defined(CONFIG_BOARDCTL_RESET)
@@ -158,7 +157,7 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
    * reset the board due to some constraints.
    */
 
-  (void)boardctl(BOARDIOC_RESET, EXIT_SUCCESS);
+  boardctl(BOARDIOC_RESET, EXIT_SUCCESS);
 
 #else
   /* Only the reset behavior is supported and we already know that there is
@@ -170,11 +169,11 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
    * off the board due to some constraints.
    */
 
-  (void)boardctl(BOARDIOC_POWEROFF, EXIT_SUCCESS);
+  boardctl(BOARDIOC_POWEROFF, EXIT_SUCCESS);
 #endif
 
   /* boarctl() will not return in any case.  It if does, it means that
-   * there was a problem with the shutdown/resaet operaion.
+   * there was a problem with the shutdown/resaet operation.
    */
 
   nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boardctl", NSH_ERRNO);
@@ -189,52 +188,85 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #if defined(CONFIG_PM) && !defined(CONFIG_NSH_DISABLE_PMCONFIG)
 int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  enum pm_state_e state = PM_IDLE;
+  struct boardioc_pm_ctrl_s ctrl =
+  {
+  };
 
   if (argc == 1)
     {
-      nsh_output(vtbl, "Current state %d, pm stay [%d, %d, %d, %d]\n",
-              pm_querystate(0),
-              pm_staycount(0, PM_NORMAL), pm_staycount(0, PM_IDLE),
-              pm_staycount(0, PM_STANDBY), pm_staycount(0, PM_SLEEP));
-      return 0;
+      int current_state;
+      int normal_count;
+      int idle_count;
+      int standby_count;
+      int sleep_count;
+
+      ctrl.action = BOARDIOC_PM_QUERYSTATE;
+      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
+      current_state = ctrl.state;
+
+      ctrl.action = BOARDIOC_PM_STAYCOUNT;
+      ctrl.state = PM_NORMAL;
+      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
+      normal_count = ctrl.count;
+
+      ctrl.state = PM_IDLE;
+      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
+      idle_count = ctrl.count;
+
+      ctrl.state = PM_STANDBY;
+      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
+      standby_count = ctrl.count;
+
+      ctrl.state = PM_SLEEP;
+      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
+      sleep_count = ctrl.count;
+
+      nsh_output(vtbl, "Current state %d, PM stay [%d, %d, %d, %d]\n",
+        current_state, normal_count, idle_count, standby_count, sleep_count);
     }
   else if (argc == 3)
     {
+      if (strcmp(argv[1], "stay") == 0)
+        {
+          ctrl.action = BOARDIOC_PM_STAY;
+        }
+      else if (strcmp(argv[1], "relax") == 0)
+        {
+          ctrl.action = BOARDIOC_PM_RELAX;
+        }
+      else
+        {
+          nsh_output(vtbl, g_fmtarginvalid, argv[1]);
+          return ERROR;
+        }
+
       if (strcmp(argv[2], "normal") == 0)
         {
-          state = PM_NORMAL;
+          ctrl.state = PM_NORMAL;
         }
       else if (strcmp(argv[2], "idle") == 0)
         {
-          state = PM_IDLE;
+          ctrl.state = PM_IDLE;
         }
       else if (strcmp(argv[2], "standby") == 0)
         {
-          state = PM_STANDBY;
+          ctrl.state = PM_STANDBY;
         }
       else if (strcmp(argv[2], "sleep") == 0)
         {
-          state = PM_SLEEP;
+          ctrl.state = PM_SLEEP;
         }
       else
         {
           nsh_output(vtbl, g_fmtarginvalid, argv[2]);
           return ERROR;
         }
-    }
 
-  if (strcmp(argv[1], "stay") == 0)
-    {
-      pm_stay(0, state);
-    }
-  else if (strcmp(argv[1], "relax") == 0)
-    {
-      pm_relax(0, state);
+      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
     }
   else
     {
-      nsh_output(vtbl, g_fmtarginvalid, argv[1]);
+      nsh_error(vtbl, g_fmttoomanyargs, argv[0]);
       return ERROR;
     }
 
@@ -256,15 +288,15 @@ int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   if (argc > 1)
     {
-      (void)boardctl(BOARDIOC_POWEROFF, atoi(argv[1]));
+      boardctl(BOARDIOC_POWEROFF, atoi(argv[1]));
     }
   else
     {
-      (void)boardctl(BOARDIOC_POWEROFF, EXIT_SUCCESS);
+      boardctl(BOARDIOC_POWEROFF, EXIT_SUCCESS);
     }
 
   /* boarctl() will not return in any case.  It if does, it means that
-   * there was a problem with the shutdown operaion.
+   * there was a problem with the shutdown operation.
    */
 
   nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boardctl", NSH_ERRNO);
@@ -286,15 +318,15 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   if (argc > 1)
     {
-      (void)boardctl(BOARDIOC_RESET, atoi(argv[1]));
+      boardctl(BOARDIOC_RESET, atoi(argv[1]));
     }
   else
     {
-      (void)boardctl(BOARDIOC_RESET, EXIT_SUCCESS);
+      boardctl(BOARDIOC_RESET, EXIT_SUCCESS);
     }
 
   /* boarctl() will not return in this case.  It if does, it means that
-   * there was a problem with the reset operaion.
+   * there was a problem with the reset operation.
    */
 
   nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boardctl", NSH_ERRNO);
@@ -500,4 +532,3 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   return OK;
 }
 #endif
-

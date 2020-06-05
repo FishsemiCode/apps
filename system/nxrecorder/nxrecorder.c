@@ -430,7 +430,7 @@ static void *nxrecorder_recordthread(pthread_addr_t pvarg)
    * (3) Terminate recording by sending the AUDIO_MSG_COMPLETE message.
    */
 
-  audinfo("%s\n", running ? "Recording..." : "Not runnning");
+  audinfo("%s\n", running ? "Recording..." : "Not running");
   while (running)
     {
       /* Wait for a signal either from the Audio driver that it needs
@@ -676,7 +676,7 @@ int nxrecorder_pause(FAR struct nxrecorder_s *precorder)
 
   return ret;
 }
-#endif  /* CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME */
+#endif /* CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME */
 
 /****************************************************************************
  * Name: nxrecorder_resume
@@ -706,7 +706,7 @@ int nxrecorder_resume(FAR struct nxrecorder_s *precorder)
 
   return ret;
 }
-#endif  /* CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME */
+#endif /* CONFIG_AUDIO_EXCLUDE_PAUSE_RESUME */
 
 /****************************************************************************
  * Name: nxrecorder_setdevice
@@ -787,7 +787,7 @@ int nxrecorder_stop(FAR struct nxrecorder_s *precorder)
 
   return OK;
 }
-#endif  /* CONFIG_AUDIO_EXCLUDE_STOP */
+#endif /* CONFIG_AUDIO_EXCLUDE_STOP */
 
 /****************************************************************************
  * Name: nxrecorder_recordraw
@@ -935,9 +935,9 @@ int nxrecorder_recordraw(FAR struct nxrecorder_s *precorder,
 
   pthread_attr_init(&tattr);
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO) - 9;
-  (void)pthread_attr_setschedparam(&tattr, &sparam);
-  (void)pthread_attr_setstacksize(&tattr,
-                                  CONFIG_NXRECORDER_RECORDTHREAD_STACKSIZE);
+  pthread_attr_setschedparam(&tattr, &sparam);
+  pthread_attr_setstacksize(&tattr,
+                            CONFIG_NXRECORDER_RECORDTHREAD_STACKSIZE);
 
   /* Add a reference count to the recorder for the thread and start the
    * thread.  We increment for the thread to avoid thread start-up

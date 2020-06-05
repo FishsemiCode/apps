@@ -8,7 +8,7 @@
  *
  * With subsequent updates, modifications, and general maintenance by:
  *
- *   Copyright (C) 2011-2013 Gregory Nutt.  All rights reserved.
+ *   Copyright (C) 2011-2013, 2019 Gregory Nutt.  All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <nuttx/binfmt/builtin.h>
+#include <nuttx/lib/builtin.h>
 #include "builtin/builtin.h"
 
 #include "nsh.h"
@@ -140,7 +140,7 @@ int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
            * SIGINT.
            */
 
-          (void)ioctl(stdout->fs_fd, TIOCSCTTY, ret);
+          ioctl(stdout->fs_fd, TIOCSCTTY, ret);
 
           /* Wait for the application to exit.  We did lock the scheduler
            * above, but that does not guarantee that the application did not
@@ -201,7 +201,7 @@ int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
               */
             }
 
-          (void)ioctl(stdout->fs_fd, TIOCSCTTY, -1);
+          ioctl(stdout->fs_fd, TIOCSCTTY, -1);
         }
 #  ifndef CONFIG_NSH_DISABLEBG
       else

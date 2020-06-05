@@ -1,36 +1,20 @@
 /****************************************************************************
  * apps/nshlib/nsh_fscmds.c
  *
- *   Copyright (C) 2007-2009, 2011-2014, 2017-2018 Gregory Nutt. All rights
- *     reserved.
- *   Author: Gregory Nutt <gnutt@nuttx.org>
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name NuttX nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  *
  ****************************************************************************/
 
@@ -45,12 +29,21 @@
 #include <stdbool.h>
 
 #include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <fcntl.h>
+#include <dirent.h>
+#include <limits.h>
+#include <libgen.h>
+#include <errno.h>
+#include <debug.h>
+
 #if !defined(CONFIG_DISABLE_MOUNTPOINT)
-#  ifdef CONFIG_FS_READABLE /* Need at least one filesytem in configuration */
-#    include <sys/mount.h>
-#    include <nuttx/drivers/ramdisk.h>
-#  endif
+#  include <sys/mount.h>
+#  include <sys/boardctl.h>
+#  include <nuttx/drivers/ramdisk.h>
 #  ifdef CONFIG_DEV_LOOP
 #    include <sys/ioctl.h>
 #    include <nuttx/fs/loop.h>
@@ -71,16 +64,6 @@
 #    include <nuttx/syslog/ramlog.h>
 #  endif
 #endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <dirent.h>
-#include <limits.h>
-#include <libgen.h>
-#include <errno.h>
-#include <debug.h>
 
 #ifdef CONFIG_FSUTILS_MKFATFS
 #  include "fsutils/mkfatfs.h"
@@ -238,47 +221,47 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
           if ((buf.st_mode & S_IRUSR) != 0)
             {
-              details[1]='r';
+              details[1] = 'r';
             }
 
           if ((buf.st_mode & S_IWUSR) != 0)
             {
-              details[2]='w';
+              details[2] = 'w';
             }
 
           if ((buf.st_mode & S_IXUSR) != 0)
             {
-              details[3]='x';
+              details[3] = 'x';
             }
 
           if ((buf.st_mode & S_IRGRP) != 0)
             {
-              details[4]='r';
+              details[4] = 'r';
             }
 
           if ((buf.st_mode & S_IWGRP) != 0)
             {
-              details[5]='w';
+              details[5] = 'w';
             }
 
           if ((buf.st_mode & S_IXGRP) != 0)
             {
-              details[6]='x';
+              details[6] = 'x';
             }
 
           if ((buf.st_mode & S_IROTH) != 0)
             {
-              details[7]='r';
+              details[7] = 'r';
             }
 
           if ((buf.st_mode & S_IWOTH) != 0)
             {
-              details[8]='w';
+              details[8] = 'w';
             }
 
           if ((buf.st_mode & S_IXOTH) != 0)
             {
-              details[9]='x';
+              details[9] = 'x';
             }
 
           nsh_output(vtbl, " %s", details);
@@ -559,7 +542,7 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
           /* Construct the full path to the new file */
 
-          allocpath = nsh_getdirpath(vtbl, destpath, basename(argv[1]) );
+          allocpath = nsh_getdirpath(vtbl, destpath, basename(argv[1]));
           if (!allocpath)
             {
               nsh_error(vtbl, g_fmtcmdoutofmemory, argv[0]);
@@ -579,6 +562,14 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
         }
     }
 
+  /* Check if the destination does not match the source */
+
+  if (strcmp(destpath, srcpath) == 0)
+    {
+      nsh_error(vtbl, g_fmtsyntax, argv[0]);
+      goto errout_with_allocpath;
+    }
+
   /* Now open the destination */
 
   wrfd = open(destpath, oflags, 0666);
@@ -590,7 +581,7 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   /* Now copy the file */
 
-  for (;;)
+  for (; ; )
     {
       int nbytesread;
       int nbyteswritten;
@@ -609,18 +600,18 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
             {
               /* EINTR is not an error (but will still stop the copy) */
 
-#ifndef CONFIG_DISABLE_SIGNALS
               if (errno == EINTR)
                 {
                   nsh_error(vtbl, g_fmtsignalrecvd, argv[0]);
                 }
               else
-#endif
                 {
                   /* Read error */
 
-                  nsh_error(vtbl, g_fmtcmdfailed, argv[0], "read", NSH_ERRNO);
+                  nsh_error(vtbl, g_fmtcmdfailed, argv[0], "read",
+                            NSH_ERRNO);
                 }
+
               goto errout_with_wrfd;
             }
         }
@@ -637,18 +628,18 @@ int cmd_cp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
             {
               /* EINTR is not an error (but will still stop the copy) */
 
-#ifndef CONFIG_DISABLE_SIGNALS
               if (errno == EINTR)
                 {
                   nsh_error(vtbl, g_fmtsignalrecvd, argv[0]);
                 }
               else
-#endif
                 {
-                 /* Read error */
+                  /* Read error */
 
-                  nsh_error(vtbl, g_fmtcmdfailed, argv[0], "write", NSH_ERRNO);
+                  nsh_error(vtbl, g_fmtcmdfailed, argv[0], "write",
+                            NSH_ERRNO);
                 }
+
               goto errout_with_wrfd;
             }
         }
@@ -678,6 +669,7 @@ errout_with_srcpath:
     {
       nsh_freefullpath(srcpath);
     }
+
 errout:
   return ret;
 }
@@ -804,7 +796,7 @@ int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       setup.filename = filepath;  /* The file or character device to use */
       setup.sectsize = 512;       /* The sector size to use with the block device */
       setup.offset   = offset;    /* An offset that may be applied to the device */
-      setup.readonly = readonly;    /* True: Read access will be supported only */
+      setup.readonly = readonly;  /* True: Read access will be supported only */
 
       ret = ioctl(fd, LOOPIOC_SETUP, (unsigned long)((uintptr_t)&setup));
       if (ret < 0)
@@ -819,7 +811,7 @@ int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   /* Free resources */
 
 errout_with_fd:
-  (void)close(fd);
+  close(fd);
 
 errout_with_paths:
   if (loopdev)
@@ -862,7 +854,8 @@ int cmd_losmart(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   /* Get the losetup options:  Two forms are supported:
    *
    *   losmart -d <loop-device>
-   *   losmart [-m minor-number] [-o <offset>] [-e erasesize] [-s sectsize] [-r] <filename>
+   *   losmart [-m minor-number] [-o <offset>] [-e erasesize] [-s sectsize]
+   *           [-r] <filename>
    *
    * NOTE that the -o and -r options are accepted with the -d option, but
    * will be ignored.
@@ -955,7 +948,8 @@ int cmd_losmart(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       /* Tear down the loop device. */
 
-      ret = ioctl(fd, SMART_LOOPIOC_TEARDOWN, (unsigned long)((uintptr_t) loopdev));
+      ret = ioctl(fd, SMART_LOOPIOC_TEARDOWN,
+                 (unsigned long)((uintptr_t) loopdev));
       if (ret < 0)
         {
           nsh_error(vtbl, g_fmtcmdfailed, argv[0], "ioctl", NSH_ERRNO);
@@ -973,7 +967,8 @@ int cmd_losmart(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       setup.offset    = offset;     /* An offset that may be applied to the device */
       setup.readonly  = readonly;   /* True: Read access will be supported only */
 
-      ret = ioctl(fd, SMART_LOOPIOC_SETUP, (unsigned long)((uintptr_t)&setup));
+      ret = ioctl(fd, SMART_LOOPIOC_SETUP,
+                  (unsigned long)((uintptr_t)&setup));
       if (ret < 0)
         {
           nsh_error(vtbl, g_fmtcmdfailed, argv[0], "ioctl", NSH_ERRNO);
@@ -986,7 +981,7 @@ int cmd_losmart(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   /* Free resources */
 
 errout_with_fd:
-  (void)close(fd);
+  close(fd);
 
 errout_with_paths:
   if (loopdev)
@@ -1091,7 +1086,7 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       switch (option)
         {
           case 'l':
-            lsflags |= (LSFLAGS_SIZE|LSFLAGS_LONG);
+            lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG);
             break;
 
           case 'R':
@@ -1169,7 +1164,8 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
        * file
        */
 
-      ret = ls_handler(vtbl, fullpath, NULL, (FAR void *)((uintptr_t)lsflags));
+      ret = ls_handler(vtbl, fullpath, NULL,
+                       (FAR void *)((uintptr_t)lsflags));
     }
   else
     {
@@ -1178,7 +1174,7 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       nsh_output(vtbl, "%s:\n", fullpath);
 
       ret = nsh_foreach_direntry(vtbl, "ls", fullpath, ls_handler,
-                                 (FAR void*)((uintptr_t)lsflags));
+                                 (FAR void *)((uintptr_t)lsflags));
       if (ret == OK && (lsflags & LSFLAGS_RECURSIVE) != 0)
         {
           /* Then recurse to list each directory within the directory */
@@ -1282,7 +1278,7 @@ int cmd_mkfatfs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   /* There should be exactly one parameter left on the command-line */
 
-  if (optind == argc-1)
+  if (optind == argc - 1)
     {
       fullpath = nsh_getfullpath(vtbl, argv[optind]);
       if (fullpath == NULL)
@@ -1350,8 +1346,8 @@ int cmd_mkfifo(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifndef CONFIG_NSH_DISABLE_MKRD
 int cmd_mkrd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  const char *fmt;
-  uint8_t *buffer;
+  FAR const char *fmt;
+  struct boardioc_mkrd_s desc;
   uint32_t nsectors;
   bool badarg = false;
   int sectsize = 512;
@@ -1405,7 +1401,7 @@ int cmd_mkrd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   /* There should be exactly one parameter left on the command-line */
 
-  if (optind == argc-1)
+  if (optind == argc - 1)
     {
       nsectors = (uint32_t)atoi(argv[optind]);
     }
@@ -1420,28 +1416,18 @@ int cmd_mkrd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       goto errout_with_fmt;
     }
 
-  /* Allocate the memory backing up the ramdisk */
+  /* Then create the ramdisk */
 
-  buffer = (uint8_t*)malloc(sectsize * nsectors);
-  if (!buffer)
-    {
-      fmt = g_fmtcmdoutofmemory;
-      goto errout_with_fmt;
-    }
+  desc.minor    = minor;         /* Minor device number of the RAM disk. */
+  desc.nsectors = nsectors;      /* The number of sectors in the RAM disk. */
+  desc.sectsize = sectsize;      /* The size of one sector in bytes. */
+  desc.rdflags  = RDFLAG_WRENABLED | RDFLAG_FUNLINK;
 
-#ifdef CONFIG_DEBUG_INFO
-  memset(buffer, 0, sectsize * nsectors);
-#endif
-  finfo("RAMDISK at %p\n", buffer);
-
-  /* Then register the ramdisk */
-
-  ret = ramdisk_register(minor, buffer, nsectors, sectsize,
-                         RDFLAG_WRENABLED | RDFLAG_FUNLINK);
+  ret = boardctl(BOARDIOC_MKRD, (uintptr_t)&desc);
   if (ret < 0)
     {
-      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "ramdisk_register", NSH_ERRNO_OF(-ret));
-      free(buffer);
+      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boarctl(BOARDIOC_MKRD)",
+                NSH_ERRNO_OF(-ret));
       return ERROR;
     }
 
@@ -1490,7 +1476,8 @@ int cmd_mksmartfs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
                 nsh_error(vtbl, "Sector size must be 256-16384\n");
                 return EINVAL;
               }
-            if (sectorsize & (sectorsize-1))
+
+            if (sectorsize & (sectorsize - 1))
               {
                 nsh_error(vtbl, "Sector size must be power of 2\n");
                 return EINVAL;
@@ -1533,7 +1520,8 @@ int cmd_mksmartfs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #endif
           if (ret < 0)
             {
-              nsh_error(vtbl, g_fmtcmdfailed, argv[0], "mksmartfs", NSH_ERRNO);
+              nsh_error(vtbl, g_fmtcmdfailed, argv[0], "mksmartfs",
+                        NSH_ERRNO);
             }
         }
 
@@ -1604,6 +1592,7 @@ int cmd_readlink(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   ssize_t len;
 
   /* readlink <link> */
+
   /* Get the fullpath to the directory */
 
   fullpath = nsh_getfullpath(vtbl, argv[1]);
@@ -1744,7 +1733,7 @@ int cmd_cmp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
    * files.
    */
 
-  for (;;)
+  for (; ; )
     {
       char buf1[128];
       char buf2[128];
@@ -1864,8 +1853,8 @@ int cmd_truncate(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           else
             {
               /* We successfully performed the create and now have a zero-
-               * length file.  Perform the truncation to extend the allocation
-               * (unless we really wanted a zero-length file).
+               * length file.  Perform the truncation to extend the
+               * allocation (unless we really wanted a zero-length file).
                */
 
               ret = OK;
@@ -1912,4 +1901,3 @@ int cmd_truncate(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 }
 #endif
 #endif
-

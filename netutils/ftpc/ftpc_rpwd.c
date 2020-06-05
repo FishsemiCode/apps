@@ -74,7 +74,7 @@
 /****************************************************************************
  * Name: ftpc_rpwd
  *
- * Descripton:
+ * Description:
  *   Returns the current working directory on the remote server.
  *
  ****************************************************************************/
@@ -90,11 +90,11 @@ FAR char *ftpc_rpwd(SESSION handle)
 
   /* Send the PWD command */
 
-  (void)ftpc_cmd(session, "PWD");
+  ftpc_cmd(session, "PWD");
 
   /* Response is like: 257 "/home/gnutt" (from vsftpd).
    *
-   * Extract the quoated path name into allocated memory.
+   * Extract the quoted path name into allocated memory.
    */
 
   start = strchr(session->reply, '\"');

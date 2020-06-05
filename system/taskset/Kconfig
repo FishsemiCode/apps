@@ -14,9 +14,8 @@ if SYSTEM_TASKSET
 config SYSTEM_TASKSET_PROGNAME
 	string "Taskset program name"
 	default "taskset"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config SYSTEM_TASKSET_PRIORITY
@@ -25,6 +24,6 @@ config SYSTEM_TASKSET_PRIORITY
 
 config SYSTEM_TASKSET_STACKSIZE
 	int "Taskset stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

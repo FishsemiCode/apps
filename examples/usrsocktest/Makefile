@@ -37,16 +37,13 @@
 
 # USRSOCK Test built-in application info
 
-CONFIG_EXAMPLES_USRSOCKTEST_PRIORITY ?= SCHED_PRIORITY_DEFAULT
-CONFIG_EXAMPLES_USRSOCKTEST_STACKSIZE ?= 4096
-
-APPNAME = usrsocktest
+PROGNAME = $(CONFIG_EXAMPLES_USRSOCKTEST_PROGNAME)
 PRIORITY = $(CONFIG_EXAMPLES_USRSOCKTEST_PRIORITY)
 STACKSIZE = $(CONFIG_EXAMPLES_USRSOCKTEST_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_USRSOCKTEST)
 
 # NuttX USRSOCK Test
 
-ASRCS =
 CSRCS = usrsocktest_daemon.c usrsocktest_basic_connect.c
 CSRCS += usrsocktest_basic_daemon.c usrsocktest_basic_getsockname.c
 CSRCS += usrsocktest_basic_getsockopt.c usrsocktest_basic_send.c
@@ -58,10 +55,5 @@ CSRCS += usrsocktest_nodaemon.c usrsocktest_poll.c
 CSRCS += usrsocktest_remote_disconnect.c usrsocktest_wake_with_signal.c
 
 MAINSRC = usrsocktest_main.c
-
-CONFIG_EXAMPLES_USRSOCKTEST_PROGNAME ?= usrsocktest$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_USRSOCKTEST_PROGNAME)
-
-MODULE = CONFIG_EXAMPLES_USRSOCKTEST
 
 include $(APPDIR)/Application.mk

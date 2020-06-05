@@ -1,35 +1,20 @@
 /****************************************************************************
  * testing/fstest/fstest_main.c
  *
- *   Copyright (C) 2015, 2018 Gregory Nutt. All rights reserved.
- *   Author: Gregory Nutt <gnutt@nuttx.org>
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name NuttX nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  *
  ****************************************************************************/
 
@@ -57,6 +42,7 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
 /* Configuration ************************************************************/
 
 #ifndef CONFIG_TESTING_FSTEST_MAXNAME
@@ -108,6 +94,7 @@ struct fstest_filedesc_s
 /****************************************************************************
  * Private Data
  ****************************************************************************/
+
 /* Pre-allocated simulated flash */
 
 static uint8_t g_fileimage[CONFIG_TESTING_FSTEST_MAXFILE];
@@ -150,11 +137,7 @@ static void fstest_loopmemusage(void)
 {
   /* Get the current memory usage */
 
-#ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmafter = mallinfo();
-#else
-  (void)mallinfo(&g_mmafter);
-#endif
 
   /* Show the change from the previous loop */
 
@@ -163,11 +146,7 @@ static void fstest_loopmemusage(void)
 
   /* Set up for the next test */
 
-#ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmprevious = g_mmafter;
-#else
-  memcpy(&g_mmprevious, &g_mmafter, sizeof(struct mallinfo));
-#endif
 }
 
 /****************************************************************************
@@ -176,11 +155,8 @@ static void fstest_loopmemusage(void)
 
 static void fstest_endmemusage(void)
 {
-#ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmafter = mallinfo();
-#else
-  (void)mallinfo(&g_mmafter);
-#endif
+
   printf("\nFinal memory usage:\n");
   fstest_showmemusage(&g_mmbefore, &g_mmafter);
 }
@@ -227,7 +203,7 @@ static inline void fstest_randname(FAR struct fstest_filedesc_s *file)
   namelen  = (rand() % maxname) + 1;
   alloclen = namelen + dirlen;
 
-  file->name = (FAR char*)malloc(alloclen + 1);
+  file->name = (FAR char *)malloc(alloclen + 1);
   if (!file->name)
     {
       printf("ERROR: Failed to allocate name, length=%d\n", namelen);
@@ -434,7 +410,7 @@ static inline int fstest_wrfile(FAR struct fstest_filedesc_s *file)
         {
           int errcode = errno;
 
-          /* If the write failed because an interrupt occurred or because there
+          /* If the write failed because an interrupt occurred or because
            * there is no space on the device, then don't complain.
            */
 
@@ -520,14 +496,14 @@ static int fstest_fillfs(void)
             }
 
 #if CONFIG_TESTING_FSTEST_VERBOSE != 0
-         printf("  Created file %s\n", file->name);
+          printf("  Created file %s\n", file->name);
 #endif
-         g_nfiles++;
+          g_nfiles++;
 
-         if (g_media_full)
-           {
-             break;
-           }
+          if (g_media_full)
+            {
+              break;
+            }
         }
     }
 
@@ -621,11 +597,14 @@ static inline int fstest_rdfile(FAR struct fstest_filedesc_s *file)
       return ERROR;
     }
 
-  /* Read all of the data info the file image buffer using random read sizes */
+  /* Read all of the data info the file image buffer using random read
+   * sizes.
+   */
 
   for (ntotalread = 0; ntotalread < file->len; )
     {
-      nbytesread = fstest_rdblock(fd, file, ntotalread, file->len - ntotalread);
+      nbytesread = fstest_rdblock(fd, file, ntotalread,
+                                  file->len - ntotalread);
       if (nbytesread < 0)
         {
           close(fd);
@@ -825,7 +804,7 @@ static int fstest_delfiles(void)
               ret = unlink(file->name);
               if (ret < 0)
                 {
-                  printf("ERROR: Unlink %d failed: %d\n", i+1, errno);
+                  printf("ERROR: Unlink %d failed: %d\n", i + 1, errno);
                   printf("  File name:  %s\n", file->name);
                   printf("  File size:  %d\n", file->len);
                   printf("  File index: %d\n", j);
@@ -877,7 +856,7 @@ static int fstest_delallfiles(void)
           ret = unlink(file->name);
           if (ret < 0)
             {
-               printf("ERROR: Unlink %d failed: %d\n", i+1, errno);
+               printf("ERROR: Unlink %d failed: %d\n", i + 1, errno);
                printf("  File name:  %s\n", file->name);
                printf("  File size:  %d\n", file->len);
                printf("  File index: %d\n", i);
@@ -951,11 +930,7 @@ static int fstest_directory(void)
  * Name: fstest_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int fstest_main(int argc, char *argv[])
-#endif
 {
   struct statfs buf;
   unsigned int i;
@@ -967,13 +942,8 @@ int fstest_main(int argc, char *argv[])
 
   /* Set up memory monitoring */
 
-#ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmbefore = mallinfo();
   g_mmprevious = g_mmbefore;
-#else
-  (void)mallinfo(&g_mmbefore);
-  memcpy(&g_mmprevious, &g_mmbefore, sizeof(struct mallinfo));
-#endif
 
   /* Loop a few times ... file the file system with some random, files,
    * delete some files randomly, fill the file system with more random file,
@@ -992,7 +962,7 @@ int fstest_main(int argc, char *argv[])
        */
 
       printf("\n=== FILLING %u =============================\n", i);
-      (void)fstest_fillfs();
+      fstest_fillfs();
       printf("Filled file system\n");
       printf("  Number of files: %d\n", g_nfiles);
       printf("  Number deleted:  %d\n", g_ndeleted);
@@ -1088,7 +1058,8 @@ int fstest_main(int argc, char *argv[])
 
       /* Perform garbage collection, integrity checks */
 
-      (void)fstest_gc(buf.f_bfree);
+      ret = fstest_gc(buf.f_bfree);
+      UNUSED(ret);
 
       /* Show memory usage */
 
@@ -1103,4 +1074,3 @@ int fstest_main(int argc, char *argv[])
   fflush(stdout);
   return 0;
 }
-

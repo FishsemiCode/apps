@@ -61,11 +61,7 @@
  * Public Functions
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int flash_test_main(int argc, char *argv[])
-#endif
 {
   struct inode* inode;
   int           ret;
@@ -86,7 +82,7 @@ int flash_test_main(int argc, char *argv[])
       return -1;
     }
 
-  /* Find the inode of the block driver indentified by 'source' */
+  /* Find the inode of the block driver identified by 'source' */
 
   ret = open_blockdriver(argv[1], 0, &inode);
   if (ret < 0)
@@ -111,8 +107,8 @@ int flash_test_main(int argc, char *argv[])
     {
       /* Perform a low-level format */
 
-      (void)inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
-      (void)inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
+      inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
+      inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
     }
 
   if (!(fmt.flags & SMART_FMT_ISFORMATTED))
@@ -141,7 +137,7 @@ int flash_test_main(int argc, char *argv[])
   seqs = (uint16_t *) malloc(fmt.nsectors << 1);
   if (seqs == NULL)
     {
-      (void) free(buffer);
+      free(buffer);
       fprintf(stderr, "Error allocating seqs buffer\n");
       goto errout_with_driver;
     }
@@ -149,8 +145,8 @@ int flash_test_main(int argc, char *argv[])
   sectors = (uint16_t *) malloc(fmt.nsectors << 1);
   if (sectors == NULL)
     {
-      (void) free(seqs);
-      (void) free(buffer);
+      free(seqs);
+      free(buffer);
       fprintf(stderr, "Error allocating sectors buffer\n");
       goto errout_with_driver;
     }
@@ -186,8 +182,8 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
-                                   &readwrite);
+      inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+                             &readwrite);
 
       /* Print the logical sector number */
 
@@ -215,7 +211,7 @@ int flash_test_main(int argc, char *argv[])
           goto errout_with_buffers;
         }
 
-      /* Generate compare string and do the comapre */
+      /* Generate compare string and do the compare */
 
       printf("\r%d     ", sectors[x]);
 
@@ -245,8 +241,8 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
-                                   &readwrite);
+      inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+                             &readwrite);
 
       /* Print the logical sector number */
 
@@ -270,8 +266,8 @@ int flash_test_main(int argc, char *argv[])
       readwrite.offset = 64;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
-                                   &readwrite);
+      inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+                             &readwrite);
 
       /* Print the logical sector number */
 
@@ -288,22 +284,22 @@ int flash_test_main(int argc, char *argv[])
 
       if (sectors[x] != 0xFFFF)
         {
-          (void)inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
-                                       sectors[x]);
+          inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
+                                 sectors[x]);
         }
     }
 
 errout_with_buffers:
   /* Free the allocated buffers */
 
-  (void) free(seqs);
-  (void) free(sectors);
-  (void) free(buffer);
+  free(seqs);
+  free(sectors);
+  free(buffer);
 
 errout_with_driver:
   /* Now close the block device and exit */
 
-  (void)close_blockdriver(inode);
+  close_blockdriver(inode);
 
 errout:
 

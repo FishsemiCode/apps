@@ -183,7 +183,7 @@ static void ping6_result(FAR const struct ping6_result_s *result)
       case ICMPv6_I_PKTDUP:
         inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer,
                   INET6_ADDRSTRLEN);
-        printf("%ld bytes from %s icmp_seq=%u time=%u ms %s\n",
+        printf("%u bytes from %s icmp_seq=%u time=%u ms\n",
                result->info->datalen, strbuffer, result->seqno,
                result->extra, (result->code == ICMPv6_I_PKTDUP) ?
                "(DUP!)" : "");
@@ -229,11 +229,7 @@ static void ping6_result(FAR const struct ping6_result_s *result)
  * Public Functions
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int ping6_main(int argc, char **argv)
-#endif
 {
   struct ping6_priv_s priv = {0};
   struct ping6_info_s info;

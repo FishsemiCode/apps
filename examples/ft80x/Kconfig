@@ -36,9 +36,8 @@ config EXAMPLES_FT80X_EXCLUDE_BITMAPS
 config EXAMPLES_FT80X_PROGNAME
 	string "FT80x program name"
 	default "ft80x"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_FT80X_PRIORITY
@@ -47,6 +46,6 @@ config EXAMPLES_FT80X_PRIORITY
 
 config EXAMPLES_FT80X_STACKSIZE
 	int "FT80x stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

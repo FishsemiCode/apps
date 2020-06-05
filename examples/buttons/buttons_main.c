@@ -59,16 +59,6 @@
 #  error "CONFIG_BUTTONS is not defined in the configuration"
 #endif
 
-#if defined(CONFIG_DISABLE_SIGNALS) && defined(CONFIG_DISABLE_POLL)
-#  error "You need at least SIGNALS or POLL support to read buttons"
-#endif
-
-#if !defined(CONFIG_DISABLE_SIGNALS) && !defined(CONFIG_DISABLE_POLL)
-#  define USE_NOTIFY_SIGNAL 1
-#else
-#  define USE_NOTIFY_POLL 1
-#endif
-
 #ifndef CONFIG_BUTTONS_NPOLLWAITERS
 #  define CONFIG_BUTTONS_NPOLLWAITERS 2
 #endif
@@ -167,11 +157,11 @@ static bool g_button_daemon_started;
 
 static int button_daemon(int argc, char *argv[])
 {
-#ifdef USE_NOTIFY_POLL
+#ifdef CONFIG_EXAMPLES_BUTTONS_POLL
   struct pollfd fds[CONFIG_BUTTONS_NPOLLWAITERS];
 #endif
 
-#ifdef USE_NOTIFY_SIGNAL
+#ifdef CONFIG_EXAMPLES_BUTTONS_SIGNAL
   struct btn_notify_s btnevents;
 #endif
 
@@ -219,7 +209,7 @@ static int button_daemon(int argc, char *argv[])
 
   printf("button_daemon: Supported BUTTONs 0x%02x\n", (unsigned int)supported);
 
-#ifdef USE_NOTIFY_SIGNAL
+#ifdef CONFIG_EXAMPLES_BUTTONS_SIGNAL
   /* Define the notifications events */
 
   btnevents.bn_press   = supported;
@@ -245,22 +235,22 @@ static int button_daemon(int argc, char *argv[])
 
   for (; ; )
     {
-#ifdef USE_NOTIFY_SIGNAL
+#ifdef CONFIG_EXAMPLES_BUTTONS_SIGNAL
       struct siginfo value;
       sigset_t set;
 #endif
 
-#ifdef USE_NOTIFY_POLL
+#ifdef CONFIG_EXAMPLES_BUTTONS_POLL
       bool timeout;
       bool pollin;
       int nbytes;
 #endif
 
-#ifdef USE_NOTIFY_SIGNAL
+#ifdef CONFIG_EXAMPLES_BUTTONS_SIGNAL
       /* Wait for a signal */
 
-      (void)sigemptyset(&set);
-      (void)sigaddset(&set, CONFIG_EXAMPLES_BUTTONS_SIGNO);
+      sigemptyset(&set);
+      sigaddset(&set, CONFIG_EXAMPLES_BUTTONS_SIGNO);
       ret = sigwaitinfo(&set, &value);
       if (ret < 0)
         {
@@ -272,7 +262,7 @@ static int button_daemon(int argc, char *argv[])
       sample = (btn_buttonset_t)value.si_value.sival_int;
 #endif
 
-#ifdef USE_NOTIFY_POLL
+#ifdef CONFIG_EXAMPLES_BUTTONS_POLL
       /* Prepare the File Descriptor for poll */
 
       memset(fds, 0, sizeof(struct pollfd)*CONFIG_BUTTONS_NPOLLWAITERS);
@@ -376,7 +366,7 @@ static int button_daemon(int argc, char *argv[])
     }
 
 errout_with_fd:
-  (void)close(fd);
+  close(fd);
 
 errout:
   g_button_daemon_started = false;
@@ -393,11 +383,7 @@ errout:
  * buttons_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int buttons_main(int argc, FAR char *argv[])
-#endif
 {
   int ret;
 

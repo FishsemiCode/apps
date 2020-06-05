@@ -50,7 +50,7 @@
  * Name: passwd_update
  *
  * Description:
- *   Change a new user to the /etc/passwd file.  If the user does not exist,
+ *   Change a user in the /etc/passwd file.  If the user does not exist,
  *   then this function will fail.
  *
  * Input Parameters:
@@ -98,6 +98,6 @@ int passwd_update(FAR const char *username, FAR const char *password)
   ret = passwd_append(username, password);
 
 errout_with_lock:
-  (void)passwd_unlock(sem);
+  passwd_unlock(sem);
   return ret;
 }

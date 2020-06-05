@@ -14,9 +14,8 @@ if EXAMPLES_RFID_READUID
 config EXAMPLES_RFID_READUID_PROGNAME
 	string "Program name"
 	default "rfid_readuid"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config EXAMPLES_RFID_READUID_PRIORITY
@@ -25,6 +24,6 @@ config EXAMPLES_RFID_READUID_PRIORITY
 
 config EXAMPLES_RFID_READUID_STACKSIZE
 	int "RFID Read UID stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

@@ -11,7 +11,7 @@
 # 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in
+#    notice, this list of conditions and the following dsclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
 # 3. Neither the name NuttX nor the names of its contributors may be
@@ -55,14 +55,6 @@ MAINSRC = tcpblaster_target1.c
 
 # Target 1 Application Info
 
-ifeq ($(CONFIG_EXAMPLES_TCPBLASTER_SERVER),y)
-CONFIG_EXAMPLES_TCPBLASTER_PROGNAME1 ?= tcpserver
-else
-CONFIG_EXAMPLES_TCPBLASTER_PROGNAME1 ?= tcpclient
-endif
-CONFIG_EXAMPLES_TCPBLASTER_PRIORITY1 ?= 100
-CONFIG_EXAMPLES_TCPBLASTER_STACKSIZE1 ?= 2048
-
 PROGNAME = $(CONFIG_EXAMPLES_TCPBLASTER_PROGNAME1)
 PRIORITY = $(CONFIG_EXAMPLES_TCPBLASTER_PRIORITY1)
 STACKSIZE = $(CONFIG_EXAMPLES_TCPBLASTER_STACKSIZE1)
@@ -80,26 +72,10 @@ MAINSRC += tcpblaster_target2.c
 
 # Target 2 Application Info
 
-ifeq ($(CONFIG_EXAMPLES_TCPBLASTER_SERVER),y)
-CONFIG_EXAMPLES_TCPBLASTER_PROGNAME2 ?= tcpclient
-else
-CONFIG_EXAMPLES_TCPBLASTER_PROGNAME2 ?= tcpserver
-endif
-CONFIG_EXAMPLES_TCPBLASTER_PRIORITY2 ?= 100
-CONFIG_EXAMPLES_TCPBLASTER_STACKSIZE2 ?= 2048
-
 PROGNAME += $(CONFIG_EXAMPLES_TCPBLASTER_PROGNAME2)
 PRIORITY += $(CONFIG_EXAMPLES_TCPBLASTER_PRIORITY2)
 STACKSIZE += $(CONFIG_EXAMPLES_TCPBLASTER_STACKSIZE2)
 
-endif
-
-# All targets
-
-ifeq ($(CONFIG_EXAMPLES_TCPBLASTER_TARGET2),y)
-APPNAME = tcpblaster1 tcpblaster2
-else
-APPNAME = tcpblaster
 endif
 
 # Host
@@ -109,10 +85,10 @@ ifneq ($(CONFIG_EXAMPLES_TCPBLASTER_LOOPBACK),y)
 
   HOSTCFLAGS += -DTCPBLASTER_HOST=1
   ifeq ($(CONFIG_EXAMPLES_TCPBLASTER_SERVER),y)
-    HOSTCFLAGS += -DCONFIG_EXAMPLES_TCPBLASTER_SERVER=1 -DCONFIG_EXAMPLES_TCPBLASTER_SERVERIP="$(CONFIG_EXAMPLES_TCPBLASTER_SERVERIP)"
+    HOSTCFLAGS += -DCONFIG_EXAMPLES_TCPBLASTER_SERVER=1 -DCONFIG_EXAMPLES_TCPBLASTER_SERVERIP=$(CONFIG_EXAMPLES_TCPBLASTER_SERVERIP)
   endif
 
-  HOST_SRCS = tcpblaster_host.c
+  HOST_SRCS = tcpblaster_host.c tcpblaster_cmdline.c
   ifeq ($(CONFIG_EXAMPLES_TCPBLASTER_SERVER),y)
     HOST_SRCS += tcpblaster_client.c
     HOST_BIN = tcpclient$(EXEEXT)
@@ -124,13 +100,7 @@ ifneq ($(CONFIG_EXAMPLES_TCPBLASTER_LOOPBACK),y)
   HOSTOBJEXT ?= hobj
   HOST_OBJS = $(HOST_SRCS:.c=.$(HOSTOBJEXT))
 
-endif
-endif
-
 # Common build
-
-ifneq ($(CONFIG_EXAMPLES_TCPBLASTER_TARGET2),y)
-ifneq ($(CONFIG_EXAMPLES_TCPBLASTER_LOOPBACK),y)
 
 $(HOST_OBJS): %.$(HOSTOBJEXT): %.c
 	@echo "CC:  $<"
@@ -160,11 +130,11 @@ ifneq ($(CONFIG_EXAMPLES_TCPBLASTER_TARGET2),y)
 ifneq ($(CONFIG_EXAMPLES_TCPBLASTER_LOOPBACK),y)
 	$(call DELFILE, *.$(HOSTOBJEXT))
 	$(call DELFILE, $(HOST_BIN))
-endif
-endif
 	$(call DELFILE, *.dSYM)
+endif
+endif
 	$(call DELFILE, config.h)
 
-MODULE = CONFIG_EXAMPLES_TCPBLASTER
+MODULE = $(CONFIG_EXAMPLES_TCPBLASTER)
 
 include $(APPDIR)/Application.mk

@@ -35,6 +35,6 @@
 
 -include $(TOPDIR)/Make.defs
 
-CSRCS		= urldecode.c base64.c md5.c
+CSRCS = urldecode.c base64.c md5.c
 
 include $(APPDIR)/Application.mk

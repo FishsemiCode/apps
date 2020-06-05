@@ -37,19 +37,13 @@
 
 # Hello, World! Example
 
-ASRCS =
-CSRCS =
 MAINSRC = wgetjson_main.c
-
-CONFIG_XYZ_PROGNAME ?= wgetjson$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
 
 # Buttons built-in application info
 
-APPNAME = wgetjson
+PROGNAME = wgetjson
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
-
-MODULE = CONFIG_EXAMPLES_WGETJSON
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_WGETJSON)
 
 include $(APPDIR)/Application.mk

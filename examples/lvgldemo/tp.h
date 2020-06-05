@@ -46,10 +46,10 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
+
 /* Configuration ************************************************************/
-/* CONFIG_NSH_BUILTIN_APPS - Build the touchscreen test as
- *   an NSH built-in function.  Default: Built as a standalone program
- * CONFIG_EXAMPLES_LGVLDEMO_MINOR - The minor device number.  Minor=N
+
+/* CONFIG_EXAMPLES_LGVLDEMO_MINOR - The minor device number.  Minor=N
  *   corresponds to touchscreen device /dev/input0.  Note this value must
  *   with CONFIG_EXAMPLES_LGVLDEMO_DEVPATH.  Default 0.
  * CONFIG_EXAMPLES_LGVLDEMO_DEVPATH - The path to the touchscreen
@@ -110,6 +110,7 @@ int tp_init(void);
  *   Read a TP data and store in 'data' argument
  *
  * Input Parameters:
+ *   indev_drv - Input device handler
  *   data - Store the x, y and state information here
  *
  * Returned Value:
@@ -117,7 +118,8 @@ int tp_init(void);
  *
  ****************************************************************************/
 
-bool tp_read(FAR lv_indev_data_t *data);
+bool tp_read(FAR struct _lv_indev_drv_t *indev_drv,
+             FAR lv_indev_data_t *data);
 
 /****************************************************************************
  * Name: tp_read

@@ -69,13 +69,7 @@ static int server_child(int argc, char *argv[])
  * tcpblaster_main
  ****************************************************************************/
 
-#if defined(BUILD_MODULE)
 int main(int argc, FAR char *argv[])
-#elif defined(CONFIG_EXAMPLES_TCPBLASTER_TARGET2)
-int tcpblaster1_main(int argc, char *argv[])
-#else
-int tcpblaster_main(int argc, char *argv[])
-#endif
 {
 #ifdef CONFIG_EXAMPLES_TCPBLASTER_LOOPBACK
   pid_t child;
@@ -123,7 +117,7 @@ int tcpblaster_main(int argc, char *argv[])
 
 #if defined(CONFIG_EXAMPLES_TCPBLASTER_LOOPBACK) && defined(CONFIG_SCHED_WAITPID)
   printf("main: Waiting for the server to exit\n");
-  (void)waitpid(child, &statloc, 0);
+  waitpid(child, &statloc, 0);
 #endif
 
   return EXIT_SUCCESS;

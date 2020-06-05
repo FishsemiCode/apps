@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage="Usage: $0 <test-dir-path>"
 
@@ -22,7 +22,7 @@ varlist=`find $dir -name "*-thunk.S"| xargs grep -h asciz | cut -f3 | sort | uni
 echo "#ifndef __EXAMPLES_NXFLAT_TESTS_SYMTAB_H"
 echo "#define __EXAMPLES_NXFLAT_TESTS_SYMTAB_H"
 echo ""
-echo "#include <nuttx/binfmt/symtab.h>"
+echo "#include <nuttx/symtab.h>"
 echo ""
 echo "static const struct symtab_s g_nxflat_exports[] = "
 echo "{"
@@ -36,4 +36,3 @@ echo "};"
 echo "#define NEXPORTS (sizeof(g_nxflat_exports)/sizeof(struct symtab_s))"
 echo ""
 echo "#endif /* __EXAMPLES_NXFLAT_TESTS_SYMTAB_H */"
-

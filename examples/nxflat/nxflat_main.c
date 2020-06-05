@@ -152,11 +152,7 @@ static inline void testheader(FAR const char *progname)
  * Name: nxflat_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int nxflat_main(int argc, char *argv[])
-#endif
 {
   FAR char *args[1];
   int ret;
@@ -191,16 +187,16 @@ int nxflat_main(int argc, char *argv[])
    * the ROMFS mountpoint.
    */
 
-  (void)setenv("PATH", MOUNTPT, 1);
+  setenv("PATH", MOUNTPT, 1);
 #endif
 
-  /* Now excercise every progrm in the ROMFS file system */
+  /* Now exercise every progrm in the ROMFS file system */
 
   for (i = 0; dirlist[i]; i++)
     {
       FAR const char *filename;
 
-      /* Output a seperated so that we can clearly discrinmate the output of
+      /* Output a separated so that we can clearly discrinmate the output of
        * this program from the others.
        */
 

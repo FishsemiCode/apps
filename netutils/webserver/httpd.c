@@ -167,9 +167,9 @@ static int httpd_openindex(struct httpd_state *pstate)
 #  if defined(CONFIG_NETUTILS_HTTPD_INDEX)
   if (ret == ERROR && errno == EISDIR)
     {
-      (void) snprintf(pstate->ht_filename + z,
-                      sizeof pstate->ht_filename - z, "/%s",
-                      CONFIG_NETUTILS_HTTPD_INDEX);
+      snprintf(pstate->ht_filename + z,
+               sizeof pstate->ht_filename - z, "/%s",
+               CONFIG_NETUTILS_HTTPD_INDEX);
 
       ret = httpd_open(pstate->ht_filename, &pstate->ht_file);
     }
@@ -331,7 +331,7 @@ static int handle_script(struct httpd_state *pstate)
               if (httpd_open(pstate->ht_scriptptr + 1,
                              &pstate->ht_file) != OK)
                 {
-                   return ERROR;
+                  return ERROR;
                 }
 
               status = httpd_send_datachunk(pstate->ht_sockfd,
@@ -341,7 +341,7 @@ static int handle_script(struct httpd_state *pstate)
               DEBUGASSERT(status >= 0);
               UNUSED(status);
 
-              (void)httpd_close(&pstate->ht_file);
+              httpd_close(&pstate->ht_file);
             }
           else
             {
@@ -444,7 +444,10 @@ static int send_headers(struct httpd_state *pstate, int status, int len)
 {
   const char *mime;
   const char *ptr;
-  char contentlen[HTTPD_MAX_CONTENTLEN] = { 0 };
+  char contentlen[HTTPD_MAX_CONTENTLEN] =
+  {
+    0
+  };
   char header[HTTPD_MAX_HEADERLEN];
   int hdrlen;
   int i;
@@ -456,17 +459,36 @@ static int send_headers(struct httpd_state *pstate, int status, int len)
   } a[] =
   {
 #ifndef CONFIG_NETUTILS_HTTPD_SCRIPT_DISABLE
-    { "shtml", "text/html"       },
+    {
+      "shtml", "text/html"
+    },
 #endif
-    { "html",  "text/html"       },
-    { "css",   "text/css"        },
-    { "txt",   "text/plain"      },
-    { "js",    "text/javascript" },
-
-    { "png",   "image/png"       },
-    { "gif",   "image/gif"       },
-    { "jpeg",  "image/jpeg"      },
-    { "jpg",   "image/jpeg"      }
+    {
+      "html",  "text/html"
+    },
+    {
+      "css",   "text/css"
+    },
+    {
+      "txt",   "text/plain"
+    },
+    {
+      "js",    "text/javascript"
+    },
+    {
+      "png",   "image/png"
+    },
+    {
+      "gif",   "image/gif"
+    },
+    {
+      "jpeg",  "image/jpeg"
+    },
+    {
+      "jpg",   "image/jpeg"
+    },
+    { "mp3",   "audio/mpeg"
+    }
   };
 
   ptr = strrchr(pstate->ht_filename, ISO_period);
@@ -488,10 +510,19 @@ static int send_headers(struct httpd_state *pstate, int status, int len)
         }
     }
 
+#ifdef CONFIG_NETUTILS_HTTPD_DIRLIST
+  if (false == httpd_is_file(pstate->ht_filename))
+    {
+      /* we assume that it's a directory */
+
+      mime = "text/html";
+    }
+#endif
+
   if (len >= 0)
     {
-      (void)snprintf(contentlen, HTTPD_MAX_CONTENTLEN,
-                     "Content-Length: %d\r\n", len);
+      snprintf(contentlen, HTTPD_MAX_CONTENTLEN,
+               "Content-Length: %d\r\n", len);
     }
   else
     {
@@ -503,8 +534,8 @@ static int send_headers(struct httpd_state *pstate, int status, int len)
 #if defined(CONFIG_NETUTILS_HTTPD_ENABLE_CHUNKED_ENCODING)
       /* Turn on chunked encoding */
 
-      (void)snprintf(contentlen, HTTPD_MAX_CONTENTLEN,
-                     "Transfer-Encoding: chunked\r\n");
+      snprintf(contentlen, HTTPD_MAX_CONTENTLEN,
+               "Transfer-Encoding: chunked\r\n");
       pstate->ht_chunked = true;
 #endif
     }
@@ -562,9 +593,8 @@ static int httpd_senderror(struct httpd_state *pstate, int status)
     }
 #endif
 
-  (void) snprintf(pstate->ht_filename, sizeof pstate->ht_filename,
-    "%s/%d.html",
-    CONFIG_NETUTILS_HTTPD_ERRPATH, status);
+  snprintf(pstate->ht_filename, sizeof pstate->ht_filename,
+           "%s/%d.html", CONFIG_NETUTILS_HTTPD_ERRPATH, status);
 
   ret = httpd_openindex(pstate);
 
@@ -576,7 +606,7 @@ static int httpd_senderror(struct httpd_state *pstate, int status)
 
   if (ret != OK)
     {
-      (void) snprintf(msg, sizeof msg, "Error %d\n", status);
+      snprintf(msg, sizeof msg, "Error %d\n", status);
 
       ret = send_chunk(pstate, msg, sizeof msg - 1);
     }
@@ -590,7 +620,7 @@ static int httpd_senderror(struct httpd_state *pstate, int status)
 #endif
 #endif
 
-      (void)httpd_close(&pstate->ht_file);
+      httpd_close(&pstate->ht_file);
     }
 
   return ret;
@@ -641,7 +671,7 @@ static int httpd_sendfile(struct httpd_state *pstate)
 #endif
       if (send_headers(pstate, 200, -1) != OK)
         {
-           goto done;
+          goto done;
         }
 
       ret = handle_script(pstate);
@@ -649,22 +679,29 @@ static int httpd_sendfile(struct httpd_state *pstate)
     }
 #endif
 
+#ifdef CONFIG_NETUTILS_HTTPD_DIRLIST
+  if (send_headers(pstate, 200, -1) != OK)
+    {
+      goto done;
+    }
+#else
   if (send_headers(pstate, pstate->ht_file.len == 0 ? 204 : 200,
                    pstate->ht_file.len) != OK)
     {
       goto done;
     }
+#endif
 
 #ifdef CONFIG_NETUTILS_HTTPD_CLASSIC
-      ret = send_chunk(pstate, pstate->ht_file.data, pstate->ht_file.len);
+  ret = send_chunk(pstate, pstate->ht_file.data, pstate->ht_file.len);
 #else
 #ifdef CONFIG_NETUTILS_HTTPD_SENDFILE
-      ret = httpd_sendfile_send(pstate->ht_sockfd, &pstate->ht_file);
+  ret = httpd_sendfile_send(pstate->ht_sockfd, &pstate->ht_file);
 #endif
 #endif
 
 done:
-  (void)httpd_close(&pstate->ht_file);
+  httpd_close(&pstate->ht_file);
   return ret;
 }
 
@@ -774,7 +811,7 @@ static inline int httpd_parse(struct httpd_state *pstate)
               }
 
             *v = '\0';
-            (void) strcpy(pstate->ht_filename, start);
+            strcpy(pstate->ht_filename, start);
             state = STATE_HEADER;
             break;
 
@@ -881,11 +918,11 @@ static void *httpd_handler(void *arg)
           status = httpd_parse(pstate);
           if (status >= 400)
             {
-              (void)httpd_senderror(pstate, status);
+              httpd_senderror(pstate, status);
             }
           else
             {
-              (void) httpd_sendfile(pstate);
+              httpd_sendfile(pstate);
             }
 
 #ifndef CONFIG_NETUTILS_HTTPD_KEEPALIVE_DISABLE
@@ -971,7 +1008,7 @@ static void single_server(uint16_t portno, pthread_startroutine_t handler,
 
       /* Handle the request. This blocks until complete. */
 
-      (void)httpd_handler((FAR void *)acceptsd);
+      httpd_handler((FAR void *)acceptsd);
     }
 
   /* Close the sockets */
@@ -984,6 +1021,7 @@ static void single_server(uint16_t portno, pthread_startroutine_t handler,
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
 /****************************************************************************
  * Name: httpd_listen
  *

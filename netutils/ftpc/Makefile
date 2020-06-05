@@ -37,8 +37,6 @@
 
 # DHCP Daemn Library
 
-CSRCS		=
-
 ifeq ($(CONFIG_NET_TCP),y)
 # FTP connection management
 CSRCS += ftpc_connect.c ftpc_disconnect.c

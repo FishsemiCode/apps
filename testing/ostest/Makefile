@@ -37,22 +37,19 @@
 
 # ostest built-in application info
 
-APPNAME = ostest
+PROGNAME = ostest
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_TESTING_OSTEST)
 
 # NuttX OS Test
 
-ASRCS =
-CSRCS = dev_null.c restart.c sigprocmask.c
+CSRCS   = dev_null.c restart.c sigprocmask.c sighand.c signest.c
 MAINSRC = ostest_main.c
 
-ifneq ($(CONFIG_DISABLE_SIGNALS),y)
-CSRCS +=  sighand.c signest.c
 ifeq ($(CONFIG_SIG_SIGSTOP_ACTION),y)
 ifeq ($(CONFIG_SIG_SIGKILL_ACTION),y)
 CSRCS += suspend.c
-endif
 endif
 endif
 
@@ -136,10 +133,5 @@ ifeq ($(CONFIG_PRIORITY_INHERITANCE),y)
 CSRCS += prioinherit.c
 endif # CONFIG_PRIORITY_INHERITANCE
 endif # CONFIG_DISABLE_PTHREAD
-
-CONFIG_XYZ_PROGNAME ?= ostest$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
-MODULE = CONFIG_TESTING_OSTEST
 
 include $(APPDIR)/Application.mk

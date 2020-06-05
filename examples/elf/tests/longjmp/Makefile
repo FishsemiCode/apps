@@ -72,8 +72,7 @@ SRCS = $(BIN).c
 OBJS = $(SRCS:.c=$(OBJEXT))
 
 all: $(BIN)
-.PHONY: clean install
-.PRECIOUS: ../../../../libapps$(LIBEXT)
+.PHONY: all clean install
 
 $(OBJS): %$(OBJEXT): %.c
 	@echo "CC: $<"
@@ -83,10 +82,15 @@ $(BIN): $(OBJS)
 	@echo "LD: $<"
 	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) -o $@ $(ARCHCRT0OBJ) $^ $(LDLIBS)
 
+$(FSIMG_DIR)/$(BIN): $(BIN)
+	$(Q) mkdir -p $(FSIMG_DIR)
+	$(Q) install $(BIN) $(FSIMG_DIR)/$(BIN)
+ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
+	$(Q) $(STRIP) $(FSIMG_DIR)/$(BIN)
+endif
+
+install: $(FSIMG_DIR)/$(BIN)
+
 clean:
 	$(call DELFILE, $(BIN))
 	$(call CLEAN)
-
-install:
-	$(Q) mkdir -p $(FSIMG_DIR)
-	$(Q) install $(BIN) $(FSIMG_DIR)/$(BIN)

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage="Usage: $0 <test-dir-path>"
 
@@ -22,15 +22,15 @@ fi
 # Extract all of the undefined symbols from the ELF files and create a
 # list of sorted, unique undefined variable names.
 
-varlist=`find ${dir} -executable -type f | xargs nm | fgrep ' U ' | sed -e "s/^[ ]*//g" | cut -d' ' -f2 | sort | uniq`
+varlist=`find ${dir} -type f -perm -a=x | xargs nm | fgrep ' U ' | sed -e "s/^[ ]*//g" | cut -d' ' -f2 | sort | uniq`
 
 # Now output the symbol table as a structure in a C source file.  All
 # undefined symbols are declared as void* types.  If the toolchain does
 # any kind of checking for function vs. data objects, then this could
-# faile
+# failed
 
 echo "#include <nuttx/compiler.h>"
-echo "#include <nuttx/binfmt/symtab.h>"
+echo "#include <nuttx/symtab.h>"
 echo ""
 
 for var in $varlist; do
@@ -48,4 +48,3 @@ done
 echo "};"
 echo ""
 echo "const int g_spawn_nexports = sizeof(g_spawn_exports) / sizeof(struct symtab_s);"
-

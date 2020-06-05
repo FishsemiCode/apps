@@ -33,14 +33,11 @@
 #
 ############################################################################
 
-CREATEDIR := errno hello helloxx longjmp mutex pthread signal task struct
-
 -include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
 
-ALL_SUBDIRS = $(CREATEDIR)
-BUILD_SUBDIRS = errno hello struct
+ALL_SUBDIRS = errno hello helloxx longjmp mutex pthread signal task struct
+BUILD_SUBDIRS = errno hello struct signal
 
 ifeq ($(CONFIG_HAVE_CXX),y)
 BUILD_SUBDIRS += helloxx
@@ -52,10 +49,6 @@ endif
 
 ifneq ($(CONFIG_DISABLE_PTHREAD),y)
 BUILD_SUBDIRS += mutex pthread
-endif
-
-ifneq ($(CONFIG_DISABLE_SIGNALS),y)
-BUILD_SUBDIRS += signal
 endif
 
 ifneq ($(CONFIG_ARCH_ADDRENV),y)
@@ -84,48 +77,29 @@ endif
 
 define DIR_template
 $(1)_$(2):
-	$(Q) $(MAKE) -C $(1) -f $(SRCDIR)/$(1)/Makefile -I $(SRCDIR)/$(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" ROMFS_DIR="$(ROMFS_DIR)" CROSSDEV=$(CROSSDEV)
+	+$(Q) $(MAKE) -C $(1) $(2) -f $(SRCDIR)/$(1)/Makefile -I $(SRCDIR)/$(1) $(3) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" FSIMG_DIR="$(FSIMG_DIR)" CROSSDEV=$(CROSSDEV)
 endef
 
 all: $(FSIMG_HDR) $(DIRLIST_HDR) $(SYMTAB_SRC)
-.PHONY: all build clean install populate
-.PRECIOUS: ../../../libapps$(LIBEXT)
+.PHONY: all clean install
 
-$(foreach DIR, $(BUILD_SUBDIRS), $(eval $(call DIR_template,$(DIR),build, all)))
-$(foreach DIR, $(ALL_SUBDIRS), $(eval $(call DIR_template,$(DIR),clean,clean)))
-$(foreach DIR, $(BUILD_SUBDIRS), $(eval $(call DIR_template,$(DIR),install,install)))
-
-# Build program(s) in each sud-directory
-
-build: $(foreach DIR, $(BUILD_SUBDIRS), $(DIR)_build)
+$(foreach DIR, $(ALL_SUBDIRS), $(eval $(call DIR_template,$(DIR),clean)))
+$(foreach DIR, $(BUILD_SUBDIRS), $(eval $(call DIR_template,$(DIR),install)))
 
 # Install each program in the file system image directory
 
 install: $(foreach DIR, $(BUILD_SUBDIRS), $(DIR)_install)
-ifneq ($(STRIP),)
-ifneq ($(CONFIG_EXAMPLES_ELF_NOSTRIP),y)
-	$(Q) $(STRIP) $(wildcard $(FSIMG_SUBDIR)/*)
-endif
-endif
-
-# Create the file system image directory
-
-$(FSIMG_DIR):
-	$(Q) mkdir $(FSIMG_DIR)
-
-# Populate the file system image directory
-
-populate:  $(FSIMG_DIR) build install
 
 ifeq ($(CONFIG_EXAMPLES_ELF_ROMFS),y)
 # Create the romfs.img file from the populated romfs directory
 
-$(ROMFS_IMG): populate
-	$(Q) genromfs -f $@ -d $(FSIMG_DIR) -V "ELFTEST"
+$(ROMFS_IMG): install
+	$(Q) genromfs -f $@.tmp -d $(FSIMG_DIR) -V "ELFTEST"
+	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
 # Create the romfs.h header file from the romfs.img file
 
-$(FSIMG_HDR) : $(ROMFS_IMG)
+$(FSIMG_HDR): $(ROMFS_IMG)
 	$(Q) (cd $(TESTS_DIR); xxd -i romfs.img | sed -e "s/^unsigned/static const unsigned/g" >$@)
 
 else
@@ -136,20 +110,23 @@ $(NXTOOLDIR)/$(GENCROMFSEXE): $(NXTOOLDIR)/$(GENCROMFSSRC)
 
 # Create the cromfs.h header file from the populated cromfs directory
 
-$(FSIMG_HDR) : populate $(NXTOOLDIR)/$(GENCROMFSEXE)
-	$(Q) $(NXTOOLDIR)/$(GENCROMFSEXE) $(FSIMG_DIR) $(FSIMG_HDR)
+$(FSIMG_HDR): install $(NXTOOLDIR)/$(GENCROMFSEXE)
+	$(Q) $(NXTOOLDIR)/$(GENCROMFSEXE) $(FSIMG_DIR) $@.tmp
+	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
 endif
 
 # Create the dirlist.h header file from the file system image directory
 
-$(DIRLIST_HDR) : populate
-	$(Q) $(TESTS_DIR)/mkdirlist.sh $(FSIMG_DIR) >$@
+$(DIRLIST_HDR): install
+	$(Q) $(TESTS_DIR)/mkdirlist.sh $(FSIMG_DIR) >$@.tmp
+	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
 # Create the exported symbol table
 
-$(SYMTAB_SRC): build
-	$(Q) $(TESTS_DIR)/mksymtab.sh $(FSIMG_DIR) >$@
+$(SYMTAB_SRC): install
+	$(Q) $(TESTS_DIR)/mksymtab.sh $(FSIMG_DIR) >$@.tmp
+	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
 # Clean each subdirectory
 

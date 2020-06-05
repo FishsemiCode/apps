@@ -36,6 +36,5 @@
 ############################################################################
 
 ifneq ($(CONFIG_WIRELESS_IWPAN),)
-CONFIGURED_APPS += wireless/iwpan
+CONFIGURED_APPS += $(APPDIR)/wireless/iwpan
 endif
-

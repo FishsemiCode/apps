@@ -1,7 +1,7 @@
 /****************************************************************************
  * apps/system/cle/cle.c
  *
- *   Copyright (C) 2014, 2018 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2014, 2018-2019 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -134,33 +134,16 @@
 #  endif
 #endif
 
-#ifdef CONFIG_SYSTEM_CLE_CMD_HISTORY
-/* Command history
- *
- *   g_cmd_history[][]             Circular buffer
- *   g_cmd_history_head            Head of the circular buffer, most recent
- *                                 command
- *   g_cmd_history_steps_from_head Offset from head
- *   g_cmd_history_len             Number of elements in the circular buffer
- *
- * REVISIT:  These globals will *not* work in an environment where there
- * are multiple copies if the NSH shell!  Use of global variables is not
- * thread safe!  These settings should, at least, be semaphore protected so
- * that the integrity of the data is assured, even though commands from
- * different sessions may be intermixed.
- */
-
-static char g_cmd_history[CONFIG_SYSTEM_CLE_CMD_HISTORY_LEN]
-                         [CONFIG_SYSTEM_CLE_CMD_HISTORY_LINELEN];
-static int g_cmd_history_head            = -1;
-static int g_cmd_history_steps_from_head = 1;
-static int g_cmd_history_len             = 0;
-
-#endif /* CONFIG_SYSTEM_CLE_CMD_HISTORY */
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+#  define COLOR_PROMPT  VT100_YELLOW
+#  define COLOR_COMMAND VT100_CYAN
+#  define COLOR_OUTPUT  VT100_GREEN
+#endif
 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
+
 /* VI Key Bindings */
 
 enum cle_key_e
@@ -172,6 +155,7 @@ enum cle_key_e
   KEY_RIGHT       = CTRL('F'),  /* Move right one character */
   KEY_DELLEFT     = CTRL('H'),  /* Delete character, left (backspace)  */
   KEY_DELEOL      = CTRL('K'),  /* Delete to the end of the line */
+  KEY_CLRSCR      = CTRL('L'),  /* Clear the screen */
   KEY_DN          = CTRL('N'),  /* Cursor down */
   KEY_UP          = CTRL('P'),  /* Cursor up   */
   KEY_DELLINE     = CTRL('U'),  /* Delete the entire line */
@@ -188,9 +172,10 @@ struct cle_s
   uint16_t coloffs;         /* Left cursor offset */
   uint16_t linelen;         /* Size of the line buffer */
   uint16_t nchars;          /* Size of data in the line buffer */
-  int infd;                 /* Input file descriptor */
-  int outfd;                /* Output file descriptor */
+  FAR FILE *ins;            /* Input file stream */
+  FAR FILE *outs;           /* Output file stream */
   FAR char *line;           /* Line buffer */
+  FAR const char *prompt;   /* Prompt, in case we have to re-print it */
 };
 
 /****************************************************************************
@@ -218,7 +203,8 @@ static void     cle_clrtoeol(FAR struct cle_s *priv);
 
 static bool     cle_opentext(FAR struct cle_s *priv, uint16_t pos,
                   uint16_t increment);
-static void     cle_closetext(FAR struct cle_s *priv, uint16_t pos, uint16_t size);
+static void     cle_closetext(FAR struct cle_s *priv, uint16_t pos,
+                  uint16_t size);
 static void     cle_showtext(FAR struct cle_s *priv);
 static void     cle_insertch(FAR struct cle_s *priv, char ch);
 static int      cle_editloop(FAR struct cle_s *priv);
@@ -227,6 +213,30 @@ static int      cle_editloop(FAR struct cle_s *priv);
  * Private Data
  ****************************************************************************/
 
+#ifdef CONFIG_SYSTEM_CLE_CMD_HISTORY
+/* Command history
+ *
+ *   g_cmd_history[][]             Circular buffer
+ *   g_cmd_history_head            Head of the circular buffer, most recent
+ *                                 command
+ *   g_cmd_history_steps_from_head Offset from head
+ *   g_cmd_history_len             Number of elements in the circular buffer
+ *
+ * REVISIT:  These globals will *not* work in an environment where there
+ * are multiple copies if the NSH shell!  Use of global variables is not
+ * thread safe!  These settings should, at least, be semaphore protected so
+ * that the integrity of the data is assured, even though commands from
+ * different sessions may be intermixed.
+ */
+
+static char g_cmd_history[CONFIG_SYSTEM_CLE_CMD_HISTORY_LEN]
+                         [CONFIG_SYSTEM_CLE_CMD_HISTORY_LINELEN];
+static int g_cmd_history_head            = -1;
+static int g_cmd_history_steps_from_head = 1;
+static int g_cmd_history_len             = 0;
+
+#endif /* CONFIG_SYSTEM_CLE_CMD_HISTORY */
+
 /* VT100 escape sequences */
 
 static const char g_cursoron[]     = VT100_CURSORON;
@@ -234,6 +244,11 @@ static const char g_cursoroff[]    = VT100_CURSOROFF;
 static const char g_getcursor[]    = VT100_GETCURSOR;
 static const char g_erasetoeol[]   = VT100_CLEAREOL;
 static const char g_fmtcursorpos[] = VT100_FMT_CURSORPOS;
+static const char g_clrscr[]       = VT100_CLEARSCREEN;
+static const char g_home[]         = VT100_CURSORHOME;
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+static const char g_setcolor[]     = VT100_FMT_FORE_COLOR;
+#endif
 
 /****************************************************************************
  * Private Functions
@@ -282,9 +297,9 @@ static void cle_write(FAR struct cle_s *priv, FAR const char *buffer,
 
   do
     {
-      /* Take the next gulp */
+      /* Put the next gulp */
 
-      nwritten = write(priv->outfd, buffer, buflen);
+      nwritten = fwrite(buffer, sizeof(char), buflen, priv->outs);
 
       /* Handle write errors.  write() should neve return 0. */
 
@@ -312,6 +327,8 @@ static void cle_write(FAR struct cle_s *priv, FAR const char *buffer,
         }
     }
   while (nremaining > 0);
+
+  fflush(priv->outs);
 }
 
 /****************************************************************************
@@ -348,7 +365,7 @@ static int cle_getch(FAR struct cle_s *priv)
     {
       /* Read one character from the incoming stream */
 
-      nread = read(priv->infd, &buffer, 1);
+      nread = fread (&buffer, sizeof(char), 1, priv->ins);
 
       /* Check for error or end-of-file. */
 
@@ -421,11 +438,68 @@ static void cle_setcursor(FAR struct cle_s *priv, uint16_t column)
 
   /* Format the cursor position command.  The origin is (1,1). */
 
-  len = snprintf(buffer, 16, g_fmtcursorpos, priv->row, column + priv->coloffs);
+  len = snprintf(buffer, 16, g_fmtcursorpos,
+                 priv->row, column + priv->coloffs);
 
   /* Send the VT100 CURSORPOS command */
 
   cle_write(priv, buffer, len);
+}
+
+/****************************************************************************
+ * Name: cle_setcolor
+ *
+ * Description:
+ *   Set foreground color
+ *
+ ****************************************************************************/
+
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+static void cle_setcolor(FAR struct cle_s *priv, uint8_t color)
+{
+  char buffer[16];
+  int len;
+
+  len = snprintf(buffer, 16, g_setcolor, color);
+  cle_write(priv, buffer, len);
+}
+#endif
+
+/****************************************************************************
+ * Name: cle_outputprompt
+ *
+ * Description:
+ *   Send the prompt to the screen
+ *
+ ****************************************************************************/
+
+static void cle_outputprompt(FAR struct cle_s *priv)
+{
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+  cle_setcolor(priv, COLOR_PROMPT);
+#endif
+  cle_write(priv, priv->prompt, strlen(priv->prompt));
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+  cle_setcolor(priv, COLOR_OUTPUT);
+#endif
+}
+
+/****************************************************************************
+ * Name: cle_clrscr
+ *
+ * Description:
+ *   Clear the screen, and re-establish the prompt
+ *
+ ****************************************************************************/
+
+static void cle_clrscr(FAR struct cle_s *priv)
+{
+  /* Send the VT100 CLEARSCREEN command */
+
+  cle_write(priv, g_clrscr, sizeof(g_clrscr));
+  cle_write(priv, g_home, sizeof(g_home));
+  priv->row = 1;
+  cle_outputprompt(priv);
 }
 
 /****************************************************************************
@@ -448,118 +522,70 @@ static int cle_getcursor(FAR struct cle_s *priv, FAR uint16_t *prow,
 
   cle_write(priv, g_getcursor, sizeof(g_getcursor));
 
-  /* We expect to get ESC[v;hR where v is the row and h is the column */
+  /* We expect to get back ESC[v;hR where v is the row and h is the column.
+   * once the sequence has started we don't expect any characters
+   * interspersed.
+   */
 
-  nbad = 0;
-  for (;;)
+  for (nbad = 0; nbad < 10; nbad++)
     {
-      /* Get the next character from the input */
+      /* Look for initial ESC */
 
       ch = cle_getch(priv);
-      if (ch == ASCII_ESC)
+      if (ch != ASCII_ESC)
         {
-          break;
+          continue;
         }
-      else if (ch < 0)
-        {
-          return -EIO;
-        }
-      else if (++nbad > 3)
-        {
-          /* We are probably talking to a non-VT100 terminal! */
 
-          return -EINVAL;
-        }
-    }
-
-  /* Have ESC, now we expect '[' */
-
-  nbad = 0;
-  for (;;)
-    {
-      /* Get the next character from the input */
+      /* Have ESC, now we expect '[' */
 
       ch = cle_getch(priv);
-      if (ch == '[')
+      if (ch != '[')
         {
-          break;
+          continue;
         }
-      else if (ch < 0)
+
+      /* ...now we expect to see a numeric value terminated with ';' */
+
+      row = 0;
+
+      while (isdigit(ch = cle_getch(priv)))
         {
-          return -EIO;
+          row = row * 10 + (ch - '0');
+        }
+
+      if (ch != ';')
+        {
+          continue;
+        }
+
+      /* ...now we expect to see another numeric value terminated with 'R' */
+
+      column = 0;
+      while (isdigit(ch = cle_getch(priv)))
+        {
+          column = 10 * column + (ch - '0');
+        }
+
+      /* ...we are done */
+
+      cleinfo("row=%ld column=%ld\n", row, column);
+
+      /* Make sure that the values are within range */
+
+      if (row <= UINT16_MAX && column <= UINT16_MAX)
+        {
+          *prow = row;
+          *pcolumn = column;
+          return OK;
         }
       else
         {
-          /* We are probably talking to a non-VT100 terminal! */
-
-          return -EINVAL;
+          return -ERANGE;
         }
     }
 
-  /* Have ESC'['.  Now we expect to see a numeric value terminated with ';' */
-
-  row = 0;
-  for (;;)
-    {
-      /* Get the next character from the input */
-
-      ch = cle_getch(priv);
-      if (isdigit(ch))
-        {
-          row = 10*row + (ch - '0');
-        }
-      else if (ch == ';')
-        {
-          break;
-        }
-      else if (ch < 0)
-        {
-          return -EIO;
-        }
-      else
-        {
-          return -EINVAL;
-        }
-    }
-
-  /* Have ESC'['v';'.  Now we expect to see another numeric value terminated with 'R' */
-
-  column = 0;
-  for (;;)
-    {
-      /* Get the next character from the input */
-
-      ch = cle_getch(priv);
-      if (isdigit(ch))
-        {
-          column = 10*column + (ch - '0');
-        }
-      else if (ch == 'R')
-        {
-          break;
-        }
-      else if (ch < 0)
-        {
-          return -EIO;
-        }
-      else
-        {
-          return -EINVAL;
-        }
-    }
-
-  cleinfo("row=%ld column=%ld\n", row, column);
-
-  /* Make sure that the values are within range */
-
-  if (row <= UINT16_MAX && column <= UINT16_MAX)
-    {
-      *prow    = row;
-      *pcolumn = column;
-      return OK;
-    }
-
-  return -ERANGE;
+  return -EINVAL;
 }
 
 /****************************************************************************
@@ -629,7 +655,8 @@ static bool cle_opentext(FAR struct cle_s *priv, uint16_t pos,
  *
  ****************************************************************************/
 
-static void cle_closetext(FAR struct cle_s *priv, uint16_t pos, uint16_t size)
+static void cle_closetext(FAR struct cle_s *priv, uint16_t pos,
+                          uint16_t size)
 {
   int i;
 
@@ -685,6 +712,9 @@ static void cle_showtext(FAR struct cle_s *priv)
 
   /* Set the cursor position to the beginning of this row */
 
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+  cle_setcolor(priv, COLOR_COMMAND);
+#endif
   cle_setcursor(priv, 0);
   cle_clrtoeol(priv);
 
@@ -723,6 +753,10 @@ static void cle_showtext(FAR struct cle_s *priv)
         }
     }
 
+#ifdef CONFIG_SYSTEM_COLOR_CLE
+  cle_setcolor(priv, COLOR_OUTPUT);
+#endif
+
   /* Turn the cursor back on */
 
   cle_cursoron(priv);
@@ -738,7 +772,8 @@ static void cle_showtext(FAR struct cle_s *priv)
 
 static void cle_insertch(FAR struct cle_s *priv, char ch)
 {
-  cleinfo("curpos=%ld ch=%c[%02x]\n", priv->curpos, isprint(ch) ? ch : '.', ch);
+  cleinfo("curpos=%ld ch=%c[%02x]\n", priv->curpos,
+          isprint(ch) ? ch : '.', ch);
 
   /* Make space in the buffer for the new character */
 
@@ -762,8 +797,11 @@ static int cle_editloop(FAR struct cle_s *priv)
 {
   /* Loop while we are in command mode */
 
-  for (;;)
+  for (; ; )
     {
+#if  1 /* Perhaps here should be a config switch */
+      char state = 0;
+#endif
       int ch;
 
       /* Make sure that the display reflects the current state */
@@ -778,118 +816,115 @@ static int cle_editloop(FAR struct cle_s *priv)
        * home/end, del
        */
 
-      {
-        char state = 0;
+      /* loop till we have a ch */
 
-        /* loop till we have a ch */
+      for (; ; )
+        {
+          ch = cle_getch(priv);
+          if (ch < 0)
+            {
+              return -EIO;
+            }
+          else if (state != 0)
+            {
+              if (state == (char)1)  /* Got ESC */
+                {
+                  if (ch == '[' || ch == 'O')
+                    {
+                      state = ch;
+                    }
+                  else
+                    {
+                      break;  /* break the for loop */
+                    }
+                }
+              else if (state == '[')
+                {
+                  /* Got ESC[ */
 
-        for (; ; )
-          {
-            ch = cle_getch(priv);
-            if (ch < 0)
-              {
-                return -EIO;
-              }
-            else if (state != 0)
-              {
-                if (state == (char)1)  /* Got ESC */
-                  {
-                    if (ch == '[' || ch == 'O')
-                      {
-                        state = ch;
-                      }
-                    else
-                      {
-                        break;  /* break the for loop */
-                      }
-                  }
-
-                else if (state == '[')
-                  {
-                    /* Got ESC[ */
-
-                    switch (ch)
-                      {
-                        case '3':    /* ESC[3~  = DEL */
-                          {
-                            state = ch;
-                          }
+                  switch (ch)
+                    {
+                      case '3':    /* ESC[3~  = DEL */
+                        {
+                          state = ch;
                           continue;
+                        }
 
-                        case 'A':
-                          {
-                            ch = KEY_UP;
-                          }
-                          break;
+                      case 'A':
+                        {
+                          ch = KEY_UP;
+                        }
+                        break;
 
-                        case 'B':
-                          {
-                            ch = KEY_DN;
-                          }
-                          break;
+                      case 'B':
+                        {
+                          ch = KEY_DN;
+                        }
+                        break;
 
-                        case 'C':
-                          {
-                            ch = KEY_RIGHT;
-                          }
-                          break;
+                      case 'C':
+                        {
+                          ch = KEY_RIGHT;
+                        }
+                        break;
 
-                        case 'D':
-                          {
-                            ch = KEY_LEFT;
-                          }
-                          break;
+                      case 'D':
+                        {
+                          ch = KEY_LEFT;
+                        }
+                        break;
 
-                        case 'F':
-                          {
-                            ch = KEY_ENDLINE;
-                          }
-                          break;
+                      case 'F':
+                        {
+                          ch = KEY_ENDLINE;
+                        }
+                        break;
 
-                        case 'H':
-                          {
-                            ch = KEY_BEGINLINE;
-                          }
-                          break;
+                      case 'H':
+                        {
+                          ch = KEY_BEGINLINE;
+                        }
+                        break;
 
-                        default:
-                          break;
-                      }
-                    break;  /* Break the 'for' loop */
-                  }
-                else if (state == 'O')
-                  {
-                    /* got ESCO */
+                      default:
+                        break;
+                    }
+                  break;  /* Break the 'for' loop */
+                }
+              else if (state == 'O')
+                {
+                  /* got ESCO */
 
-                    if (ch=='F')
-                      {
-                        ch = KEY_ENDLINE;
-                      }
-                    break; /* Break the 'for' loop */
-                 }
-                else if (state == '3')
-                  {
-                    if (ch == '~')
-                      {
-                        ch = KEY_DEL;
-                      }
-                    break; /* Break the 'for' loop */
-                  }
-                else
-                  {
-                    break; /* Break the 'for' loop */
-                  }
-              }
-            else if (ch == ASCII_ESC)
-              {
-                ++state;
-              }
-            else
-              {
-                break; /* Break the 'for' loop, use the char */
-              }
-          }
-      }
+                  if (ch == 'F')
+                    {
+                      ch = KEY_ENDLINE;
+                    }
+
+                  break; /* Break the 'for' loop */
+               }
+              else if (state == '3')
+                {
+                  if (ch == '~')
+                    {
+                      ch = KEY_DEL;
+                    }
+
+                  break; /* Break the 'for' loop */
+                }
+              else
+                {
+                  break; /* Break the 'for' loop */
+                }
+            }
+          else if (ch == ASCII_ESC)
+            {
+              ++state;
+            }
+          else
+            {
+              break; /* Break the 'for' loop, use the char */
+            }
+        }
 
 #else
       ch = cle_getch(priv);
@@ -910,6 +945,7 @@ static int cle_editloop(FAR struct cle_s *priv)
           switch (ch)
             {
               case KEY_UP:
+
                 /* Go to the past command in history */
 
                 g_cmd_history_steps_from_head--;
@@ -918,9 +954,11 @@ static int cle_editloop(FAR struct cle_s *priv)
                   {
                     g_cmd_history_steps_from_head = -(g_cmd_history_len - 1);
                   }
+
                 break;
 
               case KEY_DN:
+
                 /* Go to the recent command in history */
 
                 g_cmd_history_steps_from_head++;
@@ -929,6 +967,7 @@ static int cle_editloop(FAR struct cle_s *priv)
                   {
                     g_cmd_history_steps_from_head = 1;
                   }
+
                 break;
 
               default:
@@ -964,6 +1003,7 @@ static int cle_editloop(FAR struct cle_s *priv)
 
                   priv->curpos = priv->nchars;
                 }
+
               continue;
             }
         }
@@ -991,7 +1031,6 @@ static int cle_editloop(FAR struct cle_s *priv)
           break;
 
         case KEY_DEL: /* Delete 1 character at the cursor */
-        case ASCII_DEL:
           {
             if (priv->curpos < priv->nchars)
               {
@@ -1023,8 +1062,8 @@ static int cle_editloop(FAR struct cle_s *priv)
           }
           break;
 
-        case KEY_DELLEFT: /* Delete 1 character before the cursor */
-        //case ASCII_BS:
+        case ASCII_DEL:
+        case KEY_DELLEFT:  /* Delete 1 character before the cursor */
           {
             if (priv->curpos > 0)
               {
@@ -1039,7 +1078,7 @@ static int cle_editloop(FAR struct cle_s *priv)
 
         case KEY_DELEOL:  /* Delete to the end of the line */
           {
-            priv->nchars = (priv->nchars > 0 ? priv->curpos + 1 : 0);
+            priv->nchars = (priv->nchars > 0 ? priv->curpos : 0);
           }
           break;
 
@@ -1048,6 +1087,10 @@ static int cle_editloop(FAR struct cle_s *priv)
             priv->nchars = 0;
             priv->curpos = 0;
           }
+          break;
+
+        case KEY_CLRSCR: /* Clear the screen & return cursor to top */
+          cle_clrscr(priv);
           break;
 
         case KEY_QUOTE: /* Quoted character follows */
@@ -1130,7 +1173,8 @@ static int cle_editloop(FAR struct cle_s *priv)
  *
  ****************************************************************************/
 
-int cle(FAR char *line, uint16_t linelen, FILE *instream, FILE *outstream)
+int cle(FAR char *line, const char *prompt, uint16_t linelen,
+        FILE *instream, FILE *outstream)
 {
   FAR struct cle_s priv;
   uint16_t column;
@@ -1143,14 +1187,18 @@ int cle(FAR char *line, uint16_t linelen, FILE *instream, FILE *outstream)
   priv.linelen  = linelen;
   priv.line     = line;
 
-  /* REVISIT:  Non-standard, non-portable */
+  priv.ins      = instream;
+  priv.outs     = outstream;
 
-  priv.infd     = instream->fs_fd;
-  priv.outfd    = outstream->fs_fd;
+  /* Store the prompt in case we need to re-print it */
+
+  priv.prompt = prompt;
+  cle_outputprompt(&priv);
 
   /* Get the current cursor position */
 
   ret = cle_getcursor(&priv, &priv.row, &column);
+
   if (ret < 0)
     {
       return ret;
@@ -1188,7 +1236,8 @@ int cle(FAR char *line, uint16_t linelen, FILE *instream, FILE *outstream)
         (g_cmd_history_head + 1) % CONFIG_SYSTEM_CLE_CMD_HISTORY_LEN;
 
       for (i = 0;
-           (i < priv.nchars - 1) && i < (CONFIG_SYSTEM_CLE_CMD_HISTORY_LINELEN - 1);
+           (i < priv.nchars - 1) &&
+            i < (CONFIG_SYSTEM_CLE_CMD_HISTORY_LINELEN - 1);
            i++)
         {
           g_cmd_history[g_cmd_history_head][i] = line[i];

@@ -299,7 +299,7 @@ static void *lowpri_thread(void *parameter)
         }
 
       /* Account for all of the semaphore counts.  At any given time if there are 'n'
-       * running hight prioity tasks, then the semaphore count should be '-n'
+       * running high prioity tasks, then the semaphore count should be '-n'
        */
 
       sched_lock(); /* Needs to be atomic */
@@ -552,20 +552,20 @@ void priority_inheritance(void)
     {
       printf("priority_inheritance: Waiting for highpri_thread-%d to complete\n", i+1);
       FFLUSH();
-      (void)pthread_join(highpri[i], &result);
+      pthread_join(highpri[i], &result);
       dump_nfreeholders("priority_inheritance:");
     }
 
   printf("priority_inheritance: Waiting for medpri_thread to complete\n");
   FFLUSH();
-  (void)pthread_join(medpri, &result);
+  pthread_join(medpri, &result);
   dump_nfreeholders("priority_inheritance:");
 
   for (i = 0; i < NLOWPRI_THREADS; i++)
     {
       printf("priority_inheritance: Waiting for lowpri_thread-%d to complete\n", i+1);
       FFLUSH();
-      (void)pthread_join(lowpri[i], &result);
+      pthread_join(lowpri[i], &result);
       dump_nfreeholders("priority_inheritance:");
     }
 

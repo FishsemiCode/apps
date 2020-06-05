@@ -34,19 +34,13 @@
 
 -include $(TOPDIR)/Make.defs
 
-APPNAME = powermonitor
+PROGNAME = powermonitor
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 768
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_POWERMONITOR)
 
-ASRCS =
-CSRCS =
 MAINSRC = powermonitor_main.c
 
 CFLAGS += -I../../../nuttx/arch/arm/src -I../../../nuttx/arch/arm/src/common
-
-CONFIG_EXAMPLES_POWERMONITOR_PROGNAME ?= temperature$(EXEEXT)
-PROGNAME = $(CONFIG_EXAMPLES_POWERMONITOR_PROGNAME)
-
-MODULE = CONFIG_EXAMPLES_POWERMONITOR
 
 include $(APPDIR)/Application.mk

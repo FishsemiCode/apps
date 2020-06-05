@@ -41,7 +41,7 @@
 # Telnet daemon
 
 ifeq ($(CONFIG_NET_UDP),y)
-CSRCS		+= discover.c
+CSRCS = discover.c
 endif
 
 include $(APPDIR)/Application.mk

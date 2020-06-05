@@ -6,7 +6,6 @@
 config TESTING_OSTEST
 	tristate "OS test example"
 	default n
-	depends on !DISABLE_SIGNALS
 	---help---
 		Enable the OS test example
 
@@ -36,7 +35,7 @@ config TESTING_OSTEST_NBARRIER_THREADS
 config TESTING_OSTEST_AIO
 	bool "Asynchronous I/O Tests"
 	default n
-	depends on FS_AIO && FS_WRITABLE
+	depends on FS_AIO
 	---help---
 		Enables test of asynchronous I/O.  You must have a mounted, writable
 		directory in place to use this test.
@@ -104,10 +103,10 @@ config TESTING_OSTEST_FPUPRIORITY
 
 config TESTING_OSTEST_FPUSTACKSIZE
 	int "FPU test thread stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif # !TESTING_OSTEST_FPUTESTDISABLE
-endif # ARCH_FPU && SCHED_WAITPID && !DISABLE_SIGNALS
+endif # ARCH_FPU && SCHED_WAITPID
 
 config TESTING_OSTEST_WAITRESULT
 	bool "Wait and return test result"

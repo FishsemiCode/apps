@@ -9,16 +9,15 @@ config SYSTEM_DHCPC_RENEW
 	select NETUTILS_DHCPC
 	depends on NET_UDP && NET_BROADCAST && NET_IPv4 && NET_ETHERNET
 	---help---
-		Enble the DHCP client 'renew' command
+		Enable the DHCP client 'renew' command
 
 if SYSTEM_DHCPC_RENEW
 
 config DHCPC_RENEW_PROGNAME
 	string "Program name"
 	default "renew"
-	depends on BUILD_LOADABLE
 	---help---
-		This is the name of the program that will be use when the NSH ELF
+		This is the name of the program that will be used when the NSH ELF
 		program is installed.
 
 config DHCPC_RENEW_PRIORITY
@@ -27,6 +26,6 @@ config DHCPC_RENEW_PRIORITY
 
 config DHCPC_RENEW_STACKSIZE
 	int "DHCPC stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 endif

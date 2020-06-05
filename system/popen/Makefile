@@ -33,13 +33,10 @@
 #
 ############################################################################
 
--include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
 
 # popen()/pclose functions
 
-ASRCS =
 CSRCS = popen.c
 
 include $(APPDIR)/Application.mk

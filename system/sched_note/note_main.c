@@ -66,9 +66,7 @@ static FAR const char *g_statenames[] =
   "Running",
   "Inactive",
   "Waiting for Semaphore",
-#ifndef CONFIG_DISABLE_SIGNALS
   "Waiting for Signal",
-#endif
 #ifndef CONFIG_DISABLE_MQUEUE
   "Waiting for MQ empty",
   "Waiting for MQ full"
@@ -626,7 +624,7 @@ static int note_daemon(int argc, char *argv[])
       usleep(CONFIG_SYSTEM_NOTE_DELAY * 1000L);
     }
 
-  (void)close(fd);
+  close(fd);
 
 errout:
   g_note_daemon_started = false;
@@ -643,11 +641,7 @@ errout:
  * note_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int note_main(int argc, FAR char *argv[])
-#endif
 {
   int ret;
 

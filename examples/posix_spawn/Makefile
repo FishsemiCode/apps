@@ -39,12 +39,13 @@ CREATEDIR := filesystem
 
 # ELF Example
 
-ASRCS =
 CSRCS = symtab.c
 MAINSRC = spawn_main.c
 
-CONFIG_XYZ_PROGNAME ?= posix_spawn$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
+PROGNAME = posix_spawn
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_POSIXSPAWN)
 
 ROOTDEPPATH	+= --dep-path filesystem
 
@@ -52,35 +53,14 @@ ROOTDEPPATH	+= --dep-path filesystem
 
 VPATH += filesystem
 
-context::
-	@$(MAKE) -C filesystem  -f $(SRCDIR)/filesystem/Makefile -I $(SRCDIR)/filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+spawn_main.c: build
+filesystem/symtab.c: build
+
+.PHONY: build
+build:
+	+$(Q) $(MAKE) -C filesystem -f $(SRCDIR)/filesystem/Makefile -I $(SRCDIR)/filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 clean::
-	@$(MAKE) -C filesystem  -f $(SRCDIR)/filesystem/Makefile -I $(SRCDIR)/filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
-	$(call CLEAN)
-
-# There are no dependencies in this directory.  Some of more important
-# and more obvious dependencies are hard-coded here:
-
-spawn_main.o: spawn_main.c \
-	$(TOPDIR)/include/nuttx/config.h \
-	$(TOPDIR)/include/nuttx/compiler.h \
-	$(TOPDIR)/include/sys/mount.h \
-	$(TOPDIR)/include/stdio.h \
-	$(TOPDIR)/include/stdlib.h \
-	$(TOPDIR)/include/unistd.h \
-	$(TOPDIR)/include/string.h \
-	$(TOPDIR)/include/fcntl.h \
-	$(TOPDIR)/include/spawn.h \
-	$(TOPDIR)/include/debug.h \
-	$(TOPDIR)/include/errno.h \
-	$(TOPDIR)/include/nuttx/drivers/ramdisk.h \
-	$(TOPDIR)/include/nuttx/binfmt/elf.h \
-	$(TOPDIR)/include/nuttx/binfmt/symtab.h \
-	filesystem/romfs.h
-
-symtab.o: filesystem/symtab.c \
-	$(TOPDIR)/include/nuttx/compiler.h \
-	$(TOPDIR)/include/nuttx/binfmt/symtab.h
+	+$(Q) $(MAKE) -C filesystem -f $(SRCDIR)/filesystem/Makefile -I $(SRCDIR)/filesystem TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 include $(APPDIR)/Application.mk

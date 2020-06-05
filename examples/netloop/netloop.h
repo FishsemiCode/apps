@@ -1,7 +1,7 @@
 /****************************************************************************
  * examples/netloop/netloop.h
  *
- *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2015, 2020 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,17 +50,12 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#ifdef CONFIG_DISABLE_POLL
-#  error "The polling API is disabled"
-#endif
-
 /* Here are all of the configuration settings that must be met to have TCP/IP
  * poll/select support.  This kind of looks like overkill.
  *
  * CONFIG_NET                  - Network support must be enabled
  * CONFIG_NET_TCP              - Only support on TCP (because read-ahead
  *                               buffering s not yet support for UDP)
- * CONFIG_NET_TCP_READAHEAD    - TCP/IP read-ahead buffering must be enabled
  */
 
 
@@ -68,8 +63,8 @@
 #  error Network socket support not enabled
 #endif
 
-#if !defined(CONFIG_NET_TCP) && !defined(CONFIG_NET_TCP_READAHEAD) || \
-    !defined(CONFIG_NET_TCPBACKLOG) || !defined(CONFIG_NET_TCP_WRITE_BUFFERS)
+#if !defined(CONFIG_NET_TCP) || !defined(CONFIG_NET_TCPBACKLOG) || \
+    !defined(CONFIG_NET_TCP_WRITE_BUFFERS)
 #  error TCP not configured correctly
 #endif
 

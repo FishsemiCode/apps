@@ -14,15 +14,14 @@ if EXAMPLES_UDPBLASTER
 
 config EXAMPLES_UDPBLASTER_PROGNAME
 	string "Program name"
-	default "nettest"
-	depends on BUILD_LOADABLE
+	default "udpblaster"
 	---help---
-		This is the name of the program that will be use when the Nettest
+		This is the name of the program that will be used when the Nettest
 		program is installed.
 
 config EXAMPLES_UDPBLASTER_STACKSIZE
 	int "Nettest stack size"
-	default 2048
+	default DEFAULT_TASK_STACKSIZE
 
 config EXAMPLES_UDPBLASTER_PRIORITY
 	int "Nettest priority"
@@ -31,7 +30,6 @@ config EXAMPLES_UDPBLASTER_PRIORITY
 config EXAMPLES_UDPBLASTER_POLLOUT
 	bool "Use poll() to pace output"
 	default n
-	depends on !DISABLE_POLL
 	---help---
 		Client will use poll() to verify that sendto() will not block.  This
 		does not improve performance (in fact, it will degrade perform
@@ -59,9 +57,9 @@ endchoice # IP Domain
 
 config EXAMPLES_UDPBLASTER_INIT
 	bool "Initialize network"
-	default n if NSH_BUILTIN_APPS
-	default y if !NSH_BUILTIN_APPS
-	depends on !BUILD_LOADABLE && !EXAMPLES_UDPBLASTER_LOOPBACK
+	default n if NSH_NETINIT
+	default y if !NSH_NETINIT
+	depends on !EXAMPLES_UDPBLASTER_LOOPBACK
 	---help---
 		Include logic to initialize the network.  This should not be done if
 		the network is already initialized when udpblaster runs.  This is

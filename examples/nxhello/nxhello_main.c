@@ -1,7 +1,7 @@
 /****************************************************************************
  * examples/nxhello/nxhello_main.c
  *
- *   Copyright (C) 2011, 2015-2017 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011, 2015-2017, 2019 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,10 +55,6 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/board.h>
-
-#ifdef CONFIG_VNCSERVER
-#  include <nuttx/video/vnc.h>
-#endif
 
 #include <nuttx/nx/nx.h>
 #include <nuttx/nx/nxglib.h>
@@ -126,23 +122,29 @@ static inline int nxhello_initialize(void)
 #ifdef CONFIG_VNCSERVER
       /* Setup the VNC server to support keyboard/mouse inputs */
 
-      ret = vnc_default_fbinitialize(0, g_nxhello.hnx);
-      if (ret < 0)
-        {
-          printf("vnc_default_fbinitialize failed: %d\n", ret);
-          nx_disconnect(g_nxhello.hnx);
-          return ERROR;
-        }
+       struct boardioc_vncstart_s vnc =
+       {
+         0, g_nxhello.hnx
+       };
+
+       ret = boardctl(BOARDIOC_VNC_START, (uintptr_t)&vnc);
+       if (ret < 0)
+         {
+           printf("boardctl(BOARDIOC_VNC_START) failed: %d\n", ret);
+           nx_disconnect(g_nxhello.hnx);
+           return ERROR;
+         }
 #endif
+
        /* Start a separate thread to listen for server events.  This is probably
         * the least efficient way to do this, but it makes this example flow more
         * smoothly.
         */
 
-       (void)pthread_attr_init(&attr);
+       pthread_attr_init(&attr);
        param.sched_priority = CONFIG_EXAMPLES_NXHELLO_LISTENERPRIO;
-       (void)pthread_attr_setschedparam(&attr, &param);
-       (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXHELLO_LISTENER_STACKSIZE);
+       pthread_attr_setschedparam(&attr, &param);
+       pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXHELLO_LISTENER_STACKSIZE);
 
        ret = pthread_create(&thread, &attr, nxhello_listener, NULL);
        if (ret != 0)
@@ -159,7 +161,7 @@ static inline int nxhello_initialize(void)
             * are connected.
             */
 
-           (void)sem_wait(&g_nxhello.eventsem);
+           sem_wait(&g_nxhello.eventsem);
          }
     }
   else
@@ -179,11 +181,7 @@ static inline int nxhello_initialize(void)
  * Name: nxhello_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int nxhello_main(int argc, char *argv[])
-#endif
 {
   nxgl_mxpixel_t color;
   int ret;
@@ -237,7 +235,7 @@ int nxhello_main(int argc, char *argv[])
 
   while (!g_nxhello.havepos)
     {
-      (void)sem_wait(&g_nxhello.eventsem);
+      sem_wait(&g_nxhello.eventsem);
     }
 
   printf("nxhello_main: Screen resolution (%d,%d)\n", g_nxhello.xres, g_nxhello.yres);
@@ -250,7 +248,7 @@ int nxhello_main(int argc, char *argv[])
 
   /* Release background */
 
-  (void)nx_releasebkgd(g_nxhello.hbkgd);
+  nx_releasebkgd(g_nxhello.hbkgd);
 
   /* Close NX */
 

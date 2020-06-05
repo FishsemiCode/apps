@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # apps/tools/mkkconfig.sh
 #
 #   Copyright (C) 2015 Gregory Nutt. All rights reserved.
@@ -108,4 +108,3 @@ done
 if [ ! -z "${MENU}" ]; then
   echo "endmenu # ${MENU}" >> ${KCONFIG}
 fi
-

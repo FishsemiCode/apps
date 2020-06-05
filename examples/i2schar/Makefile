@@ -37,8 +37,6 @@
 
 # I2S character driver test
 
-ASRCS =
-CSRCS =
 ifeq ($(CONFIG_EXAMPLES_I2SCHAR_TX),y)
 CSRCS += i2schar_transmitter.c
 endif
@@ -47,15 +45,11 @@ CSRCS += i2schar_receiver.c
 endif
 MAINSRC = i2schar_main.c
 
-CONFIG_XYZ_PROGNAME ?= i2schar$(EXEEXT)
-PROGNAME = $(CONFIG_XYZ_PROGNAME)
-
 # Touchscreen built-in application info
 
-APPNAME = i2schar
+PROGNAME = i2schar
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
-
-MODULE = CONFIG_EXAMPLES_I2SCHAR
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE = $(CONFIG_EXAMPLES_I2SCHAR)
 
 include $(APPDIR)/Application.mk

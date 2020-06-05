@@ -159,11 +159,7 @@ int set_phy_reg(uint16_t phy_id, uint16_t reg_num, uint16_t val)
  * mdio_main
  ****************************************************************************/
 
-#ifdef BUILD_MODULE
 int main(int argc, FAR char *argv[])
-#else
-int mdio_main(int argc, char *argv[])
-#endif
 {
   int ret;
   int i;
@@ -222,7 +218,7 @@ int mdio_main(int argc, char *argv[])
 
       for (i = 0; i < 32; i++)
         {
-          (void)get_phy_reg(phy_id, i, &val_out);
+          get_phy_reg(phy_id, i, &val_out);
           printf("phy[%d][%d] = 0x%4x\n", phy_id, i, val_out);
         }
     }
@@ -246,4 +242,3 @@ int mdio_main(int argc, char *argv[])
 
   return 0;
 }
-
