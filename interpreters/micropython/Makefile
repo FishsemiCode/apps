@@ -34,12 +34,13 @@
 #
 ###########################################################################
 
+-include $(TOPDIR)/.config
+
 ifeq ($(CONFIG_INTERPRETERS_MICROPYTHON),y)
 MICROPY_PORT_DIR = micropython/ports/nuttx
 
 CREATEDIR = $(MICROPY_PORT_DIR)
 
--include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
