@@ -1,9 +1,8 @@
 ############################################################################
-# apps/ interpreters/micropython/Makefile
+# apps/examples/cs1237/Makefile
 #
-#   Copyright (C) 2015, 2016 Gregory Nutt. All rights reserved.
-#   Authors: Gregory Nutt <gnutt@nuttx.org>
-#            Dave Marples <dave@marples.net>
+#   Copyright (C) 2020 Fishsemi. All rights reserved.
+#   Author: dongjiuzhu <dongjiuzhu@fishsemi.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,24 +31,28 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-###########################################################################
-
--include $(TOPDIR)/.config
-
-ifeq ($(CONFIG_INTERPRETERS_MICROPYTHON),y)
-MICROPY_PORT_DIR = micropython/ports/nuttx
-
-CREATEDIR = $(MICROPY_PORT_DIR)
+############################################################################
 
 -include $(TOPDIR)/Make.defs
-include $(APPDIR)/Make.defs
 
-.PHONY = $(MAKECMDGOALS) sub-make
+# cs1237 built-in application info
 
-$(MAKECMDGOALS): sub-make
+CONFIG_EXAMPLES_CS1237_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_EXAMPLES_CS1237_STACKSIZE ?= 2048
 
-sub-make:
-	$(Q)$(MAKE) -C $(MICROPY_PORT_DIR) -f $(SRCDIR)/$(MICROPY_PORT_DIR)/Makefile -I $(SRCDIR)/$(MICROPY_PORT_DIR) TOPDIR=$(TOPDIR) APPDIR=$(APPDIR) OUTDIR=$(OUTDIR) $(MAKECMDGOALS)
-else
+APPNAME = cs1237
+PRIORITY = $(CONFIG_EXAMPLES_CS1237_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_CS1237_STACKSIZE)
+
+# cs1237 Example
+
+ASRCS =
+CSRCS =
+MAINSRC = cs1237_main.c
+
+CONFIG_EXAMPLES_CS1237_PROGNAME ?= cs1237$(EXEEXT)
+PROGNAME = $(CONFIG_EXAMPLES_CS1237_PROGNAME)
+
+MODULE = CONFIG_EXAMPLES_CS1237
+
 include $(APPDIR)/Application.mk
-endif

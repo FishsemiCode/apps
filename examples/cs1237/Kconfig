@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_CS1237
+	tristate "\"cs1237\" example"
+	default n
+	---help---
+		Enable the \"cs1237\" example
+
+if EXAMPLES_CS1237
+
+config EXAMPLES_CS1237_PROGNAME
+	string "Program name"
+	default "cs1237"
+	depends on BUILD_LOADABLE
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_CS1237_PRIORITY
+	int "cs1237 task priority"
+	default 60
+
+config EXAMPLES_CS1237_STACKSIZE
+	int "cs1237 stack size"
+	default 2048
+
+endif
