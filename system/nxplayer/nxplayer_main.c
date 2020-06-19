@@ -177,7 +177,7 @@ static struct mp_cmd_s g_nxplayer_cmds[] =
   { "q",        "",         nxplayer_cmd_quit,      NXPLAYER_HELP_TEXT(Exit NxPlayer) },
   { "quit",     "",         nxplayer_cmd_quit,      NXPLAYER_HELP_TEXT(Exit NxPlayer) },
 #ifndef CONFIG_AUDIO_EXCLUDE_VOLUME
-  { "volume",   "d%",       nxplayer_cmd_volume,    NXPLAYER_HELP_TEXT(Set volume to level specified) }
+  { "volume",   "d%",       nxplayer_cmd_volume,    NXPLAYER_HELP_TEXT(Set volume to level specified (0-15)) }
 #endif
 };
 
@@ -419,20 +419,20 @@ static int nxplayer_cmd_playraw(FAR struct nxplayer_s *pPlayer, char *parg)
 #ifndef CONFIG_AUDIO_EXCLUDE_VOLUME
 static int nxplayer_cmd_volume(FAR struct nxplayer_s *pPlayer, char *parg)
 {
-  uint16_t   percent;
+  uint16_t   volume;
 
   /* If no arg given, then print current volume */
 
   if (parg == NULL || *parg == '\0')
     {
-      printf("volume: %d\n", pPlayer->volume / 10);
+      printf("volume: %d\n", pPlayer->volume);
     }
   else
     {
       /* Get the percentage value from the argument */
 
-      percent = (uint16_t) (atof(parg) * 10.0);
-      nxplayer_setvolume(pPlayer, percent);
+      volume = (uint16_t) atoi(parg);
+      nxplayer_setvolume(pPlayer, volume);
     }
 
   return OK;
