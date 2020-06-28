@@ -37,6 +37,7 @@
 
 APPDIR := $(patsubst %/,%,$(dir $(firstword $(MAKEFILE_LIST))))
 TOPDIR ?= $(APPDIR)/import
+OUTDIRAPPS := $(OUTDIR)/../apps
 -include $(TOPDIR)/Make.defs
 -include $(APPDIR)/Make.defs
 
@@ -124,10 +125,10 @@ $(MKDIR_LIST):
 	$(Q) mkdir -p $@
 
 .import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+	$(Q) $(MAKE) -C $(OUTDIRAPPS) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 
 import: $(MKDIR_LIST)
-	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+	$(Q) $(MAKE) -C $(OUTDIRAPPS) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 
 else
 
@@ -141,7 +142,7 @@ $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 else
 
 all_target: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+	$(Q) $(MAKE) -C $(OUTDIRAPPS) -f $(APPDIR)/Makefile -I $(APPDIR) install TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 
 $(EXETABSRC): all_target
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINIST_DIR) $@
@@ -154,12 +155,14 @@ $(SYMTABOBJ): %$(OBJEXT): %.c
 
 $(BIN): $(SYMTABOBJ)
 ifeq ($(WINTOOL),y)
-	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
+	$(call ARCHIVE, "${shell cygpath -w $(BIN)}", $^)
 else
-	$(call ARLOCK, $(BIN), $^)
+	$(call ARCHIVE, $(BIN), $^)
 endif
 
 endif # !CONFIG_BUILD_LOADABLE
+
+.install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
 $(MKDIR_LIST):
 	$(Q) mkdir -p $@
@@ -169,7 +172,7 @@ install: $(MKDIR_LIST) .install
 .import: $(BIN) install
 
 import:
-	$(Q) $(MAKE) -C $(OUTDIR) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
+	$(Q) $(MAKE) -C $(OUTDIRAPPS) -f $(APPDIR)/Makefile -I $(APPDIR) .import TOPDIR="$(APPDIR)/import" APPDIR="$(APPDIR)" OUTDIR="$(OUTDIR)"
 
 endif # CONFIG_BUILD_KERNEL
 
