@@ -318,7 +318,7 @@ static int nxplayer_opendevice(FAR struct nxplayer_s *pplayer, int format,
 
       /* Device supports the format.  Open the device file. */
 
-      pplayer->devFd = open(pplayer->prefdevice, O_RDWR);
+      pplayer->devFd = open(pplayer->prefdevice, O_RDWR | O_CLOEXEC);
       if (pplayer->devFd == -1)
         {
           int errcode = errno;
@@ -387,7 +387,7 @@ static int nxplayer_opendevice(FAR struct nxplayer_s *pplayer, int format,
           snprintf(path,  sizeof(path), "/dev/audio/%s", pDevice->d_name);
 #endif /* CONFIG_AUDIO_CUSTOM_DEV_PATH */
 
-          if ((pplayer->devFd = open(path, O_RDWR)) != -1)
+          if ((pplayer->devFd = open(path, O_RDWR | O_CLOEXEC)) != -1)
             {
               /* We have the device file open.  Now issue an AUDIO ioctls to
                * get the capabilities
