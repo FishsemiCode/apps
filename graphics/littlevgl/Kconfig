@@ -22,13 +22,13 @@ menu "Graphics settings"
 
 config LV_HOR_RES
 	int "Horizontal resolution."
-	default 480
+	default 320
 	---help---
 		Number of pixels in horizontally.
 
 config LV_VER_RES
 	int "Vertical resolution."
-	default 320
+	default 240
 	---help---
 		Number of pixels vertically. Double it if anti aliasing is used
 
@@ -183,6 +183,15 @@ config USE_LV_REAL_DRAW
 config USE_LV_FILESYSTEM
 	bool "Enable filesystem (required for images, lv_img)"
 	default n
+
+config LV_MEM_CUSTOM
+	bool "enable user defined mem management method"
+	default y
+
+config LV_USE_DEBUG
+	bool "enable debug"
+	default n
+
 endmenu
 
 menu "Theme usage"
@@ -497,6 +506,11 @@ config USE_LV_ROLLER
 
 config USE_LV_SLIDER
 	bool "Slider usage"
+	depends on USE_LV_BAR
+	default y
+
+config USE_LV_CPICKER
+	bool "Color picker usage"
 	depends on USE_LV_BAR
 	default y
 
