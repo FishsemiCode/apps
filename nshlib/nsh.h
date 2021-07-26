@@ -1177,6 +1177,8 @@ int cmd_irqinfo(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
   int cmd_unset(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
 
+  int cmd_shellshow(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+
 #ifndef CONFIG_NSH_DISABLE_KILL
   int cmd_kill(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif

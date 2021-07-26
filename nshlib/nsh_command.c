@@ -484,6 +484,8 @@ static const struct cmdmap_s g_cmdmap[] =
 # endif
 #endif
 
+  {"shellshow", cmd_shellshow, 2, 2, "enable | disable"},
+
 #ifndef CONFIG_NSH_DISABLE_SHUTDOWN
 #if defined(CONFIG_BOARDCTL_POWEROFF) && defined(CONFIG_BOARDCTL_RESET)
   { "shutdown", cmd_shutdown, 1, 2, "[--reboot]" },

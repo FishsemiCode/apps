@@ -181,6 +181,30 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 }
 #endif /* CONFIG_BOARDCTL_POWEROFF && !CONFIG_NSH_DISABLE_SHUTDOWN */
 
+int cmd_shellshow(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+{
+  static uint8_t oldmask;
+  if(argc == 2)
+    {
+      if (strcmp(argv[1], "enable") == 0)
+        {
+          oldmask = setlogmask(0xff);
+        }
+      else if (strcmp(argv[1], "disable") == 0)
+        {
+          oldmask = setlogmask(0);
+        }
+      else if (strcmp(argv[1], "restore") == 0)
+        {
+          setlogmask(oldmask);
+        }
+    }
+  else
+    {
+      nsh_output(vtbl, "parameter: enable, disable, restore\n");
+    }
+}
+
 /****************************************************************************
  * Name: cmd_pmconfig
  ****************************************************************************/
