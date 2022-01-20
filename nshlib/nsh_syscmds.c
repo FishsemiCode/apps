@@ -203,6 +203,7 @@ int cmd_shellshow(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsh_output(vtbl, "parameter: enable, disable, restore\n");
     }
+  return 0;
 }
 
 /****************************************************************************
